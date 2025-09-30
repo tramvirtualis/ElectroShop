@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="footer">
+    <footer class="py-4 border-top" style="background:#eed9c7;">
+        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <span class="small">© <span th:text="${#dates.format(#dates.createNow(),'yyyy')}">2025</span> ElectroShop</span>
+            <div class="d-flex gap-3 small">
+                <a class="text-decoration-none" href="#">Privacy</a>
+                <a class="text-decoration-none" href="#">Terms</a>
+                <a class="text-decoration-none" href="#">Support</a>
+            </div>
+        </div>
+    </footer>
+ </div>
+</body>
+</html>
+
+

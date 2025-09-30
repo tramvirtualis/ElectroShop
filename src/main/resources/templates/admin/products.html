@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Admin • Products</title></head>
+<body>
+<div th:replace="fragments/admin-layout :: layout('Products')">
+    <div content>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 m-0">Products</h2>
+            <a class="btn btn-dark btn-sm" href="#">Add Product</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                <tr><th>#</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>1</td><td>iPhone 15 Pro</td><td>Smartphones</td><td>$999</td><td>42</td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-dark" href="#">Edit</a> <a class="btn btn-sm btn-outline-danger" href="#">Delete</a></td>
+                </tr>
+                <tr>
+                    <td>2</td><td>MacBook Air M2</td><td>Laptops</td><td>$1,199</td><td>15</td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-dark" href="#">Edit</a> <a class="btn btn-sm btn-outline-danger" href="#">Delete</a></td>
+                </tr>
+                <tr>
+                    <td>3</td><td>PS5 Console</td><td>Consoles</td><td>$499</td><td>30</td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-dark" href="#">Edit</a> <a class="btn btn-sm btn-outline-danger" href="#">Delete</a></td>
+                </tr>
+                <tr>
+                    <td>4</td><td>AirPods Pro</td><td>Headphones</td><td>$249</td><td>80</td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-dark" href="#">Edit</a> <a class="btn btn-sm btn-outline-danger" href="#">Delete</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Products</title>
+    <h2>Products</h2>
+</head>
+<body>
+<p>Manage products (placeholder)</p>
+</body>
+</html>
+
+

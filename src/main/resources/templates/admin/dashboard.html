@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Admin • Dashboard</title></head>
+<body>
+<div th:replace="fragments/admin-layout :: layout('Dashboard')">
+    <div content>
+        <div class="row g-3">
+            <div class="col-md-3"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Revenue</div><div class="h4">$120,500</div></div></div></div>
+            <div class="col-md-3"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Orders</div><div class="h4">1,245</div></div></div></div>
+            <div class="col-md-3"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Customers</div><div class="h4">3,210</div></div></div></div>
+            <div class="col-md-3"><div class="card shadow-sm"><div class="card-body"><div class="text-muted">Products</div><div class="h4">185</div></div></div></div>
+        </div>
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h2 class="h6">Sales Overview</h2>
+                <div class="bg-light border rounded" style="height:260px;"> <!-- Placeholder chart -->
+                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted">Chart Placeholder</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <h2>Dashboard</h2>
+</head>
+<body>
+<p>Admin dashboard (placeholder)</p>
+</body>
+</html>
+
+

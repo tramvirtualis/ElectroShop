@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Admin • Customers</title></head>
+<body>
+<div th:replace="fragments/admin-layout :: layout('Customers')">
+    <div content>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                <tr><th>#</th><th>Name</th><th>Email</th><th>Orders</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr><td>1</td><td>Alice Nguyen</td><td>alice@example.com</td><td>12</td><td class="text-end"><a class="btn btn-sm btn-outline-dark" href="#">View</a></td></tr>
+                <tr><td>2</td><td>Bob Tran</td><td>bob@example.com</td><td>5</td><td class="text-end"><a class="btn btn-sm btn-outline-dark" href="#">View</a></td></tr>
+                <tr><td>3</td><td>Chris Le</td><td>chris@example.com</td><td>2</td><td class="text-end"><a class="btn btn-sm btn-outline-dark" href="#">View</a></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Customers</title>
+    <h2>Customers</h2>
+</head>
+<body>
+<p>Manage customers (placeholder)</p>
+</body>
+</html>
+
+
