@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="sidebar">
+    <aside class="border-end" style="width:260px;background:#0f0f10;color:#e5e7eb;min-height:100vh;">
+        <div class="p-3 border-bottom border-dark">
+            <a class="navbar-brand" style="color:#22d3ee;text-decoration:none;" th:href="@{/admin}">ElectroShop Admin</a>
+        </div>
+        <nav class="nav flex-column p-3 gap-1">
+            <a class="nav-link" style="color:#e5e7eb;" th:href="@{/admin}">Dashboard</a>
+            <a class="nav-link" style="color:#e5e7eb;" th:href="@{/admin/products}">Products</a>
+            <a class="nav-link" style="color:#e5e7eb;" th:href="@{/admin/categories}">Categories</a>
+            <a class="nav-link" style="color:#e5e7eb;" th:href="@{/admin/orders}">Orders</a>
+            <a class="nav-link" style="color:#e5e7eb;" th:href="@{/admin/customers}">Customers</a>
+            <a class="nav-link" style="color:#e5e7eb;" th:href="@{/admin/revenue}">Revenue</a>
+        </nav>
+    </aside>
+</div>
+</body>
+</html>
+
+

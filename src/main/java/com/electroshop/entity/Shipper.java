@@ -9,31 +9,29 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
-@Table(name = "user")
+@Table(name = "shipper")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class User {
+public class Shipper {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
     
-    @Column(name = "full_name", nullable = false)
-    private String fullName;
+    @Column(name = "license_number")
+    private String licenseNumber;
     
-    @Column(name = "phone_number")
-    private String phoneNumber;
-    
-    @Column(unique = true, nullable = false)
-    private String email;
+    @Column(name = "vehicle_type")
+    private String vehicleType;
     
     @CreatedDate
     @Column(name = "created_at", updatable = false)
@@ -43,12 +41,8 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Customer customer;
-    
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Shipper shipper;
-    
-    @OneToMany(mappedBy = "ownerUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private java.util.List<Shop> shops;
+    @OneToMany(mappedBy = "shipper", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Order> orders;
 }
+
+

@@ -9,31 +9,23 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
-@Table(name = "user")
+@Table(name = "cart")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class User {
+public class Cart {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
-    
-    @Column(name = "full_name", nullable = false)
-    private String fullName;
-    
-    @Column(name = "phone_number")
-    private String phoneNumber;
-    
-    @Column(unique = true, nullable = false)
-    private String email;
+    @JoinColumn(name = "customer_id", nullable = false, unique = true)
+    private Customer customer;
     
     @CreatedDate
     @Column(name = "created_at", updatable = false)
@@ -43,12 +35,8 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Customer customer;
-    
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Shipper shipper;
-    
-    @OneToMany(mappedBy = "ownerUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private java.util.List<Shop> shops;
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CartItem> cartItems;
 }
+
+

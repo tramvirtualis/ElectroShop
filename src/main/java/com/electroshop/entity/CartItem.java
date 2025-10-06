@@ -11,29 +11,27 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user")
+@Table(name = "cartitem")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class User {
+public class CartItem {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cart_id", nullable = false)
+    private Cart cart;
     
-    @Column(name = "full_name", nullable = false)
-    private String fullName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
     
-    @Column(name = "phone_number")
-    private String phoneNumber;
-    
-    @Column(unique = true, nullable = false)
-    private String email;
+    @Column(nullable = false)
+    private Integer quantity = 1;
     
     @CreatedDate
     @Column(name = "created_at", updatable = false)
@@ -43,12 +41,13 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Customer customer;
-    
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Shipper shipper;
-    
-    @OneToMany(mappedBy = "ownerUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private java.util.List<Shop> shops;
+    @PrePersist
+    @PreUpdate
+    private void validateQuantity() {
+        if (quantity == null || quantity <= 0) {
+            quantity = 1;
+        }
+    }
 }
+
+
