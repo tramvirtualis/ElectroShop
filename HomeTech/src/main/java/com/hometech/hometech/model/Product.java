@@ -178,4 +178,11 @@ public class Product {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categoryID", nullable = true)
     private Category category;
+    @Transient
+    public String getBase64Image() {
+        if (image != null && image.length > 0) {
+            return java.util.Base64.getEncoder().encodeToString(image);
+        }
+        return null;
+    }
 }

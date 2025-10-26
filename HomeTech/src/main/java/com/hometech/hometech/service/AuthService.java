@@ -1,10 +1,8 @@
 package com.hometech.hometech.service;
 
-import com.hometech.hometech.Repository.AccountReposirory;
-import com.hometech.hometech.Repository.TokenForgetPasswordRepository;
+import com.hometech.hometech.Repository.*;
 import com.hometech.hometech.enums.RoleType;
-import com.hometech.hometech.model.Account;
-import com.hometech.hometech.model.TokenForgetPassword;
+import com.hometech.hometech.model.*;
 import jakarta.mail.MessagingException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,14 +25,19 @@ public class AuthService {
     private final EmailService emailService;
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService userDetailsService;
-
+    private final UserRepository userRepository;
+    private final CustomerRepository customerRepository;
+    private final AdminRepository adminRepository;
     public AuthService(AccountReposirory accountRepository, 
                       TokenForgetPasswordRepository tokenForgetPasswordRepository,
                       PasswordEncoder passwordEncoder, 
                       JwtService jwtService, 
                       EmailService emailService,
                       AuthenticationManager authenticationManager, 
-                      CustomUserDetailsService userDetailsService) {
+                      CustomUserDetailsService userDetailsService,
+                       UserRepository userRepository,
+                       CustomerRepository customerRepository,
+                       AdminRepository adminRepository) {
         this.accountRepository = accountRepository;
         this.tokenForgetPasswordRepository = tokenForgetPasswordRepository;
         this.passwordEncoder = passwordEncoder;
@@ -42,21 +45,20 @@ public class AuthService {
         this.emailService = emailService;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
+        this.customerRepository = customerRepository;
+        this.userRepository = userRepository;
+        this.adminRepository = adminRepository;
     }
 
     @Transactional
     public String register(String username, String email, String password) throws MessagingException {
-        // Kiểm tra username đã tồn tại
-        if (accountRepository.existsByUsername(username)) {
+        // Kiểm tra username, email (như cũ)
+        if (accountRepository.existsByUsername(username))
             throw new RuntimeException("Tên đăng nhập đã tồn tại");
-        }
-
-        // Kiểm tra email đã tồn tại
-        if (accountRepository.existsByEmail(email)) {
+        if (accountRepository.existsByEmail(email))
             throw new RuntimeException("Email đã được sử dụng");
-        }
 
-        // Tạo tài khoản mới
+        // Tạo tài khoản
         Account account = new Account();
         account.setUsername(username);
         account.setEmail(email);
@@ -64,20 +66,68 @@ public class AuthService {
         account.setRole(RoleType.USER);
         account.setEnabled(false);
         account.setEmailVerified(false);
-        
-        // Tạo verification token
-        String verificationToken = UUID.randomUUID().toString();
-        account.setVerificationToken(verificationToken);
+        account.setVerificationToken(UUID.randomUUID().toString());
         account.setCreatedAt(LocalDateTime.now());
         account.setUpdatedAt(LocalDateTime.now());
-
         accountRepository.save(account);
 
-        // Gửi email xác thực
-        emailService.sendVerificationEmail(email, verificationToken);
+        // ✅ Chỉ tạo Customer (kế thừa User)
+        Customer customer = new Customer();
+        customer.setAccount(account);
+        customer.setActive(false);
+        customer.setFullName(null);
+        customer.setPhone(null);
+        customer.setDateOfBirth(null);
+        customer.setLoyalty(0);
+        customerRepository.save(customer); // <-- JPA tự insert cả users + customers
 
+        // Gửi email
+        emailService.sendVerificationEmail(email, account.getVerificationToken());
         return "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.";
     }
+
+    @Transactional
+    public String registerAdmin(String username, String email, String password) throws MessagingException {
+        // 1️⃣ Kiểm tra username đã tồn tại
+        if (accountRepository.existsByUsername(username)) {
+            throw new RuntimeException("Tên đăng nhập đã tồn tại");
+        }
+
+        // 2️⃣ Kiểm tra email đã tồn tại
+        if (accountRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email đã được sử dụng");
+        }
+
+        // 3️⃣ Tạo tài khoản ADMIN
+        Account account = new Account();
+        account.setUsername(username);
+        account.setEmail(email);
+        account.setPassword(passwordEncoder.encode(password));
+        account.setRole(RoleType.ADMIN);
+        account.setEnabled(true);          // kích hoạt sẵn
+        account.setEmailVerified(true);    // không cần xác thực email
+        account.setCreatedAt(LocalDateTime.now());
+        account.setUpdatedAt(LocalDateTime.now());
+        accountRepository.save(account);
+
+        // 4️⃣ Tạo User liên kết với Account
+        User user = new User();
+        user.setAccount(account);
+        user.setFullName(null);
+        user.setPhone(null);
+        user.setActive(true);
+        userRepository.save(user);
+
+        // 5️⃣ Tạo Admin trống, kế thừa User
+        Admin admin = new Admin();
+        admin.setId(user.getId());       // 🔥 rất quan trọng: Admin kế thừa User, phải gán ID của User
+        admin.setResponses(null);        // danh sách phản hồi rỗng
+        adminRepository.save(admin);
+
+        return "Tạo tài khoản quản trị thành công!";
+    }
+
+
 
     @Transactional
     public String verifyEmail(String token) {

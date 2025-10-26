@@ -1,4 +1,4 @@
-package com.hometech.hometech.controller.Thymeleaf;
+package com.hometech.hometech.controller.Thymleaf;
 
 import com.hometech.hometech.model.Product;
 import com.hometech.hometech.model.Category;

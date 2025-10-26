@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.hometech.hometech.model.User;
 
 import java.time.LocalDateTime;
 
@@ -48,6 +49,17 @@ public class Account {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
+    // 🔹 Một Account có đúng 1 User
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
+    private User user;
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 
     // Manual getters and setters to ensure compatibility
     public Long getAccountId() {
