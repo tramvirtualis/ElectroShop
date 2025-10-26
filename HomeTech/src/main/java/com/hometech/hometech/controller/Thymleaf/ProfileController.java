@@ -60,4 +60,5 @@ public class ProfileController {
         model.addAttribute("userId", userId);
         return "profile_form";
     }
+
 }

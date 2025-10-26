@@ -16,4 +16,5 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     List<Product> findByCategoryAndStatus(Category category, boolean status);
     List<Product> findByCreatedAtAfter(LocalDateTime time);
     List<Product> findTop10ByOrderBySoldCountDesc();
+
 }

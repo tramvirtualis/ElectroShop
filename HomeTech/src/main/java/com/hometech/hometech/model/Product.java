@@ -29,7 +29,7 @@ public class Product {
     private double price;
 
     @Lob
-    @Column(name = "image")
+    @Column(name = "image", columnDefinition = "LONGBLOB")
     private byte[] image;
 
     @Column(name = "color")
@@ -45,7 +45,7 @@ public class Product {
     private String description;
 
     @Column(name = "sold_count")
-    private int soldCount = 0;
+    private Integer  soldCount = 0;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();

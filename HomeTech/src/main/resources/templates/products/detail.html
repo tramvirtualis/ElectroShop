@@ -129,7 +129,7 @@
                             </div>
                             <div class="col-md-3">
                                 <strong>Giá:</strong><br>
-                                <span class="text-success fw-bold" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</span>
+                                <span th:text="${#numbers.formatInteger(p.price)} + ' VNĐ'"></span>
                             </div>
                         </div>
                     </div>

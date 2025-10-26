@@ -2,16 +2,24 @@ package com.hometech.hometech.controller.Thymleaf;
 
 import com.hometech.hometech.model.Category;
 import com.hometech.hometech.model.Product;
+import com.hometech.hometech.model.Review;
 import com.hometech.hometech.service.CategoryService;
 import com.hometech.hometech.service.ProductService;
+import com.hometech.hometech.service.ReviewService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.io.IOException;
+import java.util.List;
 
 @Controller
 @RequestMapping("/products")
@@ -19,12 +27,16 @@ public class ProductController {
 
     private final ProductService productService;
     private final CategoryService categoryService;
+    private final ReviewService reviewService;
 
-    public ProductController(ProductService productService, CategoryService categoryService) {
+
+    public ProductController(ProductService productService, CategoryService categoryService, ReviewService reviewService) {
         this.productService = productService;
         this.categoryService = categoryService;
+        this.reviewService = reviewService;
     }
 
+    // --- Thông tin Session người dùng ---
     private void addSessionInfo(HttpServletRequest request, Model model) {
         HttpSession session = request.getSession(false);
         if (session != null) {
@@ -39,17 +51,21 @@ public class ProductController {
         }
     }
 
-    // 🟢 Hiển thị tất cả sản phẩm
+    // ---------------------------------------------------------------
+    // 🔹 PHẦN NGƯỜI DÙNG (AI CŨNG XEM ĐƯỢC)
+    // ---------------------------------------------------------------
+
+    // 🟢 Trang xem tất cả sản phẩm
     @GetMapping
-    public String viewHomePage(HttpServletRequest request, Model model) {
+    public String viewAllProducts(HttpServletRequest request, Model model) {
         addSessionInfo(request, model);
         model.addAttribute("listProducts", productService.getAll());
         model.addAttribute("categories", categoryService.getAll());
         model.addAttribute("title", "Tất cả sản phẩm");
-        return "products/index";
+        return "products/index"; // ✅ templates/products/index.html
     }
 
-    // 🟢 Hiển thị sản phẩm theo danh mục
+    // 🟢 Xem sản phẩm theo danh mục
     @GetMapping("/category/{categoryId}")
     public String viewProductsByCategory(@PathVariable int categoryId,
                                          HttpServletRequest request,
@@ -65,70 +81,91 @@ public class ProductController {
         model.addAttribute("currentCategory", category);
         model.addAttribute("categories", categoryService.getAll());
         model.addAttribute("title", "Danh mục: " + category.getCategoryName());
-        return "products/category";
+        return "products/category"; // ✅ templates/products/category.html
     }
 
-    // 🟢 Hiển thị sản phẩm đang hoạt động theo danh mục
-    @GetMapping("/category/{categoryId}/active")
-    public String viewActiveProductsByCategory(@PathVariable int categoryId,
-                                               HttpServletRequest request,
-                                               Model model,
-                                               RedirectAttributes ra) {
-        addSessionInfo(request, model);
-        Category category = categoryService.getById(categoryId);
-        if (category == null) {
-            ra.addFlashAttribute("error", "Danh mục không tồn tại!");
-            return "redirect:/products";
+    // 🟢 Xem chi tiết sản phẩm
+    @GetMapping("/{id}")
+    public String viewProductDetail(@PathVariable("id") int id, Model model) {
+        Product product = productService.getById(id);
+        List<Review> reviews = reviewService.getReviewsByProduct(id);
+        double averageRating = reviewService.getAverageRating(id);
+
+        model.addAttribute("product", product);
+        model.addAttribute("reviews", reviews);
+        model.addAttribute("averageRating", averageRating);
+
+        return "products/detail"; // trỏ tới templates/products/detail.html
+    }
+
+    // 🟢 Endpoint hiển thị ảnh sản phẩm
+    @GetMapping("/image/{id}")
+    @ResponseBody
+    public ResponseEntity<byte[]> getProductImage(@PathVariable int id) {
+        Product product = productService.getById(id);
+        if (product != null && product.getImage() != null) {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(product.getImage());
         }
-        model.addAttribute("listProducts", productService.getActiveProductsByCategoryId(categoryId));
-        model.addAttribute("currentCategory", category);
-        model.addAttribute("categories", categoryService.getAll());
-        model.addAttribute("title", "Sản phẩm đang hoạt động - " + category.getCategoryName());
-        return "products/category";
+        return ResponseEntity.notFound().build();
     }
 
-    // 🟢 Hiển thị form thêm sản phẩm mới
-    @GetMapping("/new")
+    // ---------------------------------------------------------------
+    // 🔸 PHẦN ADMIN (CHỈ QUẢN TRỊ VIÊN SỬ DỤNG)
+    // ---------------------------------------------------------------
+
+    // 🟢 Trang quản trị danh sách sản phẩm
+    @GetMapping("/admin")
+    public String adminProductList(HttpServletRequest request, Model model) {
+        addSessionInfo(request, model);
+        model.addAttribute("listProducts", productService.getAll());
+        model.addAttribute("categories", categoryService.getAll());
+        model.addAttribute("title", "Quản lý sản phẩm");
+        return "admin/products/index"; // ✅ templates/admin/products/index.html
+    }
+
+    // 🟢 Hiển thị form thêm sản phẩm
+    @GetMapping("/admin/new")
     public String showAddForm(HttpServletRequest request, Model model) {
         addSessionInfo(request, model);
         model.addAttribute("product", new Product());
         model.addAttribute("categories", categoryService.getAll());
         model.addAttribute("title", "Thêm sản phẩm mới");
-        return "products/add";
+        return "admin/products/add"; // ✅ templates/admin/products/add.html
     }
 
     // 🟢 Lưu sản phẩm mới
-    @PostMapping("/save")
-    public String saveProduct(@ModelAttribute("product") Product product,
-                              HttpServletRequest request,
-                              Model model,
-                              RedirectAttributes ra) {
-        addSessionInfo(request, model);
-        productService.save(product);
-        ra.addFlashAttribute("success", "Thêm sản phẩm thành công!");
-        return "redirect:/products";
-    }
+    @PostMapping("/admin/add")
+    public String addProduct(@RequestParam("name") String name,
+                             @RequestParam("price") Double price,
+                             @RequestParam("description") String description,
+                             @RequestParam(value = "categoryID", required = false) Integer categoryId,
+                             @RequestParam("image") MultipartFile imageFile,
+                             RedirectAttributes ra) {
 
-    // 🟢 Hiển thị chi tiết sản phẩm
-    @GetMapping("/{id}")
-    public String showProductDetail(@PathVariable int id,
-                                    HttpServletRequest request,
-                                    Model model,
-                                    RedirectAttributes ra) {
-        addSessionInfo(request, model);
-        Product product = productService.getById(id);
-        if (product == null) {
-            ra.addFlashAttribute("error", "Không tìm thấy sản phẩm!");
-            return "redirect:/products";
+        try {
+            Product product = new Product();
+            product.setProductName(name);
+            product.setPrice(price);
+            product.setDescription(description);
+            if (categoryId != null) {
+                product.setCategory(categoryService.getById(categoryId));
+            }
+            if (!imageFile.isEmpty()) {
+                product.setImage(imageFile.getBytes());
+            }
+            productService.save(product);
+            ra.addFlashAttribute("success", "Thêm sản phẩm thành công!");
+        } catch (IOException e) {
+            e.printStackTrace();
+            ra.addFlashAttribute("error", "Lỗi khi tải ảnh lên!");
         }
-        model.addAttribute("product", product);
-        model.addAttribute("categories", categoryService.getAll());
-        model.addAttribute("title", "Chi tiết sản phẩm - " + product.getProductName());
-        return "products/detail";
+        return "redirect:/products/admin";
     }
 
-    // 🟢 Hiển thị form sửa sản phẩm
-    @GetMapping("/edit/{id}")
+    // 🟢 Form chỉnh sửa sản phẩm
+    @GetMapping("/admin/edit/{id}")
     public String showEditForm(@PathVariable int id,
                                HttpServletRequest request,
                                Model model,
@@ -137,37 +174,54 @@ public class ProductController {
         Product product = productService.getById(id);
         if (product == null) {
             ra.addFlashAttribute("error", "Không tìm thấy sản phẩm cần sửa!");
-            return "redirect:/products";
+            return "redirect:/products/admin";
         }
         model.addAttribute("product", product);
         model.addAttribute("categories", categoryService.getAll());
         model.addAttribute("title", "Chỉnh sửa sản phẩm");
-        return "products/edit";
+        return "admin/products/edit"; // ✅ templates/admin/products/edit.html
     }
 
-    // 🟢 Cập nhật sản phẩm
-    @PostMapping("/update/{id}")
+    // 🟢 Cập nhật sản phẩm (có thể đổi ảnh)
+    @PostMapping("/admin/update/{id}")
     public String updateProduct(@PathVariable int id,
-                                @ModelAttribute("product") Product product,
-                                HttpServletRequest request,
-                                Model model,
+                                @RequestParam("name") String name,
+                                @RequestParam("price") Double price,
+                                @RequestParam("description") String description,
+                                @RequestParam(value = "categoryID", required = false) Integer categoryId,
+                                @RequestParam(value = "image", required = false) MultipartFile imageFile,
                                 RedirectAttributes ra) {
-        addSessionInfo(request, model);
-        product.setProductID(id);
-        productService.save(product);
-        ra.addFlashAttribute("success", "Cập nhật sản phẩm thành công!");
-        return "redirect:/products";
+        try {
+            Product existing = productService.getById(id);
+            if (existing == null) {
+                ra.addFlashAttribute("error", "Không tìm thấy sản phẩm!");
+                return "redirect:/products/admin";
+            }
+
+            existing.setProductName(name);
+            existing.setPrice(price);
+            existing.setDescription(description);
+            if (categoryId != null) {
+                existing.setCategory(categoryService.getById(categoryId));
+            }
+            if (imageFile != null && !imageFile.isEmpty()) {
+                existing.setImage(imageFile.getBytes());
+            }
+
+            productService.save(existing);
+            ra.addFlashAttribute("success", "Cập nhật sản phẩm thành công!");
+        } catch (IOException e) {
+            e.printStackTrace();
+            ra.addFlashAttribute("error", "Lỗi khi cập nhật ảnh!");
+        }
+        return "redirect:/products/admin";
     }
 
     // 🟢 Xóa sản phẩm
-    @GetMapping("/delete/{id}")
-    public String deleteProduct(@PathVariable int id,
-                                HttpServletRequest request,
-                                Model model,
-                                RedirectAttributes ra) {
-        addSessionInfo(request, model);
+    @GetMapping("/admin/delete/{id}")
+    public String deleteProduct(@PathVariable int id, RedirectAttributes ra) {
         productService.delete(id);
         ra.addFlashAttribute("success", "Xóa sản phẩm thành công!");
-        return "redirect:/products";
+        return "redirect:/products/admin";
     }
 }

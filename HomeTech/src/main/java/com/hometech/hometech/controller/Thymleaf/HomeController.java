@@ -4,6 +4,8 @@ import com.hometech.hometech.model.Product;
 import com.hometech.hometech.model.Category;
 import com.hometech.hometech.service.ProductService;
 import com.hometech.hometech.service.CategoryService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +33,10 @@ public class HomeController {
         model.addAttribute("newProducts", newProducts);
         model.addAttribute("topSelling", topSelling);
         model.addAttribute("title", "Trang chủ - HomeTech");
-
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
+            model.addAttribute("currentUser", auth.getName());
+        }
         return "home"; // Trỏ tới templates/home.html
     }
 }

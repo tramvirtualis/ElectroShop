@@ -148,4 +148,18 @@ public class AuthController {
         }
         return "redirect:/auth/login";
     }
+    @GetMapping("/logout")
+    public String logout(HttpServletRequest request, RedirectAttributes ra) {
+        // Hủy session hiện tại
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+
+        // Xóa context của Spring Security
+        SecurityContextHolder.clearContext();
+
+        ra.addFlashAttribute("success", "Đăng xuất thành công!");
+        return "redirect:/"; // Quay về trang chủ
+    }
 }

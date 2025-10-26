@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -41,11 +42,13 @@ public class SecurityConfig {
         this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
     }
 
+    // ---------------- PASSWORD ENCODER ----------------
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // ---------------- AUTH PROVIDER ----------------
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -54,53 +57,81 @@ public class SecurityConfig {
         return provider;
     }
 
+    // ---------------- AUTH MANAGER ----------------
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    // ---------------- SESSION REGISTRY ----------------
     @Bean
     public SessionRegistry sessionRegistry() {
         return new SessionRegistryImpl();
     }
 
+    // ---------------- SECURITY FILTER CHAIN ----------------
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                // 🔓 Phân quyền truy cập
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/", "/home",
                                 "/auth/**",
-                                "/login",
+                                "/oauth2/**",
+                                "/login", "/register",
                                 "/css/**", "/js/**", "/images/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
+
+                // 🧩 Cấu hình form login (username/password)
                 .formLogin(form -> form
-                        .loginPage("/auth/login")       // ✅ Trang hiển thị login.html
-                        .loginProcessingUrl("/login")   // ✅ Form submit POST /login
-                        .defaultSuccessUrl("/", true)
+                        .loginPage("/auth/login")              // Trang login
+                        .loginProcessingUrl("/login")          // Form submit
+                        .defaultSuccessUrl("/", true)          // Redirect sau login
                         .failureUrl("/auth/login?error=true")
-                        .permitAll()                    // ✅ Cho phép hiển thị trang login
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/auth/logout")
-                        .logoutSuccessUrl("/auth/login?logout=true")
                         .permitAll()
                 )
+
+                // 🔐 Cấu hình đăng nhập bằng Google OAuth2
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/auth/login")              // Sử dụng chung login.html
+                        .userInfoEndpoint(user -> user.userService(oAuth2UserService))
+                        .successHandler(oAuth2LoginSuccessHandler)
+                )
+
+                // 🚪 Cấu hình logout
+                .logout(logout -> logout
+                        .logoutUrl("/auth/logout")
+                        .logoutSuccessUrl("/")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll()
+                )
+
+                // ⚙️ Quản lý session
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                );
+                        .maximumSessions(1)
+                        .sessionRegistry(sessionRegistry())
+                )
+
+                // 🧱 Thêm JWT filter trước UsernamePasswordAuthenticationFilter
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    // ---------------- CORS CONFIG ----------------
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.setAllowedOriginPatterns(Arrays.asList("*"));
-        cfg.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
+        cfg.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(Arrays.asList("*"));
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
