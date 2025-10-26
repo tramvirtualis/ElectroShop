@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::content})}">
+<body>
+    <div th:fragment="content">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/categories">Danh mục</a></li>
+                <li class="breadcrumb-item active">Chỉnh sửa</li>
+            </ol>
+        </nav>
+
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-6">
+                    <i class="fas fa-edit text-primary"></i>
+                    Chỉnh sửa danh mục
+                </h1>
+                <p class="text-muted">Cập nhật thông tin danh mục: <strong th:text="${category.categoryName}"></strong></p>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <form th:action="@{/categories/update/{id}(id=${category.categoryID})}" th:object="${category}" method="post">
+                            <!-- Category Name -->
+                            <div class="mb-3">
+                                <label for="categoryName" class="form-label">
+                                    <i class="fas fa-tag"></i> Tên danh mục <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="categoryName" th:field="*{categoryName}" 
+                                       placeholder="Ví dụ: Điện thoại, Laptop, Phụ kiện..." required>
+                                <div class="form-text">Tên danh mục sẽ hiển thị trong danh sách sản phẩm</div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Cập nhật danh mục
+                                </button>
+                                <a th:href="@{/categories/{id}(id=${category.categoryID})}" class="btn btn-outline-info">
+                                    <i class="fas fa-eye"></i> Xem chi tiết
+                                </a>
+                                <a href="/categories" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> Hủy
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Info Panel -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle"></i> Thông tin danh mục
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>ID danh mục:</strong><br>
+                            <span class="text-muted" th:text="${category.categoryID}">N/A</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Tên hiện tại:</strong><br>
+                            <span class="category-badge fs-5" th:text="${category.categoryName}">N/A</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Tổng sản phẩm:</strong><br>
+                            <span class="text-primary fs-4" th:text="${categoryService.countProductsInCategory(category.categoryID)}">0</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Sản phẩm đang hoạt động:</strong><br>
+                            <span class="text-success fs-4" th:text="${categoryService.countActiveProductsInCategory(category.categoryID)}">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warning Panel -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle text-warning"></i> Lưu ý
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-info-circle text-info"></i> Thay đổi tên danh mục sẽ ảnh hưởng đến tất cả sản phẩm</li>
+                            <li><i class="fas fa-save text-success"></i> Nhấn "Cập nhật" để lưu thay đổi</li>
+                            <li><i class="fas fa-trash text-danger"></i> Xóa danh mục sẽ xóa tất cả sản phẩm trong đó</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

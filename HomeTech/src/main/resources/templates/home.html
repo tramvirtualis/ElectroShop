@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title ?: 'HomeTech'}">HomeTech</title>
+
+    <!-- Bootstrap & FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body { background-color: #f8f9fa; }
+        .navbar-brand { font-weight: bold; color: #007bff !important; }
+        .card:hover { transform: translateY(-5px); transition: 0.2s; }
+        .product-image { height: 200px; object-fit: cover; }
+        .category-badge {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white; border-radius: 12px;
+            padding: 6px 12px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 🟢 Header -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="/">HomeTech</a>
+        <form class="d-flex" th:action="@{/search}" method="get">
+            <input class="form-control me-2" type="search" name="keyword" placeholder="Tìm kiếm sản phẩm..." required>
+            <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
+        </form>
+    </div>
+</nav>
+
+<div class="container mt-4">
+
+    <!-- 🟣 Danh mục -->
+    <h4 class="mb-3">Danh mục</h4>
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <a th:each="c : ${categories}"
+           th:href="@{'/products/category/' + ${c.categoryID}}"
+           th:text="${c.categoryName}"
+           class="category-badge text-decoration-none"></a>
+    </div>
+
+    <!-- 🔥 Sản phẩm bán chạy -->
+    <h4 class="mb-3">Top 10 Sản phẩm bán chạy</h4>
+    <div class="row">
+        <div class="col-md-3 mb-4" th:each="p : ${topSelling}">
+            <div class="card shadow-sm h-100">
+                <img th:src="${p.imageUrl}" class="card-img-top product-image" th:alt="${p.productName}">
+                <div class="card-body text-center">
+                    <h6 th:text="${p.productName}"></h6>
+                    <p class="text-danger fw-bold" th:text="${#numbers.formatDecimal(p.price, 0, 'COMMA', '.')} + ' VNĐ'"></p>
+                    <a th:href="@{'/products/detail/' + ${p.productID}}" class="btn btn-outline-primary btn-sm">Xem chi tiết</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🆕 Sản phẩm mới -->
+    <h4 class="mb-3 mt-5">Sản phẩm mới</h4>
+    <div class="row">
+        <div class="col-md-3 mb-4" th:each="p : ${newProducts}">
+            <div class="card shadow-sm h-100">
+                <img th:src="${p.imageUrl}" class="card-img-top product-image" th:alt="${p.productName}">
+                <div class="card-body text-center">
+                    <h6 th:text="${p.productName}"></h6>
+                    <p class="text-danger fw-bold" th:text="${#numbers.formatDecimal(p.price, 0, 'COMMA', '.')} + ' VNĐ'"></p>
+                    <a th:href="@{'/products/detail/' + ${p.productID}}" class="btn btn-outline-primary btn-sm">Xem chi tiết</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 🔵 Footer -->
+<footer class="text-center mt-5 py-3 bg-light border-top">
+    <p>© 2025 HomeTech. All rights reserved.</p>
+</footer>
+
+</body>
+</html>

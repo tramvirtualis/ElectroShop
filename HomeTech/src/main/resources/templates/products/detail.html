@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::content})}">
+<body>
+    <div th:fragment="content">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/products">Sản phẩm</a></li>
+                <li class="breadcrumb-item" th:if="${product.category}">
+                    <a th:href="@{/products/category/{id}(id=${product.category.categoryID})}" 
+                       th:text="${product.category.categoryName}">Danh mục</a>
+                </li>
+                <li class="breadcrumb-item active" th:text="${product.productName}">Chi tiết</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <!-- Product Image -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <img th:if="${product.image != null}" 
+                             th:src="'data:image/jpeg;base64,' + ${#strings.replace(#arrays.toString(product.image), '[', '')}"
+                             th:alt="${product.productName}"
+                             class="img-fluid rounded">
+                        <img th:unless="${product.image != null}"
+                             src="https://via.placeholder.com/500x400?text=No+Image"
+                             th:alt="${product.productName}"
+                             class="img-fluid rounded">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h1 class="card-title" th:text="${product.productName}">Tên sản phẩm</h1>
+                        
+                        <!-- Status Badge -->
+                        <div class="mb-3">
+                            <span th:if="${product.status}" 
+                                  class="badge bg-success fs-6">
+                                <i class="fas fa-check"></i> Đang hoạt động
+                            </span>
+                            <span th:unless="${product.status}" 
+                                  class="badge bg-secondary fs-6">
+                                <i class="fas fa-pause"></i> Tạm dừng
+                            </span>
+                        </div>
+
+                        <!-- Category -->
+                        <div class="mb-3" th:if="${product.category}">
+                            <span class="category-badge" th:text="${product.category.categoryName}">Danh mục</span>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="mb-4">
+                            <h2 class="price" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</h2>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <h5>Mô tả sản phẩm</h5>
+                            <p class="text-muted" th:text="${product.description}">Mô tả sản phẩm</p>
+                        </div>
+
+                        <!-- Product Details -->
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <h6><i class="fas fa-palette text-primary"></i> Màu sắc</h6>
+                                <p th:text="${product.color ?: 'N/A'}" class="text-muted">N/A</p>
+                            </div>
+                            <div class="col-6">
+                                <h6><i class="fas fa-expand-arrows-alt text-primary"></i> Kích thước</h6>
+                                <p th:text="${product.size ?: 'N/A'}" class="text-muted">N/A</p>
+                            </div>
+                        </div>
+
+                        <!-- Created Date -->
+                        <div class="mb-4">
+                            <h6><i class="fas fa-calendar text-primary"></i> Ngày tạo</h6>
+                            <p class="text-muted" th:text="${#temporals.format(product.createDate, 'dd/MM/yyyy HH:mm')}">N/A</p>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                            <a th:href="@{/products/edit/{id}(id=${product.productID})}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Chỉnh sửa
+                            </a>
+                            <a th:href="@{/products/delete/{id}(id=${product.productID})}" 
+                               class="btn btn-danger"
+                               onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                <i class="fas fa-trash"></i> Xóa
+                            </a>
+                            <a href="/products" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Info -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle"></i> Thông tin bổ sung
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>ID sản phẩm:</strong><br>
+                                <span class="text-muted" th:text="${product.productID}">N/A</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Trạng thái:</strong><br>
+                                <span th:if="${product.status}" class="text-success">Hoạt động</span>
+                                <span th:unless="${product.status}" class="text-secondary">Tạm dừng</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Danh mục:</strong><br>
+                                <span class="text-muted" th:text="${product.category?.categoryName ?: 'N/A'}">N/A</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Giá:</strong><br>
+                                <span class="text-success fw-bold" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

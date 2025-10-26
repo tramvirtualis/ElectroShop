@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng nhập - HomeTech</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="text-center mb-4 text-primary fw-bold">Đăng nhập</h3>
+
+                    <!-- 🔔 Thông báo -->
+                    <div th:if="${param.error}" class="alert alert-danger text-center">
+                        Sai tên đăng nhập hoặc mật khẩu!
+                    </div>
+                    <div th:if="${param.logout}" class="alert alert-success text-center">
+                        Đăng xuất thành công!
+                    </div>
+                    <div th:if="${successMessage}" class="alert alert-success text-center"
+                         th:text="${successMessage}"></div>
+                    <div th:if="${errorMessage}" class="alert alert-danger text-center"
+                         th:text="${errorMessage}"></div>
+
+                    <!-- ✅ Form đăng nhập -->
+                    <form th:action="@{/login}" method="post">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Tên đăng nhập hoặc Email</label>
+                            <input id="username" name="username" type="text" class="form-control"
+                                   placeholder="Nhập tên đăng nhập hoặc email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mật khẩu</label>
+                            <input id="password" name="password" type="password"
+                                   class="form-control" placeholder="Nhập mật khẩu" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">Đăng nhập</button>
+                    </form>
+
+                    <!-- 🔗 Liên kết -->
+                    <div class="text-center mt-3">
+                        <a th:href="@{/auth/forgot-password}" class="text-decoration-none d-block mb-1">
+                            Quên mật khẩu?
+                        </a>
+                        <a th:href="@{/auth/register}" class="text-decoration-none">
+                            Chưa có tài khoản? <strong>Đăng ký ngay</strong>
+                        </a>
+                    </div>
+
+                    <hr>
+
+                    <!-- 🔵 Login Google -->
+                    <div class="mt-3">
+                        <a th:href="@{/auth/google}" class="btn btn-outline-danger w-100">
+                            <i class="fab fa-google"></i> Đăng nhập bằng Google
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -76,7 +76,7 @@ public class TokenForgetPassword {
         this.account = account;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public LocalDateTime getCreatedDate() {
         return createdAt;
     }
 

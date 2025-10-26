@@ -1,4 +1,4 @@
-package com.hometech.hometech.controller;
+package com.hometech.hometech.controller.Api;
 
 import com.hometech.hometech.service.AuthService;
 import jakarta.mail.MessagingException;

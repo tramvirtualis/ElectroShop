@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::content})}">
+<body>
+    <div th:fragment="content">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/categories">Danh mục</a></li>
+                <li class="breadcrumb-item active" th:text="${category.categoryName}">Chi tiết</li>
+            </ol>
+        </nav>
+
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h1 class="display-6">
+                    <i class="fas fa-tag text-primary"></i>
+                    <span th:text="${category.categoryName}">Tên danh mục</span>
+                </h1>
+                <p class="text-muted">Thông tin chi tiết và sản phẩm trong danh mục này</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="btn-group" role="group">
+                    <a th:href="@{/categories/edit/{id}(id=${category.categoryID})}" 
+                       class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Chỉnh sửa
+                    </a>
+                    <a th:href="@{/categories/delete/{id}(id=${category.categoryID})}" 
+                       class="btn btn-danger"
+                       onclick="return confirm('Bạn có chắc muốn xóa danh mục này?')">
+                        <i class="fas fa-trash"></i> Xóa
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Category Info -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle"></i> Thông tin danh mục
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>ID danh mục:</strong><br>
+                            <span class="text-muted" th:text="${category.categoryID}">N/A</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Tên danh mục:</strong><br>
+                            <span class="category-badge fs-5" th:text="${category.categoryName}">N/A</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Tổng sản phẩm:</strong><br>
+                            <span class="text-primary fs-4" th:text="${totalProducts}">0</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Sản phẩm đang hoạt động:</strong><br>
+                            <span class="text-success fs-4" th:text="${activeProductsCount}">0</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Sản phẩm tạm dừng:</strong><br>
+                            <span class="text-warning fs-4" th:text="${totalProducts - activeProductsCount}">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt"></i> Thao tác nhanh
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a th:href="@{/categories/{id}/products(id=${category.categoryID})}" 
+                               class="btn btn-outline-primary">
+                                <i class="fas fa-box"></i> Xem tất cả sản phẩm
+                            </a>
+                            <a th:href="@{/categories/{id}/products/active(id=${category.categoryID})}" 
+                               class="btn btn-outline-success">
+                                <i class="fas fa-check-circle"></i> Sản phẩm đang hoạt động
+                            </a>
+                            <a th:href="@{/products/new}" class="btn btn-outline-info">
+                                <i class="fas fa-plus"></i> Thêm sản phẩm vào danh mục
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products List -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-box"></i> Sản phẩm trong danh mục
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Products Grid -->
+                        <div class="row" th:if="${products != null and !products.empty}">
+                            <div class="col-md-6 mb-3" th:each="product : ${products}">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title" th:text="${product.productName}">Tên sản phẩm</h6>
+                                        <p class="card-text">
+                                            <small class="text-muted">
+                                                <i class="fas fa-dollar-sign"></i> 
+                                                <span th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</span>
+                                            </small>
+                                        </p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span th:if="${product.status}" 
+                                                  class="badge bg-success">Hoạt động</span>
+                                            <span th:unless="${product.status}" 
+                                                  class="badge bg-secondary">Tạm dừng</span>
+                                            <a th:href="@{/products/{id}(id=${product.productID})}" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div class="text-center py-4" th:if="${products == null or products.empty}">
+                            <i class="fas fa-box-open fa-2x text-muted mb-3"></i>
+                            <h6 class="text-muted">Chưa có sản phẩm nào trong danh mục này</h6>
+                            <a th:href="@{/products/new}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> Thêm sản phẩm đầu tiên
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Products -->
+                <div class="card mt-3" th:if="${activeProducts != null and !activeProducts.empty}">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-check-circle text-success"></i> Sản phẩm đang hoạt động
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-2" th:each="product : ${activeProducts}">
+                                <div class="d-flex justify-content-between align-items-center p-2 border rounded">
+                                    <div>
+                                        <strong th:text="${product.productName}">Tên sản phẩm</strong><br>
+                                        <small class="text-success">
+                                            <span th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</span>
+                                        </small>
+                                    </div>
+                                    <a th:href="@{/products/{id}(id=${product.productID})}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

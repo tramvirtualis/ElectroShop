@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::content})}">
+<body>
+    <div th:fragment="content">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h1 class="display-6">
+                    <i class="fas fa-tags text-primary"></i>
+                    Danh mục sản phẩm
+                </h1>
+                <p class="text-muted">Quản lý các danh mục sản phẩm trong hệ thống</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="/categories/new" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Thêm danh mục
+                </a>
+            </div>
+        </div>
+
+        <!-- Categories Grid -->
+        <div class="row" th:if="${categories != null and !categories.empty}">
+            <div class="col-lg-4 col-md-6 mb-4" th:each="category : ${categories}">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <!-- Category Info -->
+                        <div class="text-center mb-3">
+                            <div class="category-badge fs-4 mb-2" th:text="${category.categoryName}">Tên danh mục</div>
+                            <small class="text-muted">ID: <span th:text="${category.categoryID}"></span></small>
+                        </div>
+
+                        <!-- Products Count -->
+                        <div class="row text-center mb-3">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h5 class="text-primary mb-0" th:text="${categoryService.countProductsInCategory(category.categoryID)}">0</h5>
+                                    <small class="text-muted">Tổng sản phẩm</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h5 class="text-success mb-0" th:text="${categoryService.countActiveProductsInCategory(category.categoryID)}">0</h5>
+                                <small class="text-muted">Đang hoạt động</small>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="mt-auto">
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/categories/{id}(id=${category.categoryID})}" 
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-eye"></i> Xem chi tiết
+                                </a>
+                                <div class="btn-group" role="group">
+                                    <a th:href="@{/categories/{id}/products(id=${category.categoryID})}" 
+                                       class="btn btn-outline-info btn-sm">
+                                        <i class="fas fa-box"></i> Sản phẩm
+                                    </a>
+                                    <a th:href="@{/categories/edit/{id}(id=${category.categoryID})}" 
+                                       class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-edit"></i> Sửa
+                                    </a>
+                                    <a th:href="@{/categories/delete/{id}(id=${category.categoryID})}" 
+                                       class="btn btn-outline-danger btn-sm"
+                                       onclick="return confirm('Bạn có chắc muốn xóa danh mục này?')">
+                                        <i class="fas fa-trash"></i> Xóa
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="row" th:if="${categories == null or categories.empty}">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                    <h3 class="text-muted">Chưa có danh mục nào</h3>
+                    <p class="text-muted">Hãy tạo danh mục đầu tiên để tổ chức sản phẩm!</p>
+                    <a href="/categories/new" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Thêm danh mục
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt"></i> Thao tác nhanh
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <a href="/products" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-box"></i><br>
+                                    <small>Xem tất cả sản phẩm</small>
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/products/new" class="btn btn-outline-success w-100">
+                                    <i class="fas fa-plus"></i><br>
+                                    <small>Thêm sản phẩm mới</small>
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/categories/new" class="btn btn-outline-info w-100">
+                                    <i class="fas fa-tag"></i><br>
+                                    <small>Thêm danh mục mới</small>
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/orders" class="btn btn-outline-warning w-100">
+                                    <i class="fas fa-shopping-bag"></i><br>
+                                    <small>Xem đơn hàng</small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

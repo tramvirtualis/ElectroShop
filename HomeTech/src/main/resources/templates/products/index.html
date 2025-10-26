@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::content})}">
+<body>
+    <div th:fragment="content">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h1 class="display-6">
+                    <i class="fas fa-box text-primary"></i>
+                    <span th:text="${title}">Tất cả sản phẩm</span>
+                </h1>
+                <p class="text-muted">Khám phá các sản phẩm điện tử chất lượng cao</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="/products/new" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Thêm sản phẩm
+                </a>
+            </div>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-filter"></i> Lọc theo danh mục
+                        </h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="/products" class="btn btn-outline-primary">
+                                <i class="fas fa-th"></i> Tất cả
+                            </a>
+                            <a th:each="category : ${categories}" 
+                               th:href="@{/products/category/{id}(id=${category.categoryID})}"
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-tag"></i>
+                                <span th:text="${category.categoryName}"></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="row" th:if="${listProducts != null and !listProducts.empty}">
+            <div class="col-lg-4 col-md-6 mb-4" th:each="product : ${listProducts}">
+                <div class="card h-100 shadow-sm">
+                    <!-- Product Image -->
+                    <div class="position-relative">
+                        <img th:if="${product.image != null}" 
+                             th:src="'data:image/jpeg;base64,' + ${#strings.replace(#arrays.toString(product.image), '[', '')}"
+                             th:alt="${product.productName}"
+                             class="card-img-top product-image">
+                        <img th:unless="${product.image != null}"
+                             src="https://via.placeholder.com/300x200?text=No+Image"
+                             th:alt="${product.productName}"
+                             class="card-img-top product-image">
+                        
+                        <!-- Status Badge -->
+                        <span th:if="${product.status}" 
+                              class="badge bg-success position-absolute top-0 end-0 m-2">
+                            <i class="fas fa-check"></i> Hoạt động
+                        </span>
+                        <span th:unless="${product.status}" 
+                              class="badge bg-secondary position-absolute top-0 end-0 m-2">
+                            <i class="fas fa-pause"></i> Tạm dừng
+                        </span>
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
+                        <!-- Product Info -->
+                        <h5 class="card-title" th:text="${product.productName}">Tên sản phẩm</h5>
+                        
+                        <div class="mb-2">
+                            <span class="category-badge" th:text="${product.category?.categoryName}">Danh mục</span>
+                        </div>
+                        
+                        <p class="card-text text-muted" th:text="${product.description}">Mô tả sản phẩm</p>
+                        
+                        <!-- Product Details -->
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-palette"></i> Màu: <span th:text="${product.color}">N/A</span>
+                            </small><br>
+                            <small class="text-muted">
+                                <i class="fas fa-expand-arrows-alt"></i> Kích thước: <span th:text="${product.size}">N/A</span>
+                            </small>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="price" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</span>
+                                <div class="btn-group" role="group">
+                                    <a th:href="@{/products/{id}(id=${product.productID})}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a th:href="@{/products/edit/{id}(id=${product.productID})}" 
+                                       class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a th:href="@{/products/delete/{id}(id=${product.productID})}" 
+                                       class="btn btn-outline-danger btn-sm"
+                                       onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="row" th:if="${listProducts == null or listProducts.empty}">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <h3 class="text-muted">Không có sản phẩm nào</h3>
+                    <p class="text-muted">Hãy thêm sản phẩm đầu tiên của bạn!</p>
+                    <a href="/products/new" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Thêm sản phẩm
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
