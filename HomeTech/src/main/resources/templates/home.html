@@ -549,34 +549,7 @@
     <p>© 2025 HomeTech. All rights reserved.</p>
 </footer>
 
-<script>
-    // Quick Navigation Button Click Handlers
-    document.addEventListener('DOMContentLoaded', function() {
-        // Find navigation buttons by class or title attribute
-        const cartButton = document.querySelector('a[title*="Giỏ hàng"]');
-        const historyButton = document.querySelector('a[title*="Lịch sử"]');
-        
-        console.log('Cart button found:', cartButton);
-        console.log('History button found:', historyButton);
-        
-        // Add click handlers for navigation
-        if (cartButton) {
-            cartButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Navigating to Cart page');
-                window.location.href = '/cart';
-            });
-        }
-        
-        if (historyButton) {
-            historyButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Navigating to Purchase History page');
-                window.location.href = '/orders/history';
-            });
-        }
-    });
-</script>
+
 
 </body>
 </html>

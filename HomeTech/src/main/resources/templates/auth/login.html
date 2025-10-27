@@ -2,71 +2,314 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - HomeTech</title>
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap & FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f35 25%, #0f1419 100%);
+            min-height: 100vh;
+            font-family: 'Rajdhani', sans-serif;
+            color: #e0e6ed;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(0, 191, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(0, 255, 255, 0.06) 0%, transparent 50%);
+            animation: backgroundFloat 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes backgroundFloat {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, -30px); }
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 450px;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(0, 191, 255, 0.2);
+            border-radius: 25px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 191, 255, 0.3);
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: #6c757d;
+            margin-bottom: 2.5rem;
+            font-size: 1rem;
+        }
+
+        .form-label {
+            color: #00FFFF;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(0, 191, 255, 0.3);
+            border-radius: 15px;
+            color: #e0e6ed;
+            padding: 0.8rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #00BFFF;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 20px rgba(0, 191, 255, 0.3);
+            color: #fff;
+        }
+
+        .form-control::placeholder {
+            color: #6c757d;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
+            color: #0a0e27;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 191, 255, 0.5);
+        }
+
+        .btn-google {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(220, 53, 69, 0.1);
+            border: 2px solid rgba(220, 53, 69, 0.5);
+            color: #dc3545;
+            border-radius: 50px;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+
+        .btn-google:hover {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(220, 53, 69, 0.5);
+        }
+
+        .form-links {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(0, 191, 255, 0.2);
+        }
+
+        .form-links a {
+            color: #00FFFF;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 0.5rem 0;
+        }
+
+        .form-links a:hover {
+            color: #00BFFF;
+            text-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+        }
+
+        .alert {
+            border-radius: 15px;
+            border: 2px solid;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            border-color: rgba(220, 53, 69, 0.5);
+            color: #dc3545;
+        }
+
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            border-color: rgba(40, 167, 69, 0.5);
+            color: #28a745;
+        }
+
+        .back-home {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(0, 191, 255, 0.1);
+            border: 2px solid rgba(0, 191, 255, 0.5);
+            color: #00FFFF;
+            padding: 0.6rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .back-home:hover {
+            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
+            color: #0a0e27;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 1rem;
+            }
+            
+            .login-card {
+                padding: 2rem;
+            }
+            
+            .login-title {
+                font-size: 2rem;
+            }
+            
+            .back-home {
+                position: relative;
+                top: 0;
+                left: 0;
+                margin-bottom: 2rem;
+            }
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <h3 class="text-center mb-4 text-primary fw-bold">Đăng nhập</h3>
+<a href="/" class="back-home">
+    <i class="fas fa-arrow-left"></i> Về trang chủ
+</a>
 
-                    <!-- 🔔 Thông báo -->
-                    <div th:if="${param.error}" class="alert alert-danger text-center">
-                        Sai tên đăng nhập hoặc mật khẩu!
-                    </div>
-                    <div th:if="${param.logout}" class="alert alert-success text-center">
-                        Đăng xuất thành công!
-                    </div>
-                    <div th:if="${successMessage}" class="alert alert-success text-center"
-                         th:text="${successMessage}"></div>
-                    <div th:if="${errorMessage}" class="alert alert-danger text-center"
-                         th:text="${errorMessage}"></div>
+<div class="login-container">
+    <div class="login-card">
+        <h1 class="login-title">Đăng nhập</h1>
+        <p class="login-subtitle">Chào mừng trở lại HomeTech</p>
 
-                    <!-- ✅ Form đăng nhập -->
-                    <form th:action="@{/login}" method="post">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Tên đăng nhập hoặc Email</label>
-                            <input id="username" name="username" type="text" class="form-control"
-                                   placeholder="Nhập tên đăng nhập hoặc email" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Mật khẩu</label>
-                            <input id="password" name="password" type="password"
-                                   class="form-control" placeholder="Nhập mật khẩu" required>
-                        </div>
-
-                        <button type="submit" class="btn btn-success w-100">Đăng nhập</button>
-                    </form>
-
-                    <!-- 🔗 Liên kết -->
-                    <div class="text-center mt-3">
-                        <a th:href="@{/auth/forgot-password}" class="text-decoration-none d-block mb-1">
-                            Quên mật khẩu?
-                        </a>
-                        <a th:href="@{/auth/register}" class="text-decoration-none">
-                            Chưa có tài khoản? <strong>Đăng ký ngay</strong>
-                        </a>
-                    </div>
-
-                    <hr>
-
-                    <!-- 🔵 Login Google -->
-                    <div class="mt-3">
-                        <a th:href="@{/oauth2/authorization/google}" class="btn btn-outline-danger w-100">
-                            <i class="fab fa-google"></i> Đăng nhập bằng Google
-                        </a>
-                    </div>
-                </div>
-            </div>
+        <!-- 🔔 Thông báo -->
+        <div th:if="${param.error}" class="alert alert-danger text-center">
+            <i class="fas fa-exclamation-circle"></i> Sai tên đăng nhập hoặc mật khẩu!
         </div>
+        <div th:if="${param.logout}" class="alert alert-success text-center">
+            <i class="fas fa-check-circle"></i> Đăng xuất thành công!
+        </div>
+        <div th:if="${successMessage}" class="alert alert-success text-center"
+             th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-danger text-center"
+             th:text="${errorMessage}"></div>
+
+        <!-- ✅ Form đăng nhập -->
+        <form th:action="@{/login}" method="post">
+            <div class="mb-3">
+                <label for="username" class="form-label">
+                    <i class="fas fa-user"></i> Tên đăng nhập hoặc Email
+                </label>
+                <input id="username" name="username" type="text" class="form-control"
+                       placeholder="Nhập tên đăng nhập hoặc email" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">
+                    <i class="fas fa-lock"></i> Mật khẩu
+                </label>
+                <input id="password" name="password" type="password"
+                       class="form-control" placeholder="Nhập mật khẩu" required>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-sign-in-alt"></i> Đăng nhập
+            </button>
+        </form>
+
+        <!-- 🔗 Liên kết -->
+        <div class="form-links">
+            <a th:href="@{/auth/forgot-password}">
+                <i class="fas fa-key"></i> Quên mật khẩu?
+            </a>
+            <a th:href="@{/auth/register}">
+                <i class="fas fa-user-plus"></i> Chưa có tài khoản? <strong>Đăng ký ngay</strong>
+            </a>
+        </div>
+
+        <!-- 🔵 Login Google -->
+        <a th:href="@{/oauth2/authorization/google}" class="btn-google">
+            <i class="fab fa-google"></i> Đăng nhập bằng Google
+        </a>
     </div>
 </div>
 
