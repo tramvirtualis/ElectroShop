@@ -98,130 +98,17 @@ public class ProductController {
         return "products/detail"; // trỏ tới templates/products/detail.html
     }
 
-    // 🟢 Endpoint hiển thị ảnh sản phẩm
-    @GetMapping("/image/{id}")
-    @ResponseBody
-    public ResponseEntity<byte[]> getProductImage(@PathVariable int id) {
-        Product product = productService.getById(id);
-        if (product != null && product.getImage() != null) {
-            return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_JPEG)
-                    .body(product.getImage());
-        }
-        return ResponseEntity.notFound().build();
-    }
+//    // 🟢 Endpoint hiển thị ảnh sản phẩm
+//    @GetMapping("/image/{id}")
+//    @ResponseBody
+//    public ResponseEntity<byte[]> getProductImage(@PathVariable int id) {
+//        Product product = productService.getById(id);
+//        if (product != null && product.getImage() != null) {
+//            return ResponseEntity.ok()
+//                    .contentType(MediaType.IMAGE_JPEG)
+//                    .body(product.getImage());
+//        }
+//        return ResponseEntity.notFound().build();
+//    }
 
-    // ---------------------------------------------------------------
-    // 🔸 PHẦN ADMIN (CHỈ QUẢN TRỊ VIÊN SỬ DỤNG)
-    // ---------------------------------------------------------------
-
-    // 🟢 Trang quản trị danh sách sản phẩm
-    @GetMapping("/admin")
-    public String adminProductList(HttpServletRequest request, Model model) {
-        addSessionInfo(request, model);
-        model.addAttribute("listProducts", productService.getAll());
-        model.addAttribute("categories", categoryService.getAll());
-        model.addAttribute("title", "Quản lý sản phẩm");
-        return "admin/products/index"; // ✅ templates/admin/products/index.html
-    }
-
-    // 🟢 Hiển thị form thêm sản phẩm
-    @GetMapping("/admin/new")
-    public String showAddForm(HttpServletRequest request, Model model) {
-        addSessionInfo(request, model);
-        model.addAttribute("product", new Product());
-        model.addAttribute("categories", categoryService.getAll());
-        model.addAttribute("title", "Thêm sản phẩm mới");
-        return "admin/products/add"; // ✅ templates/admin/products/add.html
-    }
-
-    // 🟢 Lưu sản phẩm mới
-    @PostMapping("/admin/add")
-    public String addProduct(@RequestParam("name") String name,
-                             @RequestParam("price") Double price,
-                             @RequestParam("description") String description,
-                             @RequestParam(value = "categoryID", required = false) Integer categoryId,
-                             @RequestParam("image") MultipartFile imageFile,
-                             RedirectAttributes ra) {
-
-        try {
-            Product product = new Product();
-            product.setProductName(name);
-            product.setPrice(price);
-            product.setDescription(description);
-            if (categoryId != null) {
-                product.setCategory(categoryService.getById(categoryId));
-            }
-            if (!imageFile.isEmpty()) {
-                product.setImage(imageFile.getBytes());
-            }
-            productService.save(product);
-            ra.addFlashAttribute("success", "Thêm sản phẩm thành công!");
-        } catch (IOException e) {
-            e.printStackTrace();
-            ra.addFlashAttribute("error", "Lỗi khi tải ảnh lên!");
-        }
-        return "redirect:/products/admin";
-    }
-
-    // 🟢 Form chỉnh sửa sản phẩm
-    @GetMapping("/admin/edit/{id}")
-    public String showEditForm(@PathVariable int id,
-                               HttpServletRequest request,
-                               Model model,
-                               RedirectAttributes ra) {
-        addSessionInfo(request, model);
-        Product product = productService.getById(id);
-        if (product == null) {
-            ra.addFlashAttribute("error", "Không tìm thấy sản phẩm cần sửa!");
-            return "redirect:/products/admin";
-        }
-        model.addAttribute("product", product);
-        model.addAttribute("categories", categoryService.getAll());
-        model.addAttribute("title", "Chỉnh sửa sản phẩm");
-        return "admin/products/edit"; // ✅ templates/admin/products/edit.html
-    }
-
-    // 🟢 Cập nhật sản phẩm (có thể đổi ảnh)
-    @PostMapping("/admin/update/{id}")
-    public String updateProduct(@PathVariable int id,
-                                @RequestParam("name") String name,
-                                @RequestParam("price") Double price,
-                                @RequestParam("description") String description,
-                                @RequestParam(value = "categoryID", required = false) Integer categoryId,
-                                @RequestParam(value = "image", required = false) MultipartFile imageFile,
-                                RedirectAttributes ra) {
-        try {
-            Product existing = productService.getById(id);
-            if (existing == null) {
-                ra.addFlashAttribute("error", "Không tìm thấy sản phẩm!");
-                return "redirect:/products/admin";
-            }
-
-            existing.setProductName(name);
-            existing.setPrice(price);
-            existing.setDescription(description);
-            if (categoryId != null) {
-                existing.setCategory(categoryService.getById(categoryId));
-            }
-            if (imageFile != null && !imageFile.isEmpty()) {
-                existing.setImage(imageFile.getBytes());
-            }
-
-            productService.save(existing);
-            ra.addFlashAttribute("success", "Cập nhật sản phẩm thành công!");
-        } catch (IOException e) {
-            e.printStackTrace();
-            ra.addFlashAttribute("error", "Lỗi khi cập nhật ảnh!");
-        }
-        return "redirect:/products/admin";
-    }
-
-    // 🟢 Xóa sản phẩm
-    @GetMapping("/admin/delete/{id}")
-    public String deleteProduct(@PathVariable int id, RedirectAttributes ra) {
-        productService.delete(id);
-        ra.addFlashAttribute("success", "Xóa sản phẩm thành công!");
-        return "redirect:/products/admin";
-    }
 }
