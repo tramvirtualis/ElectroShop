@@ -62,7 +62,11 @@ public class OrderController {
     public String showHistory(HttpServletRequest request, Model model) {
         addSessionInfo(request, model);
         Long userId = getCurrentUserId();
-        if (userId == null) return "redirect:/auth/login";
+        if (userId == null) {
+            // Return empty history page instead of redirecting
+            model.addAttribute("orders", java.util.Collections.emptyList());
+            return "orders/history";
+        }
         model.addAttribute("orders", service.getOrdersByUserId(userId));
         return "orders/history";
     }

@@ -51,7 +51,12 @@ public class CartController {
     public String viewCart(HttpServletRequest request, Model model) {
         addSessionInfo(request, model);
         Long userId = getCurrentUserId();
-        if (userId == null) return "redirect:/auth/login";
+        if (userId == null) {
+            // Return empty cart page instead of redirecting
+            model.addAttribute("cartItems", java.util.Collections.emptyList());
+            model.addAttribute("totalPrice", 0.0);
+            return "cart";
+        }
 
         model.addAttribute("cartItems", service.getCartItemsByUserId(userId));
         double total = service.getCartItemsByUserId(userId)

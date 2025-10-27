@@ -155,6 +155,9 @@
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
+            cursor: pointer;
+            user-select: none;
+            pointer-events: auto;
         }
 
         .btn-quick-nav:hover {
@@ -282,6 +285,10 @@
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             animation: fadeInUp 0.6s ease-out backwards;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            cursor: pointer;
         }
 
         @keyframes fadeInUp {
@@ -406,6 +413,7 @@
             display: flex;
             gap: 0.5rem;
             flex-wrap: wrap;
+            pointer-events: auto;
         }
 
         /* Responsive */
@@ -455,7 +463,7 @@
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
-        </form>
+            </form>
 
             <div class="d-flex align-items-center gap-2">
                 <span class="user-info" th:if="${currentUser != null}">
@@ -464,15 +472,15 @@
                 
                 <!-- Quick Navigation Buttons -->
                 <div class="quick-nav-buttons" th:if="${currentUser != null}">
-                    <a th:href="@{/cart}" class="btn btn-quick-nav" title="🛒 Giỏ hàng">
+                    <a href="/cart" class="btn btn-quick-nav" title="🛒 Giỏ hàng">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="d-none d-lg-inline">Giỏ hàng</span>
                     </a>
-                    <a th:href="@{/orders/history}" class="btn btn-quick-nav" title="⏱ Lịch sử">
+                    <a href="/orders/history" class="btn btn-quick-nav" title="⏱ Lịch sử">
                         <i class="fas fa-history"></i>
                         <span class="d-none d-lg-inline">Lịch sử</span>
                     </a>
-                    <a th:href="@{/profile}" class="btn btn-quick-nav" title="👤 Thông tin">
+                    <a href="/profile" class="btn btn-quick-nav" title="👤 Thông tin">
                         <i class="fas fa-user"></i>
                         <span class="d-none d-lg-inline">Thông tin</span>
                     </a>
@@ -485,7 +493,6 @@
                     <i class="fas fa-sign-in-alt"></i> Đăng nhập
                 </a>
             </div>
-    </div>
     </div>
 </header>
 
@@ -512,35 +519,41 @@
     <!-- 🔥 Sản phẩm bán chạy -->
     <h2 class="section-title" th:text="${pageTitle != null ? pageTitle : 'Sản phẩm bán chạy'}">Sản phẩm bán chạy</h2>
     <div class="product-grid">
-        <div class="product-card" th:each="p, iterStat : ${topSelling}" th:style="${iterStat.index} < 20 ? 'animation-delay: ' + ${iterStat.index * 0.1} + 's' : 'animation-delay: 2s'">
+        <a th:each="p, iterStat : ${topSelling}" 
+           th:href="@{'/products/' + ${p.productID}}"
+           class="product-card" 
+           th:style="${iterStat.index} < 20 ? 'animation-delay: ' + ${iterStat.index * 0.1} + 's' : 'animation-delay: 2s'">
             <div class="product-image-container">
                 <img th:src="@{'/products/image/' + ${p.productID}}" class="product-image" th:alt="${p.productName}">
             </div>
             <div class="product-info">
                 <h6 class="product-name" th:text="${p.productName}"></h6>
                 <p class="product-price" th:text="${p.price != null ? #numbers.formatCurrency(p.price).replace('$', '') + ' VNĐ' : '0 VNĐ'}"></p>
-                <a th:href="@{'/products/' + ${p.productID}}" class="btn-view-detail">
-                        <i class="fas fa-eye"></i> Xem chi tiết
-                    </a>
+                <span class="btn-view-detail">
+                    <i class="fas fa-eye"></i> Xem chi tiết
+                </span>
             </div>
-        </div>
+        </a>
     </div>
 
     <!-- 🆕 Sản phẩm mới -->
     <h2 class="section-title" th:if="${newProducts != null and !newProducts.isEmpty()}">Sản phẩm mới</h2>
     <div class="product-grid" th:if="${newProducts != null and !newProducts.isEmpty()}">
-        <div class="product-card" th:each="p, iterStat : ${newProducts}" th:style="${iterStat.index} < 20 ? 'animation-delay: ' + (${iterStat.index} + 10) * 0.1 + 's' : 'animation-delay: 2s'">
+        <a th:each="p, iterStat : ${newProducts}" 
+           th:href="@{'/products/' + ${p.productID}}"
+           class="product-card" 
+           th:style="${iterStat.index} < 20 ? 'animation-delay: ' + (${iterStat.index} + 10) * 0.1 + 's' : 'animation-delay: 2s'">
             <div class="product-image-container">
                 <img th:src="@{'/products/image/' + ${p.productID}}" class="product-image" th:alt="${p.productName}">
             </div>
             <div class="product-info">
                 <h6 class="product-name" th:text="${p.productName}"></h6>
                 <p class="product-price" th:text="${p.price != null ? #numbers.formatDecimal(p.price, 1, 0, 2) + ' VNĐ' : '0 VNĐ'}"></p>
-                <a th:href="@{'/products/' + ${p.productID}}" class="btn-view-detail">
-                        <i class="fas fa-eye"></i> Xem chi tiết
-                    </a>
+                <span class="btn-view-detail">
+                    <i class="fas fa-eye"></i> Xem chi tiết
+                </span>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
@@ -549,7 +562,41 @@
     <p>© 2025 HomeTech. All rights reserved.</p>
 </footer>
 
-
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add explicit click handlers for quick navigation buttons
+    const cartBtn = document.querySelector('a[href="/cart"]');
+    const historyBtn = document.querySelector('a[href="/orders/history"]');
+    const profileBtn = document.querySelector('a[href="/profile"]');
+    
+    if (cartBtn) {
+        cartBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Navigating to /cart');
+            window.location.href = '/cart';
+        });
+    }
+    
+    if (historyBtn) {
+        historyBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Navigating to /orders/history');
+            window.location.href = '/orders/history';
+        });
+    }
+    
+    if (profileBtn) {
+        profileBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Navigating to /profile');
+            window.location.href = '/profile';
+        });
+    }
+});
+</script>
 
 </body>
 </html>

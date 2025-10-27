@@ -98,17 +98,17 @@ public class ProductController {
         return "products/detail"; // trỏ tới templates/products/detail.html
     }
 
-//    // 🟢 Endpoint hiển thị ảnh sản phẩm
-//    @GetMapping("/image/{id}")
-//    @ResponseBody
-//    public ResponseEntity<byte[]> getProductImage(@PathVariable int id) {
-//        Product product = productService.getById(id);
-//        if (product != null && product.getImage() != null) {
-//            return ResponseEntity.ok()
-//                    .contentType(MediaType.IMAGE_JPEG)
-//                    .body(product.getImage());
-//        }
-//        return ResponseEntity.notFound().build();
-//    }
+    // 🟢 Endpoint hiển thị ảnh sản phẩm
+    @GetMapping("/image/{id}")
+    @ResponseBody
+    public ResponseEntity<byte[]> getProductImage(@PathVariable int id) {
+        Product product = productService.getById(id);
+        if (product != null && product.getImage() != null) {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(product.getImage());
+        }
+        return ResponseEntity.notFound().build();
+    }
 
 }
