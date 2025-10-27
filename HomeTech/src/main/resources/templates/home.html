@@ -472,15 +472,19 @@
                 
                 <!-- Quick Navigation Buttons -->
                 <div class="quick-nav-buttons" th:if="${currentUser != null}">
-                    <a href="/cart" class="btn btn-quick-nav" title="🛒 Giỏ hàng">
+                    <a th:href="@{/cart}" class="btn btn-quick-nav" title="🛒 Giỏ hàng">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="d-none d-lg-inline">Giỏ hàng</span>
                     </a>
-                    <a href="/orders/history" class="btn btn-quick-nav" title="⏱ Lịch sử">
+                    <a th:href="@{/orders/index}" class="btn btn-quick-nav" title="📦 Đơn hàng">
+                        <i class="fas fa-box"></i>
+                        <span class="d-none d-lg-inline">Đơn hàng</span>
+                    </a>
+                    <a th:href="@{/orders/history}" class="btn btn-quick-nav" title="⏱ Lịch sử">
                         <i class="fas fa-history"></i>
                         <span class="d-none d-lg-inline">Lịch sử</span>
                     </a>
-                    <a href="/profile" class="btn btn-quick-nav" title="👤 Thông tin">
+                    <a th:href="@{/profile}" class="btn btn-quick-nav" title="👤 Thông tin">
                         <i class="fas fa-user"></i>
                         <span class="d-none d-lg-inline">Thông tin</span>
                     </a>
@@ -564,37 +568,8 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Add explicit click handlers for quick navigation buttons
-    const cartBtn = document.querySelector('a[href="/cart"]');
-    const historyBtn = document.querySelector('a[href="/orders/history"]');
-    const profileBtn = document.querySelector('a[href="/profile"]');
-    
-    if (cartBtn) {
-        cartBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Navigating to /cart');
-            window.location.href = '/cart';
-        });
-    }
-    
-    if (historyBtn) {
-        historyBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Navigating to /orders/history');
-            window.location.href = '/orders/history';
-        });
-    }
-    
-    if (profileBtn) {
-        profileBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Navigating to /profile');
-            window.location.href = '/profile';
-        });
-    }
+    // Navigation buttons now use Thymeleaf th:href for proper server-side routing
+    console.log('Home page loaded successfully');
 });
 </script>
 

@@ -49,15 +49,6 @@ public class OrderController {
         return null;
     }
 
-    @GetMapping
-    public String listOrders(HttpServletRequest request, Model model) {
-        addSessionInfo(request, model);
-        Long userId = getCurrentUserId();
-        if (userId == null) return "redirect:/auth/login";
-        model.addAttribute("orders", service.getOrdersByUserId(userId));
-        return "orders/index";
-    }
-
     @GetMapping("/history")
     public String showHistory(HttpServletRequest request, Model model) {
         addSessionInfo(request, model);
@@ -83,6 +74,19 @@ public class OrderController {
         model.addAttribute("currentStatus", status);
         model.addAttribute("statuses", OrderStatus.values());
         return "orders/status";
+    }
+
+    @GetMapping({"/", "/index"})
+    public String listOrders(HttpServletRequest request, Model model) {
+        addSessionInfo(request, model);
+        Long userId = getCurrentUserId();
+        if (userId == null) {
+            // Return empty orders page instead of redirecting
+            model.addAttribute("orders", java.util.Collections.emptyList());
+            return "orders/index";
+        }
+        model.addAttribute("orders", service.getOrdersByUserId(userId));
+        return "orders/index";
     }
 
     @GetMapping("/{id}")

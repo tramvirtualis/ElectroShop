@@ -89,6 +89,10 @@
             border-radius: 20px;
             padding: 2rem;
             transition: all 0.4s ease;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
         }
 
         .timeline-item:hover {
@@ -195,80 +199,39 @@
 
 <div class="container">
     <div class="timeline">
-        <!-- History Item 1 -->
-        <div class="timeline-item">
+        <!-- Dynamic Order History Items -->
+        <a th:each="order : ${orders}" 
+           th:href="@{'/orders/' + ${order.orderId}}"
+           class="timeline-item">
             <div class="history-date">
-                <i class="fas fa-calendar-alt"></i> September 15, 2025
+                <i class="fas fa-calendar-alt"></i> 
+                <span th:text="${#temporals.format(order.orderDate, 'MMMM dd, yyyy')}">September 15, 2025</span>
             </div>
-            <h5 class="mb-3">Order #12341</h5>
-            <div class="history-products">
-                <div class="history-product">
-                    <img src="/products/image/1" alt="Product">
+            <h5 class="mb-3">Order #<span th:text="${order.orderId}">12341</span></h5>
+            
+            <div class="history-products" th:if="${order.orderItems != null and !order.orderItems.empty}">
+                <div class="history-product" th:each="item : ${order.orderItems}">
+                    <img th:src="@{'/products/image/' + ${item.product.productID}}" th:alt="${item.product.productName}">
                     <div class="mt-2">
-                        <small style="font-weight: 600;">iPhone 15</small>
+                        <small style="font-weight: 600;" th:text="${item.product.productName}">Product Name</small>
                         <br>
-                        <small class="text-muted">x1</small>
-                    </div>
-                </div>
-                <div class="history-product">
-                    <img src="/products/image/2" alt="Product">
-                    <div class="mt-2">
-                        <small style="font-weight: 600;">Samsung S24</small>
-                        <br>
-                        <small class="text-muted">x1</small>
+                        <small class="text-muted">x<span th:text="${item.quantity}">1</span></small>
                     </div>
                 </div>
             </div>
+            
             <div class="history-total">
-                Total: 54,980,000 ₫
+                Total: <span th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">54,980,000 ₫</span>
             </div>
-        </div>
-
-        <!-- History Item 2 -->
-        <div class="timeline-item">
-            <div class="history-date">
-                <i class="fas fa-calendar-alt"></i> August 28, 2025
+            
+            <div class="mt-3">
+                <span class="badge bg-primary" th:text="${order.orderStatus}">Completed</span>
             </div>
-            <h5 class="mb-3">Order #12340</h5>
-            <div class="history-products">
-                <div class="history-product">
-                    <img src="/products/image/3" alt="Product">
-                    <div class="mt-2">
-                        <small style="font-weight: 600;">MacBook Pro</small>
-                        <br>
-                        <small class="text-muted">x1</small>
-                    </div>
-                </div>
-            </div>
-            <div class="history-total">
-                Total: 45,990,000 ₫
-            </div>
-        </div>
-
-        <!-- History Item 3 -->
-        <div class="timeline-item">
-            <div class="history-date">
-                <i class="fas fa-calendar-alt"></i> July 10, 2025
-            </div>
-            <h5 class="mb-3">Order #12339</h5>
-            <div class="history-products">
-                <div class="history-product">
-                    <img src="/products/image/4" alt="Product">
-                    <div class="mt-2">
-                        <small style="font-weight: 600;">AirPods Pro</small>
-                        <br>
-                        <small class="text-muted">x2</small>
-                    </div>
-                </div>
-            </div>
-            <div class="history-total">
-                Total: 15,980,000 ₫
-            </div>
-        </div>
+        </a>
     </div>
 
     <!-- Empty State -->
-    <div class="empty-history d-none">
+    <div class="empty-history" th:if="${orders == null or orders.empty}">
         <div class="empty-icon">
             <i class="fas fa-history"></i>
         </div>
@@ -282,4 +245,3 @@
 
 </body>
 </html>
-
