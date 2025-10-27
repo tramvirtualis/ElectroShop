@@ -58,6 +58,15 @@ public class OrderController {
         return "orders/index";
     }
 
+    @GetMapping("/history")
+    public String showHistory(HttpServletRequest request, Model model) {
+        addSessionInfo(request, model);
+        Long userId = getCurrentUserId();
+        if (userId == null) return "redirect:/auth/login";
+        model.addAttribute("orders", service.getOrdersByUserId(userId));
+        return "orders/history";
+    }
+
     @GetMapping("/status/{status}")
     public String listOrdersByStatus(@PathVariable OrderStatus status,
                                      HttpServletRequest request,

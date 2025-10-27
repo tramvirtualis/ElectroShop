@@ -139,3 +139,4 @@ The application includes comprehensive logging:
 3. Ensure database `HomeTech` exists
 4. Check firewall/port 3306 access
 
+

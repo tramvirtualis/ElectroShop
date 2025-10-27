@@ -35,6 +35,13 @@ public class ProfileController {
         }
     }
 
+    // 🟢 Hiển thị trang profile (without userId)
+    @GetMapping
+    public String showProfile(HttpServletRequest request, Model model) {
+        addSessionInfo(request, model);
+        return "profile";
+    }
+
     // 🟢 Hiển thị form cập nhật thông tin cá nhân
     @GetMapping("/{userId}")
     public String showProfileForm(@PathVariable Long userId,

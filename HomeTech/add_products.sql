@@ -23,3 +23,4 @@ INSERT INTO products (product_name, price, description, categoryID, sold_count, 
 ('Samsung Galaxy Watch 6', 6990000, 'Galaxy Watch 6 với Wear OS', 4, 80, 1, 'Graphite', 0, NOW()),
 ('Google Pixel Watch 2', 7990000, 'Pixel Watch 2 với Fitbit', 4, 60, 1, 'Obsidian', 0, NOW()),
 ('Garmin Venu 3', 8990000, 'Garmin Venu 3 fitness watch', 4, 50, 1, 'Graphite', 0, NOW());
+

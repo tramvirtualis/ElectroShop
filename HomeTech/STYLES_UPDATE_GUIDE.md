@@ -180,3 +180,4 @@ After applying the theme to each page:
 3. Lazy load heavy animations
 4. Compress images for faster loading
 
+

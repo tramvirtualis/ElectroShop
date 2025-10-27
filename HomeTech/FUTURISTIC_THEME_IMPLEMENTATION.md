@@ -202,3 +202,4 @@ Reference files created:
 4. **Preserve Thymeleaf** - Don't change `th:*` attributes
 5. **Use the classes** - Leverage existing CSS rather than writing custom styles
 
+

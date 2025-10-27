@@ -31,3 +31,4 @@ LEFT JOIN categories c ON p.categoryID = c.categoryID
 ORDER BY p.sold_count DESC
 LIMIT 10;
 
+

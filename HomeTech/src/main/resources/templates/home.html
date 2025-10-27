@@ -142,6 +142,29 @@
             box-shadow: 0 5px 20px rgba(0, 191, 255, 0.5);
         }
 
+        .btn-quick-nav {
+            border: 1px solid rgba(0, 191, 255, 0.5);
+            border-radius: 20px;
+            padding: 0.4rem 0.9rem;
+            color: #00FFFF;
+            background: rgba(0, 191, 255, 0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-quick-nav:hover {
+            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
+            color: #0a0e27;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 191, 255, 0.5);
+        }
+
         .btn-logout {
             border-color: rgba(255, 77, 77, 0.5);
             color: #ff6b6b;
@@ -378,6 +401,13 @@
             font-size: 0.9rem;
         }
 
+        /* Quick Navigation Styles */
+        .quick-nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .section-title {
@@ -392,6 +422,20 @@
             .category-pill {
                 padding: 0.6rem 1.5rem;
                 font-size: 0.9rem;
+            }
+
+            .quick-nav-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn-quick-nav {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .premium-header .d-flex {
+                flex-direction: column;
             }
         }
     </style>
@@ -416,14 +460,31 @@
             <div class="d-flex align-items-center gap-2">
                 <span class="user-info" th:if="${currentUser != null}">
                     Xin chào, <span th:text="${currentUser}">User</span>
-            </span>
+                </span>
+                
+                <!-- Quick Navigation Buttons -->
+                <div class="quick-nav-buttons" th:if="${currentUser != null}">
+                    <a th:href="@{/cart}" class="btn btn-quick-nav" title="🛒 Giỏ hàng">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="d-none d-lg-inline">Giỏ hàng</span>
+                    </a>
+                    <a th:href="@{/orders/history}" class="btn btn-quick-nav" title="⏱ Lịch sử">
+                        <i class="fas fa-history"></i>
+                        <span class="d-none d-lg-inline">Lịch sử</span>
+                    </a>
+                    <a th:href="@{/profile}" class="btn btn-quick-nav" title="👤 Thông tin">
+                        <i class="fas fa-user"></i>
+                        <span class="d-none d-lg-inline">Thông tin</span>
+                    </a>
+                </div>
+                
                 <a th:if="${currentUser != null}" th:href="@{/auth/logout}" class="btn btn-premium btn-logout">
-                <i class="fas fa-sign-out-alt"></i> Đăng xuất
-            </a>
+                    <i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span>
+                </a>
                 <a th:if="${currentUser == null}" th:href="@{/auth/login}" class="btn btn-premium">
-                <i class="fas fa-sign-in-alt"></i> Đăng nhập
-            </a>
-        </div>
+                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                </a>
+            </div>
     </div>
     </div>
 </header>
@@ -487,6 +548,35 @@
 <footer class="premium-footer">
     <p>© 2025 HomeTech. All rights reserved.</p>
 </footer>
+
+<script>
+    // Quick Navigation Button Click Handlers
+    document.addEventListener('DOMContentLoaded', function() {
+        // Find navigation buttons by class or title attribute
+        const cartButton = document.querySelector('a[title*="Giỏ hàng"]');
+        const historyButton = document.querySelector('a[title*="Lịch sử"]');
+        
+        console.log('Cart button found:', cartButton);
+        console.log('History button found:', historyButton);
+        
+        // Add click handlers for navigation
+        if (cartButton) {
+            cartButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Navigating to Cart page');
+                window.location.href = '/cart';
+            });
+        }
+        
+        if (historyButton) {
+            historyButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Navigating to Purchase History page');
+                window.location.href = '/orders/history';
+            });
+        }
+    });
+</script>
 
 </body>
 </html>

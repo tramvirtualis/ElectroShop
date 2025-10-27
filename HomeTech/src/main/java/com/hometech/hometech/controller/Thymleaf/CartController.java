@@ -59,7 +59,7 @@ public class CartController {
                 .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
                 .sum();
         model.addAttribute("totalPrice", total);
-        return "cart/index";
+        return "cart";
     }
 
     @PostMapping("/add")
