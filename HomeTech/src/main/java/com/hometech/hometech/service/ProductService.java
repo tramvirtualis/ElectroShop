@@ -93,4 +93,9 @@ public class ProductService {
     public List<Product> getTop10BestSellingProducts() {
         return productRepository.findTop10ByOrderBySoldCountDesc();
     }
+
+    // 🟢 Lấy top 10 sản phẩm bán chạy nhất theo tên danh mục
+    public List<Product> getTop10BestSellingProductsByCategory(String categoryName) {
+        return productRepository.findTop10ByCategory_CategoryNameOrderBySoldCountDesc(categoryName);
+    }
 }

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - HomeTech</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .product { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+        .category { margin: 5px 0; padding: 5px; background: #e0e0e0; }
+    </style>
+</head>
+<body>
+    <h1>HomeTech Database Debug</h1>
+    
+    <div class="section">
+        <h2>All Products (<span th:text="${#lists.size(allProducts)}">0</span>)</h2>
+        <div th:each="product : ${allProducts}" class="product">
+            <strong th:text="${product.productName}">Product Name</strong> - 
+            ID: <span th:text="${product.productID}">0</span> - 
+            Sold Count: <span th:text="${product.soldCount}">0</span> - 
+            Category: <span th:text="${product.category != null ? product.category.categoryName : 'NULL'}">NULL</span>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Top 10 Products (<span th:text="${#lists.size(top10Products)}">0</span>)</h2>
+        <div th:each="product : ${top10Products}" class="product">
+            <strong th:text="${product.productName}">Product Name</strong> - 
+            ID: <span th:text="${product.productID}">0</span> - 
+            Sold Count: <span th:text="${product.soldCount}">0</span> - 
+            Category: <span th:text="${product.category != null ? product.category.categoryName : 'NULL'}">NULL</span>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Categories (<span th:text="${#lists.size(categories)}">0</span>)</h2>
+        <div th:each="category : ${categories}" class="category">
+            ID: <span th:text="${category.categoryID}">0</span> - 
+            Name: <span th:text="${category.categoryName}">Category Name</span>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Database Query Test</h2>
+        <p>Run these queries in your MySQL database:</p>
+        <pre>
+-- Test main query
+SELECT productid, product_name, sold_count, categoryID 
+FROM products 
+ORDER BY sold_count DESC 
+LIMIT 10;
+
+-- Test category query
+SELECT p.productid, p.product_name, p.sold_count, c.category_name
+FROM products p 
+JOIN categories c ON p.categoryID = c.categoryID 
+WHERE c.category_name = 'Smartphone'
+ORDER BY p.sold_count DESC 
+LIMIT 10;
+        </pre>
+    </div>
+</body>
+</html>
+
