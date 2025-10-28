@@ -19,8 +19,9 @@
             font-family: 'Rajdhani', sans-serif;
             color: #e0e6ed;
             padding: 2rem;
+            padding-top: 140px; /* Space for fixed header */
         }
-
+        
         .page-title {
             font-family: 'Orbitron', sans-serif;
             font-size: 2.5rem;
@@ -83,7 +84,7 @@
         <div class="order-card" th:each="order : ${orders}">
             <div class="order-id">
                 Order #<span th:text="${order.orderId}">12345</span>
-            </div>
+                </div>
             <p>Status: <span th:text="${order.orderStatus}">Status</span></p>
             <p>Date: <span th:text="${order.orderDate}">Date</span></p>
             <p>Total: <span th:text="${order.totalPrice}">0</span> ₫</p>
@@ -107,8 +108,8 @@
         <a th:href="@{/}" class="btn-back">
             <i class="fas fa-arrow-left"></i> Back to Home
         </a>
+        </div>
     </div>
-</div>
 
 </body>
 </html>

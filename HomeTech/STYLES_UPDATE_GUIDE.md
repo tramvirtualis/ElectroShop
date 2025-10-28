@@ -181,3 +181,5 @@ After applying the theme to each page:
 4. Compress images for faster loading
 
 
+
+

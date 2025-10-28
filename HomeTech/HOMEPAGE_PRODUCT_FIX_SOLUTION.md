@@ -140,3 +140,5 @@ The application includes comprehensive logging:
 4. Check firewall/port 3306 access
 
 
+
+

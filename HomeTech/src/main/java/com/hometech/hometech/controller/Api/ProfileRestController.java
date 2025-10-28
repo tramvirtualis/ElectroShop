@@ -1,7 +1,7 @@
 package com.hometech.hometech.controller.Api;
 
 import com.hometech.hometech.dto.UpdateProfileDTO;
-import com.hometech.hometech.model.Customer;
+import com.hometech.hometech.model.User;
 import com.hometech.hometech.service.ProfileService;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +16,7 @@ public class ProfileRestController {
     }
 
     @PutMapping("/{userId}")
-    public Customer updateOrCreateProfile(@PathVariable Long userId, @RequestBody UpdateProfileDTO dto) {
+    public User updateOrCreateProfile(@PathVariable Long userId, @RequestBody UpdateProfileDTO dto) {
         return profileService.updateOrCreateProfile(userId, dto);
     }
 }
