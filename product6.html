@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${product.productName + ' - HomeTech'}">Product Detail - HomeTech</title>
+    <title>Samsung Galaxy S24 - HomeTech</title>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -515,6 +515,8 @@
         }
     }
 </script>
+<!-- top script intentionally left empty: cart functions are defined in the main script at the end
+     to avoid duplicate definitions and ensure consistent scoping. -->
 
 <!-- Header -->
 <header class="premium-header">
@@ -543,30 +545,26 @@
     <div class="product-container">
         <!-- Left: Product Image -->
         <div class="product-image-section">
-                        <img th:if="${product.image != null}" 
-                 th:src="@{'/products/image/' + ${product.productID}}"
-                             th:alt="${product.productName}"
-                 class="product-image-large">
-                        <img th:unless="${product.image != null}"
-                 src="https://via.placeholder.com/500x500?text=No+Image"
-                             th:alt="${product.productName}"
+                        
+                        <img src="https://via.placeholder.com/500x500?text=No+Image"
+                             alt="Samsung Galaxy S24"
                  class="product-image-large">
         </div>
 
         <!-- Right: Product Info -->
         <div class="product-info-section">
-            <h1 class="product-title" th:text="${product.productName}">Tên sản phẩm</h1>
-            <div class="product-price-large" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</div>
+            <h1 class="product-title">Samsung Galaxy S24</h1>
+            <div class="product-price-large">900 VNĐ</div>
 
             <!-- Specifications -->
-            <div class="spec-grid" th:if="${product.color != null or product.size != null}">
-                <div class="spec-item" th:if="${product.color != null}">
+            <div class="spec-grid">
+                <div class="spec-item">
                     <div class="spec-label">Màu sắc</div>
-                    <div class="spec-value" th:text="${product.color}">N/A</div>
+                    <div class="spec-value">Titanium Gray</div>
                 </div>
-                <div class="spec-item" th:if="${product.size != null}">
+                <div class="spec-item">
                     <div class="spec-label">Kích thước</div>
-                    <div class="spec-value" th:text="${product.size}">N/A</div>
+                    <div class="spec-value">256</div>
                 </div>
             </div>
 
@@ -589,9 +587,7 @@
     <!-- Description Section -->
     <div class="description-section">
         <h2 class="description-title">Mô tả sản phẩm</h2>
-        <div class="description-text" th:if="${product.description != null}" th:text="${product.description}">
-            Mô tả sản phẩm chi tiết...
-        </div>
+        <div class="description-text">Premium Android smartphone with AI-powered features</div>
                         </div>
 
                         </div>
@@ -607,17 +603,13 @@
                         </div>
 
         <div class="popup-product-info">
-            <img th:if="${product.image != null}" 
-                 th:src="@{'/products/image/' + ${product.productID}}"
-                 th:alt="${product.productName}"
-                 class="popup-image">
-            <img th:unless="${product.image != null}"
-                 src="https://via.placeholder.com/80x80?text=No+Image"
-                 th:alt="${product.productName}"
+            
+            <img src="https://via.placeholder.com/80x80?text=No+Image"
+                 alt="Samsung Galaxy S24"
                  class="popup-image">
             <div class="popup-info">
-                <div class="popup-product-name" th:text="${product.productName}">Product Name</div>
-                <div class="popup-product-price" id="popupPrice" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</div>
+                <div class="popup-product-name">Samsung Galaxy S24</div>
+                <div class="popup-product-price" id="popupPrice">900 VNĐ</div>
             </div>
                         </div>
 
@@ -647,92 +639,7 @@
         </div>
 
 <!-- Hidden Add-To-Cart Form -->
-<form id="addToCartForm" th:action="@{/cart/add}" method="post" style="display:none;">
-    <input type="hidden" name="productId" id="formProductId" th:value="${product.productID}">
+<form id="addToCartForm" action="/cart/add" method="post" style="display:none;">
+    <input type="hidden" name="productId" id="formProductId" value="6">
     <input type="hidden" name="quantity" id="formQuantity" value="1">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-    <button type="submit">submit</button>
     
-</form>
-
-<!-- Footer -->
-<footer class="premium-footer">
-    <p style="margin: 0; font-size: 0.9rem;">© 2025 HomeTech. All rights reserved.</p>
-</footer>
-
-<script th:inline="javascript">
-const productPrice = /*[[${product.price}]]*/ 0;
-
-// Main quantity controls
-function increaseQuantity() {
-    const input = document.getElementById('quantity');
-    let value = parseInt(input.value);
-    if (value < 100) input.value = value + 1;
-}
-
-function decreaseQuantity() {
-    const input = document.getElementById('quantity');
-    let value = parseInt(input.value);
-    if (value > 1) input.value = value - 1;
-}
-
-// Popup quantity controls
-function increasePopupQuantity() {
-    const input = document.getElementById('popupQuantity');
-    let value = parseInt(input.value);
-    if (value < 100) {
-        input.value = value + 1;
-        updatePopupTotal();
-    }
-}
-
-function decreasePopupQuantity() {
-    const input = document.getElementById('popupQuantity');
-    let value = parseInt(input.value);
-    if (value > 1) {
-        input.value = value - 1;
-        updatePopupTotal();
-    }
-}
-
-function updatePopupTotal() {
-    const quantity = parseInt(document.getElementById('popupQuantity').value);
-    const total = productPrice * quantity;
-    document.getElementById('popupTotal').textContent = formatPrice(total) + ' VNĐ';
-}
-
-function formatPrice(price) {
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
-// Popup functions
-function showCartPopup() {
-    const quantity = parseInt(document.getElementById('quantity').value);
-    document.getElementById('popupQuantity').value = quantity;
-    updatePopupTotal();
-    document.getElementById('cartPopup').classList.add('active');
-}
-
-function closeCartPopup() {
-    document.getElementById('cartPopup').classList.remove('active');
-}
-
-function submitAddToCart() {
-    const quantity = parseInt(document.getElementById('popupQuantity').value);
-    document.getElementById('formQuantity').value = quantity;
-    document.getElementById('addToCartForm').submit();
-}
-
-// Initialize popup total on load
-window.addEventListener('load', function() {
-    updatePopupTotal();
-});
-
-// Update total when popup quantity changes
-document.getElementById('popupQuantity').addEventListener('input', function() {
-    updatePopupTotal();
-});
-</script>
-
-</body>
-</html>

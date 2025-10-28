@@ -1,8 +1,11 @@
 package com.hometech.hometech.controller.Thymleaf;
 
 import com.hometech.hometech.Repository.AccountReposirory;
+import com.hometech.hometech.Repository.UserRepository;
 import com.hometech.hometech.enums.OrderStatus;
+import com.hometech.hometech.model.Account;
 import com.hometech.hometech.model.Order;
+import com.hometech.hometech.model.User;
 import com.hometech.hometech.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -19,135 +22,136 @@ import java.util.List;
 @RequestMapping("/orders")
 public class OrderController {
 
+    private final OrderService service;
+    private final AccountReposirory accountRepository;
+    private final UserRepository userRepository;
 
-    private final OrderService orderService;
-
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
+    public OrderController(OrderService service, AccountReposirory accountRepository, UserRepository userRepository) {
+        this.service = service;
+        this.accountRepository = accountRepository;
+        this.userRepository = userRepository;
     }
 
-    // 🧩 Lấy userId từ session (giả định đã lưu khi đăng nhập)
-    private Long getCurrentUserId(HttpServletRequest request) {
+    private void addSessionInfo(HttpServletRequest request, Model model) {
         HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("userId") != null) {
-            return (Long) session.getAttribute("userId");
+        if (session != null) {
+            model.addAttribute("sessionId", session.getId());
+            model.addAttribute("username", session.getAttribute("username"));
+            model.addAttribute("isAuthenticated", session.getAttribute("isAuthenticated"));
         }
-        throw new RuntimeException("Không tìm thấy userId trong session.");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
+            model.addAttribute("currentUser", auth.getName());
+            model.addAttribute("userAuthorities", auth.getAuthorities());
+        }
     }
 
-    // ----------------------------------------------------------
-    // 🟢 XEM DANH SÁCH ĐƠN HÀNG
-    // ----------------------------------------------------------
-    @GetMapping
-    public String viewOrders(HttpServletRequest request, Model model) {
-        Long userId = getCurrentUserId(request);
-        List<Order> orders = orderService.getOrdersByUserId(userId);
-        model.addAttribute("orders", orders);
-        model.addAttribute("title", "Đơn hàng của tôi");
-        model.addAttribute("orderStats", orderService.countOrdersByStatusForUser(userId));
-
-        return "user/orders/index"; // ✅ templates/user/orders/index.html
+    private Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            Account account = accountRepository.findByUsername(username)
+                    .or(() -> accountRepository.findByEmail(username))
+                    .orElse(null);
+            if (account == null) return null;
+            
+            User user = userRepository.findByAccount(account);
+            if (user == null) return null;
+            
+            return user.getId(); // Use User.id, not Account.accountId
+        }
+        return null;
     }
 
-    // 🟢 XEM CHI TIẾT ĐƠN HÀNG
-    @GetMapping("/{orderId}")
-    public String viewOrderDetail(@PathVariable int orderId, HttpServletRequest request, Model model) {
-        Long userId = getCurrentUserId(request);
-        Order order = orderService.getOrderById(orderId);
+    @GetMapping("/history")
+    public String showHistory(HttpServletRequest request, Model model) {
+        addSessionInfo(request, model);
+        Long userId = getCurrentUserId();
+        if (userId == null) {
+            // Return empty history page instead of redirecting
+            model.addAttribute("orders", java.util.Collections.emptyList());
+            return "orders/history";
+        }
+        model.addAttribute("orders", service.getOrdersByUserId(userId));
+        return "orders/history";
+    }
 
-        // Kiểm tra quyền xem
-        if (order == null || order.getCustomer().getUser().getId() != userId) {
-            throw new RuntimeException("Bạn không có quyền xem đơn hàng này.");
+    @GetMapping("/status/{status}")
+    public String listOrdersByStatus(@PathVariable OrderStatus status,
+                                     HttpServletRequest request,
+                                     Model model) {
+        addSessionInfo(request, model);
+        Long userId = getCurrentUserId();
+        if (userId == null) return "redirect:/auth/login";
+
+        model.addAttribute("orders", service.getOrdersByUserIdAndStatus(userId, status));
+        model.addAttribute("currentStatus", status);
+        model.addAttribute("statuses", OrderStatus.values());
+        return "orders/status";
+    }
+
+    @GetMapping({"/", "/index"})
+    public String listOrders(HttpServletRequest request, Model model) {
+        addSessionInfo(request, model);
+        Long userId = getCurrentUserId();
+        if (userId == null) {
+            // Return empty orders page instead of redirecting
+            model.addAttribute("orders", java.util.Collections.emptyList());
+            return "orders/index";
+        }
+        model.addAttribute("orders", service.getOrdersByUserId(userId));
+        return "orders/index";
+    }
+
+    @GetMapping("/{id}")
+    public String viewOrderDetail(@PathVariable int id,
+                                  HttpServletRequest request,
+                                  Model model) {
+        addSessionInfo(request, model);
+        Long userId = getCurrentUserId();
+        if (userId == null) return "redirect:/auth/login";
+
+        Order order = service.getOrderById(id);
+        if (order == null) return "redirect:/orders";
+
+        if (order.getCustomer().getUser().getId() != userId) {
+            return "redirect:/orders";
         }
 
         model.addAttribute("order", order);
-        model.addAttribute("title", "Chi tiết đơn hàng #" + orderId);
-        return "user/orders/detail";
+        model.addAttribute("statuses", OrderStatus.values());
+        model.addAttribute("canCancel", service.canCancelOrder(id));
+        return "orders/detail";
     }
 
-    // ----------------------------------------------------------
-    // 🟠 ĐẶT HÀNG TỪ GIỎ HÀNG
-    // ----------------------------------------------------------
-    @PostMapping("/create")
-    public String createOrder(HttpServletRequest request, RedirectAttributes ra) {
-        try {
-            Long userId = getCurrentUserId(request);
-            Order order = orderService.createOrder(userId);
-            ra.addFlashAttribute("successMessage", "Đặt hàng thành công! Mã đơn #" + order.getOrderId());
-            return "redirect:/user/orders";
-        } catch (Exception e) {
-            ra.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/cart";
-        }
+    @PostMapping("/{id}/update-status")
+    public String updateOrderStatus(@PathVariable int id,
+                                    @RequestParam("status") OrderStatus status) {
+        service.updateStatus(id, status);
+        return "redirect:/orders/" + id;
     }
 
-    // ----------------------------------------------------------
-    // 🔴 HỦY ĐƠN HÀNG (CHỈ TRONG 30 PHÚT)
-    // ----------------------------------------------------------
-    @PostMapping("/cancel/{orderId}")
-    public String cancelOrder(@PathVariable int orderId, HttpServletRequest request, RedirectAttributes ra) {
+    @PostMapping("/{id}/cancel")
+    public String cancelOrder(@PathVariable int id) {
+        Long userId = getCurrentUserId();
+        if (userId == null) return "redirect:/auth/login";
         try {
-            Long userId = getCurrentUserId(request);
-            orderService.cancelOrderByUser(userId, orderId);
-            ra.addFlashAttribute("successMessage", "Đã hủy đơn hàng #" + orderId + " thành công!");
+            service.cancelOrderByUser(userId, id);
+            return "redirect:/orders?success=Canceled successfully";
         } catch (RuntimeException e) {
-            ra.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/orders/" + id + "?error=" + e.getMessage();
         }
-        return "redirect:/user/orders";
     }
 
-    // ----------------------------------------------------------
-    // 🟡 LỌC ĐƠN HÀNG THEO TRẠNG THÁI
-    // ----------------------------------------------------------
-    @GetMapping("/status/{status}")
-    public String viewOrdersByStatus(@PathVariable("status") OrderStatus status,
-                                     HttpServletRequest request,
-                                     Model model) {
-        Long userId = getCurrentUserId(request);
-        List<Order> orders = orderService.getOrdersByUserIdAndStatus(userId, status);
-        model.addAttribute("orders", orders);
-        model.addAttribute("currentStatus", status);
-        model.addAttribute("title", "Đơn hàng trạng thái: " + status);
-        model.addAttribute("orderStats", orderService.countOrdersByStatusForUser(userId));
-
-        return "user/orders/index";
-    }
-    @GetMapping("/search")
-    public String searchOrders(@RequestParam("keyword") String keyword,
-                               @RequestParam(value = "status", required = false) OrderStatus status,
-                               HttpServletRequest request,
-                               Model model,
-                               RedirectAttributes ra) {
+    @PostMapping("/create")
+    public String createOrder() {
+        Long userId = getCurrentUserId();
+        if (userId == null) return "redirect:/auth/login";
         try {
-            Long userId = getCurrentUserId(request);
-            List<Order> results;
-
-            if (status != null) {
-                // Nếu đang ở trang lọc trạng thái, chỉ tìm trong các đơn có cùng trạng thái
-                results = orderService.getOrdersByUserIdAndStatus(userId, status);
-                results.removeIf(order -> !String.valueOf(order.getOrderId()).contains(keyword)
-                        && !order.getOrderStatus().name().toLowerCase().contains(keyword.toLowerCase())
-                        && !String.valueOf(order.getTotalPrice()).contains(keyword));
-                model.addAttribute("currentStatus", status);
-                model.addAttribute("title", "Kết quả tìm kiếm trong trạng thái " + status);
-            } else {
-                // Nếu không có trạng thái cụ thể, tìm toàn bộ đơn của user
-                results = orderService.searchOrders(keyword);
-                results.removeIf(order -> order.getCustomer().getUser().getId() != userId);
-                model.addAttribute("title", "Kết quả tìm kiếm: " + keyword);
-            }
-
-            model.addAttribute("orders", results);
-            model.addAttribute("keyword", keyword);
-
-            if (results.isEmpty()) {
-                model.addAttribute("infoMessage", "Không tìm thấy đơn hàng phù hợp.");
-            }
-
-            return "user/orders/index";
-        } catch (Exception e) {
-            ra.addFlashAttribute("errorMessage", "Lỗi khi tìm kiếm: " + e.getMessage());
+            service.createOrder(userId);
             return "redirect:/orders";
+        } catch (RuntimeException e) {
+            return "redirect:/cart?error=" + e.getMessage();
         }
     }
 }

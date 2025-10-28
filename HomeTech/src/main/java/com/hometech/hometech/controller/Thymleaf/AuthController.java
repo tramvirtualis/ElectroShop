@@ -1,5 +1,9 @@
 package com.hometech.hometech.controller.Thymleaf;
 
+import com.hometech.hometech.Repository.AccountReposirory;
+import com.hometech.hometech.Repository.UserRepository;
+import com.hometech.hometech.model.Account;
+import com.hometech.hometech.model.User;
 import com.hometech.hometech.service.AuthService;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,9 +21,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AuthController {
 
     private final AuthService authService;
+    private final AccountReposirory accountRepository;
+    private final UserRepository userRepository;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, AccountReposirory accountRepository, UserRepository userRepository) {
         this.authService = authService;
+        this.accountRepository = accountRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -139,6 +147,17 @@ public class AuthController {
             session.setAttribute("username", auth.getName());
             session.setAttribute("isAuthenticated", true);
             session.setAttribute("authorities", auth.getAuthorities());
+
+            // Save userId (User.id) in session for downstream controllers
+            Account account = accountRepository.findByUsername(auth.getName())
+                    .or(() -> accountRepository.findByEmail(auth.getName()))
+                    .orElse(null);
+            if (account != null) {
+                User user = userRepository.findByAccount(account);
+                if (user != null) {
+                    session.setAttribute("userId", user.getId());
+                }
+            }
 
             model.addAttribute("username", auth.getName());
             model.addAttribute("isAuthenticated", true);

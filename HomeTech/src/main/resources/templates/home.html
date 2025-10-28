@@ -572,11 +572,82 @@
 </footer>
 </div>
 
+<!-- Hidden Add-To-Cart Form -->
+<form id="homeAddToCartForm" th:action="@{/cart/add}" method="post" style="display:none;">
+    <input type="hidden" name="productId" id="homeCartProductId">
+    <input type="hidden" name="quantity" id="homeCartQuantity" value="1">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+</form>
+
+<!-- Toast Notification Styles -->
+<style>
+.toast-notification {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    background: rgba(0, 191, 255, 0.95);
+    color: #0a0e27;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 191, 255, 0.5);
+    z-index: 9999;
+    animation: slideIn 0.3s ease-out;
+    font-weight: 600;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Navigation buttons now use Thymeleaf th:href for proper server-side routing
     console.log('Home page loaded successfully');
 });
+
+// Cart functionality for home page
+function showCartPopup(productId, productName) {
+    // Show toast notification
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        Đã thêm "${productName}" vào giỏ hàng!
+    `;
+    document.body.appendChild(toast);
+
+    // Remove toast after 3 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease-out reverse';
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+
+    console.log(`Added product ${productId} to cart`);
+}
+
+// Function to submit add to cart form
+function submitAddToCart(productId, quantity = 1) {
+    const form = document.getElementById('homeAddToCartForm');
+    if (form) {
+        document.getElementById('homeCartProductId').value = productId;
+        document.getElementById('homeCartQuantity').value = quantity;
+        form.submit();
+    } else {
+        console.error('Add to cart form not found');
+    }
+}
 </script>
 
 </body>
