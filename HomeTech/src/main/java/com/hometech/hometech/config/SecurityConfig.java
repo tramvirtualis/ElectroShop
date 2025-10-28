@@ -81,18 +81,20 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/", "/home",
                                 "/auth/**",
+                                "/admin/login",  // Cho phép truy cập trang login admin
                                 "/oauth2/**",
                                 "/login", "/register",
                                 "/css/**", "/js/**", "/images/**",
                                 "/products/**",
                                 "/cart", "/orders/**", "/profile"
                         ).permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")  // Yêu cầu role ADMIN cho các trang admin
                         .anyRequest().authenticated()
                 )
 
                 // 🧩 Cấu hình form login (username/password)
                 .formLogin(form -> form
-                        .loginPage("/auth/login")              // Trang login
+                        .loginPage("/auth/login")              // Trang login mặc định
                         .loginProcessingUrl("/login")          // Form submit
                         .defaultSuccessUrl("/", true)          // Redirect sau login
                         .failureUrl("/auth/login?error=true")
