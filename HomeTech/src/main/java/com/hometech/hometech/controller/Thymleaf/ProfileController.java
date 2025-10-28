@@ -151,12 +151,12 @@ public class ProfileController {
 
     // 🟡 Xử lý submit form (thêm mới hoặc cập nhật)
     @PostMapping("/{userId}")
-    public String updateProfile(@PathVariable Long userId,
-                                @ModelAttribute("profile") UpdateProfileDTO dto,
-                                HttpServletRequest request,
-                                Model model) {
+     public String updateProfile(@PathVariable Long userId,
+                                 @ModelAttribute("profile") UpdateProfileDTO dto,
+                                 HttpServletRequest request,
+                                 Model model) {
         addSessionInfo(request, model);
-        Customer saved = profileService.updateOrCreateProfile(userId, dto);
+         profileService.updateOrCreateProfile(userId, dto);
         model.addAttribute("message", "Cập nhật thông tin cá nhân thành công!");
         model.addAttribute("profile", profileService.getProfile(userId));
         model.addAttribute("userId", userId);
