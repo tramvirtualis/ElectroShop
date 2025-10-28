@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.IOException;
 import java.util.List;
 
 @Controller
@@ -29,14 +28,15 @@ public class ProductController {
     private final CategoryService categoryService;
     private final ReviewService reviewService;
 
-
-    public ProductController(ProductService productService, CategoryService categoryService, ReviewService reviewService) {
+    public ProductController(ProductService productService,
+                             CategoryService categoryService,
+                             ReviewService reviewService) {
         this.productService = productService;
         this.categoryService = categoryService;
         this.reviewService = reviewService;
     }
 
-    // --- Thông tin Session người dùng ---
+    // --- 🧩 Thông tin Session người dùng ---
     private void addSessionInfo(HttpServletRequest request, Model model) {
         HttpSession session = request.getSession(false);
         if (session != null) {
@@ -62,7 +62,7 @@ public class ProductController {
         model.addAttribute("listProducts", productService.getAll());
         model.addAttribute("categories", categoryService.getAll());
         model.addAttribute("title", "Tất cả sản phẩm");
-        return "products/index"; // ✅ templates/products/index.html
+        return "products/index";
     }
 
     // 🟢 Xem sản phẩm theo danh mục
@@ -81,24 +81,27 @@ public class ProductController {
         model.addAttribute("currentCategory", category);
         model.addAttribute("categories", categoryService.getAll());
         model.addAttribute("title", "Danh mục: " + category.getCategoryName());
-        return "products/category"; // ✅ templates/products/category.html
+        return "products/category";
     }
 
-    // 🟢 Xem chi tiết sản phẩm
+    // 🟢 Xem chi tiết sản phẩm + danh sách review (chỉ review chưa ẩn)
     @GetMapping("/{id}")
-    public String viewProductDetail(@PathVariable("id") int id, Model model) {
+    public String viewProductDetail(@PathVariable("id") int id, Model model, HttpServletRequest request) {
+        addSessionInfo(request, model);
         Product product = productService.getById(id);
-        List<Review> reviews = reviewService.getReviewsByProduct(id);
+
+        // ✅ Chỉ lấy các review chưa bị ẩn
+        List<Review> reviews = reviewService.getVisibleReviewsByProduct(id);
         double averageRating = reviewService.getAverageRating(id);
 
         model.addAttribute("product", product);
         model.addAttribute("reviews", reviews);
         model.addAttribute("averageRating", averageRating);
 
-        return "products/detail"; // trỏ tới templates/products/detail.html
+        return "products/detail";
     }
 
-    // 🟢 Endpoint hiển thị ảnh sản phẩm
+    // 🟢 Hiển thị ảnh sản phẩm
     @GetMapping("/image/{id}")
     @ResponseBody
     public ResponseEntity<byte[]> getProductImage(@PathVariable int id) {
@@ -111,4 +114,25 @@ public class ProductController {
         return ResponseEntity.notFound().build();
     }
 
+    // ---------------------------------------------------------------
+    // 🔹 PHẦN NGƯỜI DÙNG: GỬI HOẶC CẬP NHẬT ĐÁNH GIÁ
+    // ---------------------------------------------------------------
+
+    @PostMapping("/review")
+    public String submitReview(@RequestParam("productId") int productId,
+                               @RequestParam("userId") int userId,
+                               @RequestParam("ratingValue") int ratingValue,
+                               @RequestParam("comment") String comment,
+                               @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+                               RedirectAttributes ra) {
+
+        try {
+            reviewService.addOrUpdateReview(productId, userId, ratingValue, comment, imageFile);
+            ra.addFlashAttribute("successMessage", "Cảm ơn bạn đã đánh giá sản phẩm!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", "Không thể gửi đánh giá: " + e.getMessage());
+        }
+
+        return "redirect:/products/" + productId;
+    }
 }

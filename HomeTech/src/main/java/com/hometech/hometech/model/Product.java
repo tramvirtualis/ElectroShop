@@ -47,12 +47,18 @@ public class Product {
     @Column(name = "sold_count")
     private Integer  soldCount = 0;
 
+    public void setSoldCount(Integer soldCount) {
+        this.soldCount = soldCount;
+    }
+
+
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // 🔗 Quan hệ 1-1 với Review
-    @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private Review review;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<Review> reviews;
 
     // 🔗 Quan hệ 1-n với CartItem
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -86,13 +92,7 @@ public class Product {
         this.orders = orders;
     }
 
-    public Review getReview() {
-        return review;
-    }
 
-    public void setReview(Review review) {
-        this.review = review;
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
@@ -172,6 +172,13 @@ public class Product {
 
     public void setProductID(int productID) {
         this.productID = productID;
+    }
+    public List<Review> getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(List<Review> reviews) {
+        this.reviews = reviews;
     }
 
     // 🔗 Quan hệ n-1 với Category

@@ -180,7 +180,7 @@ public class AdminProductController {
     @GetMapping("/{id}")
     public String viewProductDetail(@PathVariable("id") int id, Model model) {
         Product product = productService.getById(id);
-        List<Review> reviews = reviewService.getReviewsByProduct(id);
+        List<Review> reviews = reviewService.getAllReviewsByProduct(id);
         double averageRating = reviewService.getAverageRating(id);
 
         model.addAttribute("product", product);

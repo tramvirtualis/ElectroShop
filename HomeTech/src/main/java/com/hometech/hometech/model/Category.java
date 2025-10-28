@@ -1,9 +1,6 @@
 package com.hometech.hometech.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +14,11 @@ import java.util.List;
 @AllArgsConstructor
 public class Category {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "categoryid")
     private int categoryID;
+
+    @Column(name = "category_name", nullable = false, unique = true)
     private String categoryName;
 
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)

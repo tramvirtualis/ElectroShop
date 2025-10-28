@@ -40,10 +40,23 @@ public class Review {
     @JoinColumn(name = "userID", nullable = false)
     private Customer customer;
 
+    // 🟢 Phản hồi của admin (nếu có)
+    @OneToOne(mappedBy = "review", fetch = FetchType.LAZY)
+    private Response response;
     // 🟢 Hình ảnh minh họa (nếu có)
     @Lob
     private byte[] image;
 
+    @Column(name = "is_hidden")
+    private boolean hidden = false; // mặc định là false = hiển thị
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
     public int getReviewID() {
         return reviewID;
     }
@@ -116,7 +129,5 @@ public class Review {
         this.response = response;
     }
 
-    // 🟢 Phản hồi của admin (nếu có)
-    @OneToOne(mappedBy = "review", fetch = FetchType.LAZY)
-    private Response response;
+
 }

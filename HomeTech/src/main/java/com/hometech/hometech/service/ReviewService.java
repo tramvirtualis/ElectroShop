@@ -1,8 +1,11 @@
 package com.hometech.hometech.service;
 
-
-import com.hometech.hometech.model.*;
-import com.hometech.hometech.Repository.*;
+import com.hometech.hometech.model.Customer;
+import com.hometech.hometech.model.Product;
+import com.hometech.hometech.model.Review;
+import com.hometech.hometech.Repository.CustomerRepository;
+import com.hometech.hometech.Repository.ProductRepository;
+import com.hometech.hometech.Repository.ReviewRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,57 +31,80 @@ public class ReviewService {
     // 🟢 Thêm hoặc cập nhật đánh giá
     public Review addOrUpdateReview(int productID, int userID, int ratingValue, String comment, MultipartFile imageFile) {
         Product product = productRepository.findById(productID)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với ID: " + productID));
+
         Customer customer = customerRepository.findById(userID)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + userID));
 
-        Review review = reviewRepository.findByCustomerAndProduct(customer, product)
-                .map(existing -> {
-                    existing.setRatingValue(ratingValue);
-                    existing.setComment(comment);
-                    existing.setUpdatedAt(LocalDateTime.now());
-                    if (imageFile != null && !imageFile.isEmpty()) {
-                        try {
-                            existing.setImage(imageFile.getBytes());
-                        } catch (IOException e) {
-                            throw new RuntimeException("Không thể đọc ảnh tải lên");
-                        }
-                    }
-                    return reviewRepository.save(existing);
-                })
-                .orElseGet(() -> {
-                    Review newReview = new Review();
-                    newReview.setRatingValue(ratingValue);
-                    newReview.setComment(comment);
-                    newReview.setCreatedAt(LocalDateTime.now());
-                    newReview.setUpdatedAt(LocalDateTime.now());
-                    newReview.setProduct(product);
-                    newReview.setCustomer(customer);
-                    if (imageFile != null && !imageFile.isEmpty()) {
-                        try {
-                            newReview.setImage(imageFile.getBytes());
-                        } catch (IOException e) {
-                            throw new RuntimeException("Không thể đọc ảnh tải lên");
-                        }
-                    }
-                    return reviewRepository.save(newReview);
-                });
+        Review review = reviewRepository.findByCustomerAndProduct(customer, product).orElse(null);
+        if (review == null) {
+            review = new Review();
+            review.setProduct(product);
+            review.setCustomer(customer);
+            review.setCreatedAt(LocalDateTime.now());
+        }
 
-        return review;
+        review.setRatingValue(ratingValue);
+        review.setComment(comment);
+        review.setUpdatedAt(LocalDateTime.now());
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            try {
+                review.setImage(imageFile.getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException("Không thể đọc ảnh tải lên: " + e.getMessage());
+            }
+        }
+
+        return reviewRepository.save(review);
     }
 
-    // 🟢 Lấy tất cả review của sản phẩm
-    public List<Review> getReviewsByProduct(int productID) {
+    // 🟢 Review cho người dùng (chỉ hiển thị review chưa bị ẩn)
+    public List<Review> getVisibleReviewsByProduct(int productID) {
         Product product = productRepository.findById(productID)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với ID: " + productID));
+        return reviewRepository.findByProductAndHiddenFalse(product);
+    }
+
+    // 🟢 Review cho admin (hiển thị tất cả, kể cả ẩn)
+    public List<Review> getAllReviewsByProduct(int productID) {
+        Product product = productRepository.findById(productID)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với ID: " + productID));
         return reviewRepository.findByProduct(product);
     }
 
-    // 🟢 Tính trung bình sao (không lưu DB)
+    // 🟢 Tính trung bình số sao
     public double getAverageRating(int productID) {
         Product product = productRepository.findById(productID)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm với ID: " + productID));
         Double avg = reviewRepository.getAverageRatingByProduct(product);
         return avg != null ? avg : 0.0;
+    }
+
+    // 🟢 Admin xem tất cả review trong hệ thống
+    public List<Review> getAllReviews() {
+        return reviewRepository.findAll();
+    }
+
+    // 🟢 Xem 1 review cụ thể
+    public Review getReviewById(int reviewId) {
+        return reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá với ID: " + reviewId));
+    }
+
+    // 🟢 Ẩn review
+    public void hideReviewById(int reviewId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá"));
+        review.setHidden(true);
+        reviewRepository.save(review);
+    }
+
+    // 🟢 Hiện lại review
+    public void unhideReviewById(int reviewId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá"));
+        review.setHidden(false);
+        reviewRepository.save(review);
     }
 }

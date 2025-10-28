@@ -12,9 +12,7 @@ import com.hometech.hometech.enums.OrderStatus;
 import com.hometech.hometech.model.OrderItem;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class OrderService {
@@ -175,5 +173,48 @@ public class OrderService {
         
         order.setOrderStatus(OrderStatus.CANCELLED);
         return orderRepo.save(order);
+    }
+    public List<Order> searchOrders(String keyword) {
+        return orderRepo.searchOrders(keyword.toLowerCase());
+    }
+    /**
+     * 🟢 Đếm số lượng đơn hàng theo trạng thái — chỉ của 1 user
+     */
+    public Map<OrderStatus, Long> countOrdersByStatusForUser(Long userId) {
+        Customer customer = customerRepo.findByUser_Id(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
+
+        List<Order> orders = orderRepo.findByCustomer(customer);
+        Map<OrderStatus, Long> stats = new EnumMap<>(OrderStatus.class);
+
+        // Khởi tạo mặc định = 0
+        for (OrderStatus status : OrderStatus.values()) {
+            stats.put(status, 0L);
+        }
+
+        // Đếm thực tế
+        for (Order order : orders) {
+            stats.put(order.getOrderStatus(), stats.get(order.getOrderStatus()) + 1);
+        }
+
+        return stats;
+    }
+
+    /**
+     * 🟢 Đếm số lượng đơn hàng theo trạng thái — toàn hệ thống (admin)
+     */
+    public Map<OrderStatus, Long> countAllOrdersByStatus() {
+        List<Order> orders = orderRepo.findAll();
+        Map<OrderStatus, Long> stats = new EnumMap<>(OrderStatus.class);
+
+        for (OrderStatus status : OrderStatus.values()) {
+            stats.put(status, 0L);
+        }
+
+        for (Order order : orders) {
+            stats.put(order.getOrderStatus(), stats.get(order.getOrderStatus()) + 1);
+        }
+
+        return stats;
     }
 }

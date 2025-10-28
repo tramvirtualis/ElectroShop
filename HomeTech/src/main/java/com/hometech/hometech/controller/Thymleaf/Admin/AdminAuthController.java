@@ -1,6 +1,7 @@
 package com.hometech.hometech.controller.Thymleaf.Admin;
 
 import com.hometech.hometech.Repository.UserRepository;
+import com.hometech.hometech.controller.Api.AuthRestController;
 import com.hometech.hometech.dto.UpdateProfileDTO;
 import com.hometech.hometech.enums.RoleType;
 import com.hometech.hometech.model.Address;
@@ -10,7 +11,11 @@ import com.hometech.hometech.service.AuthService;
 import com.hometech.hometech.service.ProfileService;
 import com.hometech.hometech.service.UserService;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -66,6 +71,54 @@ public class AdminAuthController {
         model.addAttribute("users", userService.getAllUsers());
         return "admin/user-list";
     }
+    @GetMapping("/login")
+    public String loginPage(HttpServletRequest request, Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        // 🧠 Kiểm tra đúng cách: chỉ redirect nếu thực sự có user đã login
+        if (auth != null
+                && auth.isAuthenticated()
+                && auth.getPrincipal() != null
+                && !"anonymousUser".equals(auth.getPrincipal().toString())) {
+            return "redirect:/";
+        }
+
+        HttpSession session = request.getSession(true);
+        model.addAttribute("sessionId", session.getId());
+        return "auth/login";
+    }
+    @PostMapping("/login")
+    public String processAdminLogin(@RequestParam String usernameOrEmail,
+                                    @RequestParam String password,
+                                    HttpServletRequest request,
+                                    RedirectAttributes ra) {
+        try {
+            // Gọi service đăng nhập admin
+            var response = authService.loginAdmin(usernameOrEmail, password);
+
+            // Nếu thành công → tạo session
+            HttpSession session = request.getSession(true);
+            session.setAttribute("username", response.getUsername());
+            session.setAttribute("role", response.getRole());
+            session.setAttribute("accessToken", response.getAccessToken());
+            session.setAttribute("isAuthenticated", true);
+
+            // Kiểm tra role (phải là ADMIN)
+            if (!"ADMIN".equalsIgnoreCase(response.getRole())) {
+                ra.addFlashAttribute("errorMessage", "Bạn không có quyền truy cập vào trang quản trị!");
+                return "redirect:/auth/login";
+            }
+
+            // ✅ Đăng nhập thành công → chuyển sang trang admin dashboard
+            ra.addFlashAttribute("successMessage", "Đăng nhập quản trị viên thành công!");
+            return "redirect:/admin/dashboard";
+
+        } catch (RuntimeException e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/auth/login";
+        }
+    }
+
     @GetMapping("/{userId}")
     public String getUserProfile(@PathVariable Long userId, Model model) {
         try {

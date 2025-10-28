@@ -130,7 +130,7 @@ public class AuthService {
         return "Tạo tài khoản quản trị thành công!";
     }
 
-        public AuthResponse login(String usernameOrEmail, String password) {
+    public AuthResponse login(String usernameOrEmail, String password) {
         try {
             // Xác thực thông tin đăng nhập
             authenticationManager.authenticate(
@@ -164,6 +164,46 @@ public class AuthService {
                     account.getEmail(),
                     account.getRole().name(),
                     "Đăng nhập thành công"
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("Tên đăng nhập hoặc mật khẩu không đúng");
+        }
+    }
+    public AuthResponse loginAdmin(String usernameOrEmail, String password) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(usernameOrEmail, password)
+            );
+
+            Account account = accountRepository.findByUsername(usernameOrEmail)
+                    .or(() -> accountRepository.findByEmail(usernameOrEmail))
+                    .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại"));
+
+            if (!account.isEnabled()) {
+                throw new RuntimeException("Tài khoản chưa được kích hoạt.");
+            }
+
+            if (!account.isEmailVerified()) {
+                throw new RuntimeException("Email chưa được xác thực.");
+            }
+
+            // 🧩 Chỉ cho phép ROLE_ADMIN đăng nhập
+            if (!account.getRole().name().equals("ADMIN")) {
+                throw new RuntimeException("Bạn không có quyền truy cập vào trang quản trị.");
+            }
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(account.getUsername());
+            String accessToken = jwtService.generateToken(userDetails);
+            String refreshToken = jwtService.generateRefreshToken(userDetails);
+
+            return new AuthResponse(
+                    accessToken,
+                    refreshToken,
+                    account.getUsername(),
+                    account.getEmail(),
+                    account.getRole().name(),
+                    "Đăng nhập admin thành công"
             );
 
         } catch (Exception e) {
