@@ -53,18 +53,21 @@
         .container {
             position: relative;
             z-index: 1;
-            padding-top: 2rem;
+            padding-top: 130px; /* Space for fixed header */
             padding-bottom: 2rem;
         }
 
         /* Header Styles */
         .premium-header {
-            background: rgba(10, 14, 39, 0.85);
+            background: rgba(10, 14, 39, 0.95);
             backdrop-filter: blur(20px);
             border-bottom: 2px solid rgba(0, 191, 255, 0.2);
             padding: 1rem 0;
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
             z-index: 1000;
             box-shadow: 0 4px 30px rgba(0, 191, 255, 0.1);
         }
@@ -259,5 +262,6 @@
 
 </body>
 </html>
+
 
 

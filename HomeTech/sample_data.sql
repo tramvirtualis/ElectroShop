@@ -31,3 +31,5 @@ INSERT IGNORE INTO products (product_name, price, description, categoryID, sold_
 ('Google Pixel Watch 2', 7990000, 'Pixel Watch 2 với Fitbit', 4, 60, 1, 'Black', 0, NOW());
 
 
+
+

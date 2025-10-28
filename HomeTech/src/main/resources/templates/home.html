@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${title != null ? title : 'HomeTech'}">HomeTech</title>
-    
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
 
@@ -51,12 +51,15 @@
 
         /* Header Styles */
         .premium-header {
-            background: rgba(10, 14, 39, 0.85);
+            background: rgba(10, 14, 39, 0.95);
             backdrop-filter: blur(20px);
             border-bottom: 2px solid rgba(0, 191, 255, 0.2);
             padding: 1rem 0;
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
             z-index: 1000;
             box-shadow: 0 4px 30px rgba(0, 191, 255, 0.1);
         }
@@ -180,10 +183,11 @@
         }
 
         /* Main Container */
-        .container {
+        .main-container {
             position: relative;
             z-index: 1;
-            padding-top: 2rem;
+            padding-top: 120px; /* Space for fixed header */
+            min-height: calc(100vh - 120px);
         }
 
         /* Section Titles */
@@ -463,12 +467,12 @@
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
-            </form>
+        </form>
 
             <div class="d-flex align-items-center gap-2">
                 <span class="user-info" th:if="${currentUser != null}">
                     Xin chào, <span th:text="${currentUser}">User</span>
-                </span>
+            </span>
                 
                 <!-- Quick Navigation Buttons -->
                 <div class="quick-nav-buttons" th:if="${currentUser != null}">
@@ -494,12 +498,13 @@
                     <i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span>
                 </a>
                 <a th:if="${currentUser == null}" th:href="@{/auth/login}" class="btn btn-premium">
-                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
-                </a>
-            </div>
+                <i class="fas fa-sign-in-alt"></i> Đăng nhập
+            </a>
+        </div>
     </div>
 </header>
 
+<div class="main-container">
 <div class="container">
 
     <!-- 🟣 Danh mục -->
@@ -534,10 +539,10 @@
                 <h6 class="product-name" th:text="${p.productName}"></h6>
                 <p class="product-price" th:text="${p.price != null ? #numbers.formatCurrency(p.price).replace('$', '') + ' VNĐ' : '0 VNĐ'}"></p>
                 <span class="btn-view-detail">
-                    <i class="fas fa-eye"></i> Xem chi tiết
+                        <i class="fas fa-eye"></i> Xem chi tiết
                 </span>
             </div>
-        </a>
+                    </a>
     </div>
 
     <!-- 🆕 Sản phẩm mới -->
@@ -554,10 +559,10 @@
                 <h6 class="product-name" th:text="${p.productName}"></h6>
                 <p class="product-price" th:text="${p.price != null ? #numbers.formatDecimal(p.price, 1, 0, 2) + ' VNĐ' : '0 VNĐ'}"></p>
                 <span class="btn-view-detail">
-                    <i class="fas fa-eye"></i> Xem chi tiết
+                        <i class="fas fa-eye"></i> Xem chi tiết
                 </span>
             </div>
-        </a>
+                    </a>
     </div>
 </div>
 
@@ -565,6 +570,7 @@
 <footer class="premium-footer">
     <p>© 2025 HomeTech. All rights reserved.</p>
 </footer>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

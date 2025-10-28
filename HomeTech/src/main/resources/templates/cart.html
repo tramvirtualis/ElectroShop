@@ -26,6 +26,7 @@
             color: #e0e6ed;
             position: relative;
             overflow-x: hidden;
+            padding-top: 120px; /* Space for fixed header */
         }
 
         body::before {
@@ -49,11 +50,21 @@
         }
 
         .page-header {
-            background: rgba(10, 14, 39, 0.85);
+            background: rgba(10, 14, 39, 0.95);
             backdrop-filter: blur(20px);
             border-bottom: 2px solid rgba(0, 191, 255, 0.2);
             padding: 1.5rem 0;
-            margin-bottom: 3rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 191, 255, 0.1);
+        }
+        
+        .page-content {
+            padding-top: 20px;
         }
 
         .page-title {
@@ -221,6 +232,7 @@
     </div>
 </div>
 
+<div class="page-content">
 <div class="container">
     <div class="row">
         <div class="col-lg-8">
@@ -317,6 +329,9 @@
     </div>
 </div>
 
+</div>
+
 </body>
 </html>
+
 
