@@ -18,6 +18,30 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int cartId;
 
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
+
+    public int getCartId() {
+        return cartId;
+    }
+
+    public void setCartId(int cartId) {
+        this.cartId = cartId;
+    }
+
+    public List<CartItem> getCardItems() {
+        return cardItems;
+    }
+
+    public void setCardItems(List<CartItem> cardItems) {
+        this.cardItems = cardItems;
+    }
+
     // Khóa ngoại đến Customer
     @OneToOne
     @JoinColumn(name = "customer_id")

@@ -14,6 +14,11 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -28,11 +33,13 @@ public class AdminAuthController {
     private final AuthService authService;
     private final UserService userService;
     private final ProfileService profileService;
+    private final UserDetailsService userDetailsService;
     public AdminAuthController(AuthService authService, UserService userService,
-                               ProfileService profileService) {
+                               ProfileService profileService, UserDetailsService userDetailsService) {
         this.authService = authService;
         this.userService = userService;
         this.profileService = profileService;
+        this.userDetailsService = userDetailsService;
     }
 
     // 🟢 Hiển thị danh sách người dùng
@@ -80,12 +87,12 @@ public class AdminAuthController {
                 && auth.isAuthenticated()
                 && auth.getPrincipal() != null
                 && !"anonymousUser".equals(auth.getPrincipal().toString())) {
-            return "redirect:/";
+            return "redirect:/admin/dashboard";
         }
 
         HttpSession session = request.getSession(true);
         model.addAttribute("sessionId", session.getId());
-        return "auth/login";
+        return "admin/login";
     }
     @PostMapping("/login")
     public String processAdminLogin(@RequestParam String usernameOrEmail,
@@ -103,10 +110,19 @@ public class AdminAuthController {
             session.setAttribute("accessToken", response.getAccessToken());
             session.setAttribute("isAuthenticated", true);
 
+            // Thiết lập Authentication vào SecurityContext để Spring Security nhận diện admin
+            UserDetails userDetails = userDetailsService.loadUserByUsername(response.getUsername());
+            UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authenticationToken);
+            SecurityContextHolder.setContext(context);
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+
             // Kiểm tra role (phải là ADMIN)
             if (!"ADMIN".equalsIgnoreCase(response.getRole())) {
                 ra.addFlashAttribute("errorMessage", "Bạn không có quyền truy cập vào trang quản trị!");
-                return "redirect:/auth/login";
+                return "redirect:/admin/login";
             }
 
             // ✅ Đăng nhập thành công → chuyển sang trang admin dashboard
@@ -115,7 +131,7 @@ public class AdminAuthController {
 
         } catch (RuntimeException e) {
             ra.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/auth/login";
+            return "redirect:/admin/login";
         }
     }
 
