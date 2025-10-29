@@ -2,6 +2,9 @@ package com.hometech.hometech.controller.Thymleaf;
 
 import com.hometech.hometech.Repository.AccountReposirory;
 import com.hometech.hometech.Repository.UserRepository;
+import com.hometech.hometech.Repository.CustomerRepository;
+import com.hometech.hometech.model.Customer;
+import com.hometech.hometech.model.Address;
 import com.hometech.hometech.model.Account;
 import com.hometech.hometech.model.User;
 import com.hometech.hometech.service.CartService;
@@ -20,11 +23,13 @@ public class CartController {
     private final CartService service;
     private final AccountReposirory accountRepository;
     private final UserRepository userRepository;
+    private final CustomerRepository customerRepository;
 
-    public CartController(CartService service, AccountReposirory accountRepository, UserRepository userRepository) {
+    public CartController(CartService service, AccountReposirory accountRepository, UserRepository userRepository, CustomerRepository customerRepository) {
         this.service = service;
         this.accountRepository = accountRepository;
         this.userRepository = userRepository;
+        this.customerRepository = customerRepository;
     }
 
     private void addSessionInfo(HttpServletRequest request, Model model) {
@@ -60,18 +65,38 @@ public class CartController {
         addSessionInfo(request, model);
         Long userId = getCurrentUserId();
         if (userId == null) {
-            // Return empty cart page instead of redirecting
-            model.addAttribute("cartItems", java.util.Collections.emptyList());
-            model.addAttribute("totalPrice", 0.0);
+            var items = service.getCartItemsForSession(request.getSession(true).getId());
+            model.addAttribute("cartItems", items);
+            double totalGuest = items.stream()
+                    .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
+                    .sum();
+            model.addAttribute("totalPrice", totalGuest);
             return "cart";
         }
 
-        model.addAttribute("cartItems", service.getCartItemsByUserId(userId));
-        double total = service.getCartItemsByUserId(userId)
+        var userItems = service.getCartItemsByUserId(userId);
+        model.addAttribute("cartItems", userItems);
+        double total = userItems
                 .stream()
                 .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
                 .sum();
         model.addAttribute("totalPrice", total);
+        // Address for logged-in user
+        Customer customer = customerRepository.findByUser_Id(userId).orElse(null);
+        if (customer != null && customer.getAddress() != null) {
+            Address a = customer.getAddress();
+            StringBuilder sb = new StringBuilder();
+            if (a.getAddressLine() != null && !a.getAddressLine().isBlank()) sb.append(a.getAddressLine());
+            if (a.getCommune() != null && !a.getCommune().isBlank()) {
+                if (sb.length() > 0) sb.append(", ");
+                sb.append(a.getCommune());
+            }
+            if (a.getCity() != null && !a.getCity().isBlank()) {
+                if (sb.length() > 0) sb.append(", ");
+                sb.append(a.getCity());
+            }
+            model.addAttribute("address", sb.toString());
+        }
         return "cart";
     }
 
@@ -113,7 +138,10 @@ public class CartController {
                                    Model model) {
         addSessionInfo(request, model);
         Long userId = getCurrentUserId();
-        if (userId == null) return "redirect:/auth/login";
+        if (userId == null) {
+            service.increaseQuantityForSession(request.getSession(true).getId(), id);
+            return "redirect:/cart";
+        }
 
         service.increaseQuantity(userId, id);
         return "redirect:/cart";
@@ -125,7 +153,10 @@ public class CartController {
                                    Model model) {
         addSessionInfo(request, model);
         Long userId = getCurrentUserId();
-        if (userId == null) return "redirect:/auth/login";
+        if (userId == null) {
+            service.decreaseQuantityForSession(request.getSession(true).getId(), id);
+            return "redirect:/cart";
+        }
 
         service.decreaseQuantity(userId, id);
         return "redirect:/cart";
@@ -137,7 +168,10 @@ public class CartController {
                              Model model) {
         addSessionInfo(request, model);
         Long userId = getCurrentUserId();
-        if (userId == null) return "redirect:/auth/login";
+        if (userId == null) {
+            service.removeItemForSession(request.getSession(true).getId(), id);
+            return "redirect:/cart";
+        }
 
         service.removeItem(userId, id);
         return "redirect:/cart";

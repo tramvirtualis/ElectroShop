@@ -257,7 +257,7 @@
                     </div>
                     <div class="text-end" style="min-width: 150px;">
                         <p class="price mb-2" th:text="${#numbers.formatDecimal(ci.product.price * ci.quantity, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</p>
-                        <a th:href="@{'/cart/remove/' + ${ci.cartItemId}}" class="btn btn-sm" style="color: #ff6b6b;">
+                        <a th:href="@{'/cart/remove/' + ${ci.cartItemId}}" class="btn btn-sm" style="color: #ff6b6b;" onclick="return confirm('Xóa sản phẩm này?');">
                             <i class="fas fa-trash"></i> Remove
                         </a>
                     </div>
@@ -268,6 +268,10 @@
         <div class="col-lg-4">
             <div class="summary-card">
                 <h3 class="summary-title">Order Summary</h3>
+                <div class="summary-row" th:if="${address != null}">
+                    <span>Address:</span>
+                    <span th:text="${address}">N/A</span>
+                </div>
                 
                 <div class="summary-row">
                     <span>Subtotal:</span>
@@ -279,14 +283,11 @@
                     <span>Free</span>
                 </div>
                 
-                <div class="summary-row">
-                    <span>Tax:</span>
-                    <span th:text="${#numbers.formatDecimal(totalPrice * 0.10, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
-                </div>
+                
                 
                 <div class="summary-row summary-total">
                     <span>Total:</span>
-                    <span th:text="${#numbers.formatDecimal(totalPrice * 1.10, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                    <span th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
                 </div>
 
                 <button class="btn-checkout">

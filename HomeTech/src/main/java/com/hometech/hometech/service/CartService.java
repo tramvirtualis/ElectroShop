@@ -45,6 +45,13 @@ public class CartService {
         return cartRepo.findByCart(customer.getCart());
     }
 
+    // 🔹 Xem giỏ hàng của guest theo session
+    public List<CartItem> getCartItemsForSession(String sessionId) {
+        Customer customer = getOrCreateGuestCustomer(sessionId);
+        if (customer.getCart() == null) return List.of();
+        return cartRepo.findByCart(customer.getCart());
+    }
+
     // 🔹 Thêm sản phẩm vào giỏ
     public CartItem addProduct(Long userId, int productId, int quantity) {
         Customer customer = customerRepo.findByUser_Id(userId)
@@ -188,6 +195,44 @@ public class CartService {
             throw new RuntimeException("Unauthorized: Cart item does not belong to this user");
         }
         
+        cartRepo.deleteById(itemId);
+    }
+
+    // ===== Guest session operations =====
+    public CartItem increaseQuantityForSession(String sessionId, int itemId) {
+        Customer guest = getOrCreateGuestCustomer(sessionId);
+        CartItem item = cartRepo.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+        if (item.getCart().getCartId() != guest.getCart().getCartId()) {
+            throw new RuntimeException("Unauthorized: Cart item does not belong to this session");
+        }
+        item.setQuantity(item.getQuantity() + 1);
+        return cartRepo.save(item);
+    }
+
+    public CartItem decreaseQuantityForSession(String sessionId, int itemId) {
+        Customer guest = getOrCreateGuestCustomer(sessionId);
+        CartItem item = cartRepo.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+        if (item.getCart().getCartId() != guest.getCart().getCartId()) {
+            throw new RuntimeException("Unauthorized: Cart item does not belong to this session");
+        }
+        if (item.getQuantity() > 1) {
+            item.setQuantity(item.getQuantity() - 1);
+            return cartRepo.save(item);
+        } else {
+            cartRepo.deleteById(itemId);
+            return null;
+        }
+    }
+
+    public void removeItemForSession(String sessionId, int itemId) {
+        Customer guest = getOrCreateGuestCustomer(sessionId);
+        CartItem item = cartRepo.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+        if (item.getCart().getCartId() != guest.getCart().getCartId()) {
+            throw new RuntimeException("Unauthorized: Cart item does not belong to this session");
+        }
         cartRepo.deleteById(itemId);
     }
 }
