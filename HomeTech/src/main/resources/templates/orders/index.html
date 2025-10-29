@@ -21,50 +21,69 @@
             padding: 2rem;
             padding-top: 140px; /* Space for fixed header */
         }
+
+        .container { max-width: 980px; margin: 0 auto; }
         
         .page-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
-            font-weight: 700;
+            font-size: 2.4rem;
+            font-weight: 800;
+            text-align: left;
             background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.5px;
         }
 
         .order-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(0, 191, 255, 0.2);
-            border-radius: 20px;
-            padding: 2rem;
-            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(0, 191, 255, 0.18);
+            border-radius: 16px;
+            padding: 1.6rem;
+            margin-bottom: 1.2rem;
+            box-shadow: 0 6px 24px rgba(0, 191, 255, 0.08);
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+        }
+        .order-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 191, 255, 0.35);
+            box-shadow: 0 10px 36px rgba(0, 191, 255, 0.18);
         }
 
         .order-id {
-            font-size: 1.3rem;
-            font-weight: 700;
+            font-size: 1.15rem;
+            font-weight: 800;
             color: #00FFFF;
+            margin-bottom: .35rem;
         }
+        .order-meta { color: #99a3b0; font-size: .95rem; margin: .15rem 0; }
+        .order-total { color: #00FFFF; font-weight: 700; }
 
-        .empty-orders {
-            text-align: center;
-            padding: 5rem 2rem;
-        }
+        .empty-orders { text-align: center; padding: 4.5rem 2rem; }
 
-        .btn-back {
-            background: rgba(0, 191, 255, 0.1);
-            border: 2px solid rgba(0, 191, 255, 0.5);
-            color: #00FFFF;
-            padding: 0.6rem 1.5rem;
-            border-radius: 25px;
+        .btn, .btn-back {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 160px;
+            padding: 0.8rem 1.4rem;
+            border-radius: 28px;
             text-decoration: none;
+            font-weight: 700;
+            border: 1px solid rgba(0, 191, 255, 0.45);
+            color: #00FFFF;
+            background: rgba(0, 191, 255, 0.10);
+            transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
         }
-
-        .btn-back:hover {
+        .btn:hover, .btn-back:hover {
             background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
             color: #0a0e27;
+            border-color: transparent;
+            box-shadow: 0 8px 28px rgba(0, 191, 255, 0.35);
+            transform: translateY(-2px);
         }
+        .btn-primary { margin-top: .6rem; }
     </style>
 </head>
 <body>
@@ -74,21 +93,27 @@
         <i class="fas fa-shopping-bag"></i> My Orders
     </h1>
 
-    <!-- Debug: Show if orders variable exists -->
-    <p style="color: #00FFFF;">DEBUG: Orders count = <span th:text="${orders != null ? orders.size() : 'NULL'}">0</span></p>
+    <!-- Success/Error Toasts -->
+    <div th:if="${success != null}" style="background: rgba(0, 191, 255, 0.15); border: 2px solid rgba(0, 191, 255, 0.6); color: #00FFFF; padding: 0.8rem 1rem; border-radius: 12px; margin-bottom: 1rem;">
+        <i class="fas fa-check-circle"></i>
+        <span th:text="${success}">Order created</span>
+    </div>
+    <div th:if="${error != null}" style="background: rgba(255, 77, 77, 0.15); border: 2px solid rgba(255, 77, 77, 0.6); color: #ff6b6b; padding: 0.8rem 1rem; border-radius: 12px; margin-bottom: 1rem;">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:text="${error}">Error</span>
+    </div>
 
     <!-- Orders List -->
     <div th:if="${orders != null and !orders.empty}">
-        <p style="color: #00FFFF;">DEBUG: Found <span th:text="${orders.size()}">0</span> orders</p>
         
         <div class="order-card" th:each="order : ${orders}">
             <div class="order-id">
                 Order #<span th:text="${order.orderId}">12345</span>
-                </div>
-            <p>Status: <span th:text="${order.orderStatus}">Status</span></p>
-            <p>Date: <span th:text="${order.orderDate}">Date</span></p>
-            <p>Total: <span th:text="${order.totalPrice}">0</span> ₫</p>
-            <a th:href="@{'/orders/' + ${order.orderId}}" class="btn-back">View Details</a>
+            </div>
+            <p class="order-meta">Status: <span th:text="${order.orderStatus}">Status</span></p>
+            <p class="order-meta">Date: <span th:text="${order.orderDate}">Date</span></p>
+            <p class="order-total">Total: <span th:text="${order.totalPrice}">0</span> ₫</p>
+            <a th:href="@{'/orders/' + ${order.orderId}}" class="btn btn-primary">View Details</a>
         </div>
     </div>
 

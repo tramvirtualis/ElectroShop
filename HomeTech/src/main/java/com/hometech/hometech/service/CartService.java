@@ -235,4 +235,26 @@ public class CartService {
         }
         cartRepo.deleteById(itemId);
     }
+
+    // ===== Merge guest cart (by session) into logged-in user's cart =====
+    private Customer findGuestCustomerBySession(String sessionId) {
+        String guestEmail = "guest_" + sessionId + "@guest.local";
+        com.hometech.hometech.model.User user = userRepository.findByEmail(guestEmail);
+        if (user == null) return null;
+        return customerRepo.findByUser_Id(user.getId()).orElse(null);
+    }
+
+    public void mergeSessionCartToUser(String sessionId, Long userId) {
+        Customer guest = findGuestCustomerBySession(sessionId);
+        if (guest == null || guest.getCart() == null) return;
+        List<CartItem> items = cartRepo.findByCart(guest.getCart());
+        if (items == null || items.isEmpty()) return;
+        for (CartItem ci : items) {
+            addProduct(userId, ci.getProduct().getProductID(), ci.getQuantity());
+        }
+        // clear guest items
+        for (CartItem ci : items) {
+            cartRepo.deleteById(ci.getCartItemId());
+        }
+    }
 }

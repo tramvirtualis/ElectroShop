@@ -12,6 +12,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
+import com.hometech.hometech.service.CartService;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -26,13 +27,16 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final AccountReposirory accountRepository;
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
+    private final CartService cartService;
 
     public OAuth2LoginSuccessHandler(AccountReposirory accountRepository,
                                      UserRepository userRepository,
-                                     CustomerRepository customerRepository) {
+                                     CustomerRepository customerRepository,
+                                     CartService cartService) {
         this.accountRepository = accountRepository;
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
+        this.cartService = cartService;
     }
 
     @Override
@@ -88,6 +92,10 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             customer.setCart(cart);
             customerRepository.save(customer);
         }
+
+        // Merge any session cart accumulated before login
+        String sessionId = request.getSession(true).getId();
+        cartService.mergeSessionCartToUser(sessionId, user.getId());
 
         response.sendRedirect("/");
     }

@@ -234,6 +234,15 @@
 
 <div class="page-content">
 <div class="container">
+    <!-- Flash Messages -->
+    <div th:if="${success != null}" style="background: rgba(0, 191, 255, 0.15); border: 2px solid rgba(0, 191, 255, 0.6); color: #00FFFF; padding: 0.8rem 1rem; border-radius: 12px; margin-bottom: 1rem;">
+        <i class="fas fa-check-circle"></i>
+        <span th:text="${success}">Đặt hàng thành công</span>
+    </div>
+    <div th:if="${error != null}" style="background: rgba(255, 77, 77, 0.15); border: 2px solid rgba(255, 77, 77, 0.6); color: #ff6b6b; padding: 0.8rem 1rem; border-radius: 12px; margin-bottom: 1rem;">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:text="${error}">Có lỗi xảy ra</span>
+    </div>
     <div class="row">
         <div class="col-lg-8">
             <!-- Cart Items from DB -->
@@ -291,9 +300,11 @@
                     <span th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
                 </div>
 
-                <button class="btn-checkout">
-                    <i class="fas fa-lock"></i> Proceed to Checkout
-                </button>
+                <form th:action="@{/orders/create}" method="post">
+                    <button type="submit" class="btn-checkout">
+                        <i class="fas fa-lock"></i> Đặt hàng
+                    </button>
+                </form>
 
                 <a href="/" class="btn btn-outline-light w-100 mt-2">
                     <i class="fas fa-arrow-left"></i> Continue Shopping

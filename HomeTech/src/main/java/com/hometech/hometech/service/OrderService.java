@@ -80,6 +80,49 @@ public class OrderService {
         return order;
     }
 
+    // 🆕 Tạo đơn hàng cho khách (guest) theo session guest_{sessionId}@guest.local
+    public Order createOrderForSession(String sessionId) {
+        String guestEmail = "guest_" + sessionId + "@guest.local";
+        com.hometech.hometech.model.User guestUser = customerRepo
+                .findAll()
+                .stream()
+                .map(Customer::getUser)
+                .filter(u -> guestEmail.equals(u.getEmail()))
+                .findFirst()
+                .orElse(null);
+        if (guestUser == null) {
+            throw new RuntimeException("No guest cart for this session");
+        }
+        Customer customer = customerRepo.findByUser_Id(guestUser.getId())
+                .orElseThrow(() -> new RuntimeException("Guest customer not found"));
+        if (customer.getCart() == null) throw new RuntimeException("Guest cart not found");
+
+        List<CartItem> cartItems = cartRepo.findByCart(customer.getCart());
+        if (cartItems.isEmpty()) throw new RuntimeException("Giỏ hàng trống!");
+
+        double total = 0;
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (CartItem c : cartItems) {
+            total += c.getProduct().getPrice() * c.getQuantity();
+            OrderItem oi = new OrderItem();
+            oi.setProduct(c.getProduct());
+            oi.setQuantity(c.getQuantity());
+            oi.setPrice(c.getProduct().getPrice());
+            orderItems.add(oi);
+        }
+        Order order = new Order();
+        order.setCustomer(customer);
+        order.setTotalPrice(total);
+        order.setOrderStatus(OrderStatus.WAITING_CONFIRMATION);
+        order.setOrderItems(orderItems);
+        order.setOrderDate(new java.util.Date());
+        orderItems.forEach(i -> i.setOrder(order));
+        orderRepo.save(order);
+        orderItemRepo.saveAll(orderItems);
+        cartRepo.deleteAll(cartItems);
+        return order;
+    }
+
     // 🟡 Cập nhật trạng thái đơn hàng
     public Order updateStatus(int orderId, OrderStatus newStatus) {
         Order order = orderRepo.findById(orderId)
