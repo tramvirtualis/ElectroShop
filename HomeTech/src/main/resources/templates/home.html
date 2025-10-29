@@ -613,8 +613,8 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Home page loaded successfully');
 });
 
-// Cart functionality for home page
-function showCartPopup(productId, productName) {
+// Cart functionality for home page - toast only
+function showCartToast(productId, productName) {
     // Show toast notification
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
@@ -636,6 +636,9 @@ function showCartPopup(productId, productName) {
 
     console.log(`Added product ${productId} to cart`);
 }
+
+// Expose only toast helper to global, avoid clashing with product popup API
+window.showCartToast = showCartToast;
 
 // Function to submit add to cart form
 function submitAddToCart(productId, quantity = 1) {

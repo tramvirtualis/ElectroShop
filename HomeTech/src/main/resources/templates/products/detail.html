@@ -458,6 +458,27 @@
             gap: 1rem;
         }
 
+        .btn-add-cart {
+            flex: 1;
+            padding: 0.8rem 1.5rem;
+            border-radius: 15px;
+            border: 2px solid rgba(0, 255, 255, 0.6);
+            background: rgba(0, 255, 255, 0.12);
+            color: #00FFFF;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-add-cart:hover {
+            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
+            color: #0a0e27;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 191, 255, 0.4);
+        }
+
         .btn-view-cart {
             flex: 1;
             background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
@@ -514,6 +535,88 @@
             overlay.classList.remove('active');
         }
     }
+</script>
+
+<!-- Final guard: ensure global entry exists even if earlier code fails or loads late -->
+<script>
+(function(){
+    try {
+        if (!window.showCartPopup || typeof window.showCartPopup !== 'function') {
+            window.showCartPopup = function(productIdOrData) {
+                const popup = document.getElementById('cartPopup');
+                if (!popup) { console.warn('#cartPopup not found (guard)'); return; }
+                const nameEl = popup.querySelector('.popup-product-name');
+                const totalEl = popup.querySelector('#popupTotal') || popup.querySelector('#total');
+                if (nameEl) nameEl.textContent = (productIdOrData && productIdOrData.name) || nameEl.textContent || 'Product';
+                const price = (productIdOrData && Number(productIdOrData.price)) || (typeof productPrice !== 'undefined' ? Number(productPrice) : 0) || 0;
+                if (totalEl) totalEl.textContent = (price) + ' VNĐ';
+                popup.classList.add('active');
+            };
+            console.log('showCartPopup guard attached');
+        }
+
+        // Guard for other inline handlers to prevent ReferenceError
+        if (typeof window.handleViewCart !== 'function') {
+            window.handleViewCart = function() {
+                try {
+                    // minimal add-to-cart then goto cart
+                    const qty = parseInt(document.getElementById('popupQuantity')?.value || '1') || 1;
+                    const id = document.getElementById('formProductId')?.value || null;
+                    const name = document.querySelector('.popup-product-name')?.textContent || 'Product';
+                    const priceText = (document.getElementById('popupPrice')?.textContent || '').replace(/[^\d.]/g,'');
+                    const price = Number(priceText) || (typeof productPrice !== 'undefined' ? Number(productPrice) : 0) || 0;
+                    const cart = JSON.parse(localStorage.getItem('hometech_cart') || '[]');
+                    const ex = cart.find(i => String(i.id||'')===String(id||''))
+                    if (ex) ex.quantity = (ex.quantity||0) + qty; else cart.push({id,name,price,quantity:qty});
+                    localStorage.setItem('hometech_cart', JSON.stringify(cart));
+                } catch(e) {}
+                window.location.href = '/cart';
+            };
+        }
+        if (typeof window.handleAddToCart !== 'function') {
+            window.handleAddToCart = function() {
+                try {
+                    const qty = parseInt(document.getElementById('popupQuantity')?.value || '1') || 1;
+                    const id = document.getElementById('formProductId')?.value || null;
+                    const name = document.querySelector('.popup-product-name')?.textContent || 'Product';
+                    const priceText = (document.getElementById('popupPrice')?.textContent || '').replace(/[^\d.]/g,'');
+                    const price = Number(priceText) || (typeof productPrice !== 'undefined' ? Number(productPrice) : 0) || 0;
+                    const cart = JSON.parse(localStorage.getItem('hometech_cart') || '[]');
+                    const ex = cart.find(i => String(i.id||'')===String(id||''))
+                    if (ex) ex.quantity = (ex.quantity||0) + qty; else cart.push({id,name,price,quantity:qty});
+                    localStorage.setItem('hometech_cart', JSON.stringify(cart));
+                } catch(e) {}
+            };
+        }
+        if (typeof window.updatePopupTotal !== 'function') {
+            window.updatePopupTotal = function(){
+                try {
+                    const qtyEl = document.getElementById('popupQuantity');
+                    const priceEl = document.getElementById('popupPrice');
+                    const quantity = parseInt(qtyEl ? qtyEl.value : '1') || 1;
+                    const jsPrice = (typeof window.productPrice !== 'undefined') ? Number(window.productPrice) : 0;
+                    const textPrice = priceEl ? Number((priceEl.textContent || '').replace(/[^\d.]/g, '')) : 0;
+                    const basePrice = (isNaN(jsPrice) || jsPrice === 0) ? textPrice : jsPrice;
+                    const total = (Number(basePrice) || 0) * quantity;
+                    const totalEl = document.getElementById('popupTotal');
+                    if (totalEl) totalEl.textContent = (total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")) + ' VNĐ';
+                } catch(e) { /* no-op */ }
+            }
+        }
+        if (typeof window.increasePopupQuantity !== 'function') {
+            window.increasePopupQuantity = function(){
+                const input = document.getElementById('popupQuantity');
+                if (!input) return; let v = parseInt(input.value)||1; if (v<100) input.value = v+1; if (window.updatePopupTotal) window.updatePopupTotal();
+            }
+        }
+        if (typeof window.decreasePopupQuantity !== 'function') {
+            window.decreasePopupQuantity = function(){
+                const input = document.getElementById('popupQuantity');
+                if (!input) return; let v = parseInt(input.value)||1; if (v>1) input.value = v-1; if (window.updatePopupTotal) window.updatePopupTotal();
+            }
+        }
+    } catch(e) { console.error('Guard attach failed', e); }
+})();
 </script>
 
 <!-- Header -->
@@ -636,8 +739,11 @@
                         </div>
 
         <div class="popup-actions">
-            <button class="btn-view-cart" onclick="submitAddToCart()">
+            <button class="btn-view-cart" onclick="handleViewCart()">
                 <i class="fas fa-shopping-cart"></i> Xem giỏ hàng
+            </button>
+            <button class="btn-add-cart" onclick="handleAddToCart()">
+                <i class="fas fa-cart-plus"></i> Add to Cart
             </button>
             <button class="btn-continue" onclick="closeCartPopup()">
                 Tiếp tục mua
@@ -696,9 +802,15 @@ function decreasePopupQuantity() {
 }
 
 function updatePopupTotal() {
-    const quantity = parseInt(document.getElementById('popupQuantity').value);
-    const total = productPrice * quantity;
-    document.getElementById('popupTotal').textContent = formatPrice(total) + ' VNĐ';
+    const qtyEl = document.getElementById('popupQuantity');
+    const priceEl = document.getElementById('popupPrice');
+    const quantity = parseInt(qtyEl ? qtyEl.value : '1') || 1;
+    const jsPrice = (typeof productPrice !== 'undefined') ? Number(productPrice) : 0;
+    const textPrice = priceEl ? Number((priceEl.textContent || '').replace(/[^\d.]/g, '')) : 0;
+    const basePrice = (isNaN(jsPrice) || jsPrice === 0) ? textPrice : jsPrice;
+    const total = (Number(basePrice) || 0) * quantity;
+    const totalEl = document.getElementById('popupTotal');
+    if (totalEl) totalEl.textContent = formatPrice(total) + ' VNĐ';
 }
 
 function formatPrice(price) {
@@ -706,21 +818,124 @@ function formatPrice(price) {
 }
 
 // Popup functions
-function showCartPopup() {
-    const quantity = parseInt(document.getElementById('quantity').value);
-    document.getElementById('popupQuantity').value = quantity;
-    updatePopupTotal();
-    document.getElementById('cartPopup').classList.add('active');
+async function showCartPopup(productIdOrData) {
+    try {
+        // Default quantity from main selector if exists
+        const mainQtyEl = document.getElementById('quantity');
+        const quantity = mainQtyEl ? parseInt(mainQtyEl.value) || 1 : 1;
+
+        // Resolve product data without relying on network where possible
+        let productData = null;
+        if (productIdOrData && typeof productIdOrData === 'object') {
+            productData = productIdOrData;
+        } else if (productIdOrData) {
+            // Optional graceful fetch if an id is provided
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 5000);
+                const res = await fetch(`/api/products/${productIdOrData}`, { signal: controller.signal, headers: { 'Accept': 'application/json' } });
+                clearTimeout(timeout);
+                if (res.ok) {
+                    productData = await res.json();
+                }
+            } catch (e) {
+                // Swallow network errors gracefully; we'll fallback to DOM/Thymeleaf data
+                console.warn('Product fetch skipped/fallback:', e && e.message ? e.message : e);
+            }
+        }
+
+        // DOM elements
+        const overlayEl = document.getElementById('cartPopup');
+        const nameEl = document.querySelector('.popup-product-name');
+        const priceEl = document.getElementById('popupPrice');
+        const imgEl = document.querySelector('.popup-image');
+        const qtyEl = document.getElementById('popupQuantity');
+        const totalEl = document.getElementById('popupTotal');
+        const hiddenIdEl = document.getElementById('formProductId');
+
+        // Current values as fallback
+        const fallbackName = nameEl ? nameEl.textContent.trim() : '';
+        const numericPrice = Number(typeof productPrice !== 'undefined' ? productPrice : 0) || 0;
+        const existingTextPrice = Number(((priceEl && priceEl.textContent) ? priceEl.textContent : '').replace(/[^\d.]/g, '')) || 0;
+        const fallbackImg = imgEl ? imgEl.getAttribute('src') : '';
+        const fallbackId = hiddenIdEl ? hiddenIdEl.value : null;
+
+        // Merge with productData if available
+        const finalName = productData && productData.name ? productData.name : fallbackName;
+        const finalPrice = (productData && typeof productData.price === 'number')
+            ? productData.price
+            : (numericPrice > 0 ? numericPrice : existingTextPrice);
+        const finalImage = productData && productData.imageUrl ? productData.imageUrl : fallbackImg;
+        const finalId = productData && productData.id ? productData.id : fallbackId;
+
+        if (nameEl) nameEl.textContent = finalName;
+        if (priceEl) priceEl.textContent = formatPrice(finalPrice) + ' VNĐ';
+        if (imgEl && finalImage) imgEl.setAttribute('src', finalImage);
+        if (hiddenIdEl && finalId) hiddenIdEl.value = finalId;
+
+        if (qtyEl) qtyEl.value = quantity;
+        if (totalEl) totalEl.textContent = formatPrice(finalPrice * quantity) + ' VNĐ';
+
+        if (overlayEl) overlayEl.classList.add('active');
+    } catch (err) {
+        console.error('Error showing cart popup:', err);
+    }
 }
 
 function closeCartPopup() {
     document.getElementById('cartPopup').classList.remove('active');
 }
 
-function submitAddToCart() {
-    const quantity = parseInt(document.getElementById('popupQuantity').value);
-    document.getElementById('formQuantity').value = quantity;
-    document.getElementById('addToCartForm').submit();
+// Local cart storage helpers
+function getLocalCart() {
+    try {
+        return JSON.parse(localStorage.getItem('hometech_cart')) || [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function setLocalCart(cart) {
+    localStorage.setItem('hometech_cart', JSON.stringify(cart));
+}
+
+function getProductInfoFromPopup() {
+    const idInput = document.getElementById('formProductId');
+    const productId = idInput ? idInput.value : null;
+    const nameEl = document.querySelector('.popup-product-name');
+    const price = Number(productPrice || 0);
+    const quantity = parseInt(document.getElementById('popupQuantity').value) || 1;
+    const imgEl = document.querySelector('.popup-image');
+    return {
+        id: productId,
+        name: nameEl ? nameEl.textContent.trim() : '',
+        price: price,
+        quantity: quantity,
+        image: imgEl ? imgEl.getAttribute('src') : ''
+    };
+}
+
+function addOrUpdateCartItem(item) {
+    const cart = getLocalCart();
+    const idx = cart.findIndex(ci => (ci.id || '') === (item.id || ''));
+    if (idx >= 0) {
+        cart[idx].quantity = (parseInt(cart[idx].quantity) || 0) + item.quantity;
+    } else {
+        cart.push(item);
+    }
+    setLocalCart(cart);
+}
+
+function handleAddToCart() {
+    const item = getProductInfoFromPopup();
+    addOrUpdateCartItem(item);
+    updatePopupTotal();
+}
+
+function handleViewCart() {
+    const item = getProductInfoFromPopup();
+    addOrUpdateCartItem(item);
+    window.location.href = '/cart';
 }
 
 // Initialize popup total on load
@@ -732,6 +947,15 @@ window.addEventListener('load', function() {
 document.getElementById('popupQuantity').addEventListener('input', function() {
     updatePopupTotal();
 });
+
+// Expose functions globally for inline onclick handlers
+window.showCartPopup = showCartPopup;
+window.closeCartPopup = closeCartPopup;
+window.increasePopupQuantity = increasePopupQuantity;
+window.decreasePopupQuantity = decreasePopupQuantity;
+window.handleAddToCart = handleAddToCart;
+window.handleViewCart = handleViewCart;
+window.updatePopupTotal = updatePopupTotal;
 </script>
 
 </body>
