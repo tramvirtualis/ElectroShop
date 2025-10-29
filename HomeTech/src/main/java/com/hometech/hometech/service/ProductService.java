@@ -38,6 +38,10 @@ public class ProductService {
 
     // 🟢 Xóa sản phẩm
     public void delete(int id) {
+        // Xoá phụ thuộc ở bảng product_images trước để tránh lỗi FK
+        try {
+            productRepository.deleteImagesByProductId(id);
+        } catch (Exception ignored) {}
         productRepository.deleteById(id);
     }
 

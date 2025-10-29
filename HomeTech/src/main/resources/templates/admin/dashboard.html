@@ -4,293 +4,135 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - HomeTech</title>
-    
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Bootstrap & FontAwesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #6C5CE7;
+            --success: #00B894;
+            --danger: #FF7675;
+            --warning: #FDCB6E;
+            --dark: #2D3436;
+            --light: #F8F9FA;
+            --gray: #636E72;
         }
 
         body {
-            background: linear-gradient(135deg, #0a0e27 0%, #1a1f35 25%, #0f1419 100%);
-            min-height: 100vh;
             font-family: 'Rajdhani', sans-serif;
-            color: #e0e6ed;
-            position: relative;
-            overflow: hidden;
+            background: linear-gradient(135deg, #1e1e2f, #2d1b3a);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
         }
 
-        /* Animated Background */
-        body::before {
-            content: '';
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            background-image: 
-                radial-gradient(circle at 20% 30%, rgba(0, 191, 255, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(0, 255, 255, 0.06) 0%, transparent 50%);
-            animation: backgroundFloat 20s ease-in-out infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        @keyframes backgroundFloat {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(30px, -30px); }
-        }
-
-        /* Admin Layout */
         .admin-container {
             display: flex;
-            height: 100vh;
-            position: relative;
-            z-index: 1;
+            min-height: 100vh;
         }
 
-        /* Sidebar */
         .admin-sidebar {
-            width: 280px;
-            background: rgba(10, 14, 39, 0.95);
-            backdrop-filter: blur(20px);
-            border-right: 2px solid rgba(0, 191, 255, 0.2);
-            padding: 2rem 0;
+            width: 260px;
+            background: rgba(30, 30, 47, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem 1rem;
+            border-right: 1px solid rgba(255,255,255,0.1);
             position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 100;
-            box-shadow: 4px 0 30px rgba(0, 191, 255, 0.1);
+            height: 100%;
+            z-index: 1000;
+            transition: all 0.3s;
         }
 
         .sidebar-logo {
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.5rem;
             font-weight: 900;
-            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            padding: 0 2rem;
-            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            color: var(--primary);
             text-align: center;
-            letter-spacing: 1px;
+            margin-bottom: 2rem;
+            letter-spacing: 2px;
         }
 
         .sidebar-menu {
             list-style: none;
             padding: 0;
+            margin: 0;
         }
 
         .sidebar-item {
-            margin: 0.5rem 1rem;
+            margin-bottom: 0.5rem;
         }
 
         .sidebar-link {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 1rem 1.5rem;
-            color: #e0e6ed;
+            padding: 0.75rem 1rem;
+            color: #ddd;
             text-decoration: none;
-            border-radius: 15px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            border-radius: 12px;
+            transition: all 0.3s;
+            font-weight: 600;
         }
 
-        .sidebar-link::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 191, 255, 0.3), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .sidebar-link:hover {
-            background: rgba(0, 191, 255, 0.1);
-            border: 1px solid rgba(0, 191, 255, 0.3);
+        .sidebar-link:hover, .sidebar-link.active {
+            background: var(--primary);
+            color: white;
             transform: translateX(5px);
-        }
-
-        .sidebar-link:hover::before {
-            left: 100%;
-        }
-
-        .sidebar-link.active {
-            background: linear-gradient(135deg, rgba(0, 191, 255, 0.2), rgba(0, 255, 255, 0.2));
-            border: 2px solid #00BFFF;
-            box-shadow: 0 0 30px rgba(0, 191, 255, 0.4);
-            color: #00FFFF;
-            transform: translateX(5px);
-        }
-
-        .sidebar-link.active::before {
-            display: none;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
         }
 
         .sidebar-icon {
-            font-size: 1.2rem;
-            width: 24px;
-            text-align: center;
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
         }
 
-        /* Main Content */
         .admin-main {
             flex: 1;
-            margin-left: 280px;
+            margin-left: 260px;
             padding: 2rem;
-            overflow-y: auto;
-            height: 100vh;
+            background: transparent;
         }
 
         .admin-header {
             margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .admin-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
-            position: relative;
-            padding-bottom: 1rem;
+            font-size: 1.8rem;
+            margin: 0;
+            color: var(--primary);
         }
 
-        .admin-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100px;
-            height: 3px;
-            background: linear-gradient(90deg, #00BFFF, transparent);
-            box-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
-        }
-
-        .admin-actions {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .btn-admin {
-            border: 2px solid rgba(0, 191, 255, 0.5);
-            border-radius: 25px;
-            padding: 0.6rem 1.5rem;
-            color: #00FFFF;
-            background: rgba(0, 191, 255, 0.1);
-            transition: all 0.3s ease;
-            text-decoration: none;
+        .btn-add {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
             font-weight: 600;
-            cursor: pointer;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            transition: 0.3s;
         }
 
-        .btn-admin:hover {
-            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
-            color: #0a0e27;
-            border-color: transparent;
+        .btn-add:hover {
+            background: #00a07d;
             transform: translateY(-2px);
-            box-shadow: 0 5px 25px rgba(0, 191, 255, 0.5);
         }
 
-        .btn-admin-danger {
-            border-color: rgba(255, 77, 77, 0.5);
-            color: #ff6b6b;
-        }
-
-        .btn-admin-danger:hover {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
-            color: #fff;
-            border-color: transparent;
-        }
-
-        /* Content Panel */
-        .admin-content-panel {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(0, 191, 255, 0.2);
-            border-radius: 25px;
-            padding: 2rem;
-            transition: all 0.4s ease;
-        }
-
-        .admin-content-panel:hover {
-            border-color: #00BFFF;
-            box-shadow: 0 20px 60px rgba(0, 191, 255, 0.2);
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        /* Data Table */
-        .data-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-
-        .data-table thead {
-            background: rgba(0, 191, 255, 0.1);
-        }
-
-        .data-table th {
-            padding: 1rem;
-            text-align: left;
-            font-weight: 700;
-            color: #00FFFF;
-            border-bottom: 2px solid rgba(0, 191, 255, 0.3);
-            font-size: 0.95rem;
-        }
-
-        .data-table td {
-            padding: 1rem;
-            border-bottom: 1px solid rgba(0, 191, 255, 0.1);
-            color: #e0e6ed;
-        }
-
-        .data-table tbody tr {
-            transition: all 0.3s ease;
-        }
-
-        .data-table tbody tr:hover {
-            background: rgba(0, 191, 255, 0.05);
-            transform: translateX(5px);
-        }
-
-        .badge-table {
-            padding: 0.4rem 0.8rem;
-            border-radius: 15px;
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-
-        .badge-active {
-            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
-            color: #0a0e27;
-        }
-
-        .badge-inactive {
-            background: rgba(255, 255, 255, 0.1);
-            color: #e0e6ed;
-            border: 1px solid rgba(0, 191, 255, 0.3);
-        }
-
-        /* Stats Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -299,394 +141,179 @@
         }
 
         .stat-card {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255,255,255,0.1);
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(0, 191, 255, 0.2);
-            border-radius: 20px;
             padding: 1.5rem;
-            transition: all 0.4s ease;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: 0.3s;
         }
 
         .stat-card:hover {
-            border-color: #00BFFF;
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 191, 255, 0.3);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
         .stat-icon {
             font-size: 2rem;
-            color: #00FFFF;
+            color: var(--primary);
             margin-bottom: 0.5rem;
         }
 
         .stat-value {
             font-size: 2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: white;
         }
 
         .stat-label {
-            color: #6c757d;
+            color: #aaa;
             font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .admin-sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-                border-right: none;
-                border-bottom: 2px solid rgba(0, 191, 255, 0.2);
-            }
-
-            .admin-main {
-                margin-left: 0;
-                padding: 1rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .data-table {
-                font-size: 0.85rem;
-            }
+        .admin-content-panel {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
         }
 
-        /* Hidden Content */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        .data-table th {
+            background: rgba(108, 92, 231, 0.3);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: #eee;
+        }
+
+        .data-table tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .badge-table {
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-active {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-inactive {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-admin {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-right: 0.5rem;
+            transition: 0.3s;
+        }
+
+        .btn-admin:hover {
+            background: #5a4fcf;
+            transform: translateY(-1px);
+        }
+
+        .btn-admin-danger {
+            background: var(--danger);
+        }
+
+        .btn-admin-danger:hover {
+            background: #e65b5b;
+        }
+
+        .btn-sm {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.7rem;
+        }
+
         .content-section {
             display: none;
-            animation: fadeIn 0.5s ease-in;
         }
 
         .content-section.active {
             display: block;
+            animation: fadeIn 0.5s ease;
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 992px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            .admin-main {
+                margin-left: 0;
             }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: #6c757d;
-        }
-
-        .empty-state-icon {
-            font-size: 4rem;
-            color: rgba(0, 191, 255, 0.3);
-            margin-bottom: 1rem;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, rgba(10, 14, 39, 0.98) 0%, rgba(26, 31, 53, 0.98) 100%);
-            border: 2px solid rgba(0, 191, 255, 0.3);
-            border-radius: 25px;
-            padding: 2rem;
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 191, 255, 0.3);
-            animation: slideIn 0.4s ease;
-            position: relative;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-50px);
+            .admin-sidebar.active {
+                transform: translateX(0);
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid rgba(0, 191, 255, 0.2);
-        }
-
-        .modal-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .modal-close {
-            background: transparent;
-            border: 2px solid rgba(255, 77, 77, 0.5);
-            color: #ff6b6b;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-close:hover {
-            background: rgba(255, 77, 77, 0.2);
-            transform: rotate(90deg);
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #00FFFF;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(0, 191, 255, 0.3);
-            border-radius: 15px;
-            color: #e0e6ed;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #00BFFF;
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 20px rgba(0, 191, 255, 0.3);
-        }
-
-        .form-control::placeholder {
-            color: rgba(224, 230, 237, 0.4);
-        }
-
-        .form-control option {
-            background: #0a0e27;
-            color: #e0e6ed;
-        }
-
-        textarea.form-control {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        .input-error {
-            border-color: #ff6b6b !important;
-            box-shadow: 0 0 10px rgba(255, 107, 107, 0.3) !important;
-        }
-
-        .error-message {
-            color: #ff6b6b;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-            display: none;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 2px solid rgba(0, 191, 255, 0.2);
-        }
-
-        .btn-modal {
-            padding: 0.8rem 2rem;
-            border-radius: 25px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-modal-primary {
-            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
-            color: #0a0e27;
-            border: none;
-        }
-
-        .btn-modal-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 25px rgba(0, 191, 255, 0.5);
-        }
-
-        .btn-modal-secondary {
-            background: transparent;
-            border: 2px solid rgba(0, 191, 255, 0.5);
-            color: #00FFFF;
-        }
-
-        .btn-modal-secondary:hover {
-            background: rgba(0, 191, 255, 0.1);
-        }
-
-        .btn-sm {
-            padding: 0.4rem 1rem;
-            font-size: 0.85rem;
-        }
-
-        input[type="file"] {
-            color: #e0e6ed;
-        }
-
-        input[type="file"]::file-selector-button {
-            background: rgba(0, 191, 255, 0.2);
-            border: 2px solid rgba(0, 191, 255, 0.5);
-            border-radius: 10px;
-            padding: 0.5rem 1rem;
-            color: #00FFFF;
-            cursor: pointer;
-            margin-right: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        input[type="file"]::file-selector-button:hover {
-            background: rgba(0, 191, 255, 0.3);
-        }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 30px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.1);
-            transition: 0.4s;
-            border-radius: 30px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 22px;
-            width: 22px;
-            left: 4px;
-            bottom: 4px;
-            background-color: #e0e6ed;
-            transition: 0.4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(30px);
-        }
-
-        .switch-label {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
         }
     </style>
 </head>
 <body>
-
 <div class="admin-container">
-    
+
     <!-- Sidebar -->
     <aside class="admin-sidebar">
         <div class="sidebar-logo">
             <i class="fas fa-tachometer-alt"></i> ADMIN PANEL
         </div>
-        
         <ul class="sidebar-menu">
             <li class="sidebar-item">
                 <a href="#" class="sidebar-link active" data-section="products">
-                    <span class="sidebar-icon"><i class="fas fa-box"></i></span>
-                    <span>Manage Products</span>
+                    <i class="fas fa-box sidebar-icon"></i> Products
                 </a>
             </li>
             <li class="sidebar-item">
                 <a href="#" class="sidebar-link" data-section="categories">
-                    <span class="sidebar-icon"><i class="fas fa-tags"></i></span>
-                    <span>Manage Categories</span>
+                    <i class="fas fa-tags sidebar-icon"></i> Categories
                 </a>
             </li>
             <li class="sidebar-item">
                 <a href="#" class="sidebar-link" data-section="orders">
-                    <span class="sidebar-icon"><i class="fas fa-shopping-bag"></i></span>
-                    <span>Manage Orders</span>
-                </a>
-            </li>
-            <li class="sidebar-item">
-                <a href="#" class="sidebar-link" data-section="payments">
-                    <span class="sidebar-icon"><i class="fas fa-credit-card"></i></span>
-                    <span>Manage Payments</span>
+                    <i class="fas fa-shopping-bag sidebar-icon"></i> Orders
                 </a>
             </li>
             <li class="sidebar-item">
                 <a href="#" class="sidebar-link" data-section="customers">
-                    <span class="sidebar-icon"><i class="fas fa-users"></i></span>
-                    <span>Manage Customers</span>
+                    <i class="fas fa-users sidebar-icon"></i> Users
                 </a>
             </li>
         </ul>
@@ -694,716 +321,407 @@
 
     <!-- Main Content -->
     <main class="admin-main">
-        
-        <!-- Products Section -->
-        <div class="content-section active" id="products">
+
+        <!-- PRODUCTS SECTION -->
+        <div class="content-section" id="products" th:classappend="${dashboardSection} == null or ${dashboardSection} == 'products' ? ' active' : ''">
             <div class="admin-header">
-                <h1 class="admin-title">
-                    <i class="fas fa-box"></i> Manage Products
-                </h1>
-                <div class="admin-actions">
-                    <button class="btn-admin">
+                <h1 class="admin-title"><i class="fas fa-box"></i> Manage Products</h1>
+                <div>
+                    <a th:href="@{/admin/dashboard}" class="btn-admin btn-sm" style="margin-right:0.5rem;">
+                        <i class="fas fa-list"></i> Open page
+                    </a>
+                    <a th:href="@{/admin/dashboard/product/new}" class="btn-add">
                         <i class="fas fa-plus"></i> Add Product
-                    </button>
-                    <button class="btn-admin">
-                        <i class="fas fa-sync"></i> Refresh
-                    </button>
+                    </a>
                 </div>
+            </div>
+
+            <!-- Product Form (inline modal area) -->
+            <!-- Product Form (inline area) -->
+            <div th:if="${showProductForm}" class="admin-content-panel" style="margin-bottom:1rem;">
+                <form th:action="@{/admin/dashboard/product/save}" method="post" enctype="multipart/form-data">
+                    <!-- Nếu dùng CSRF -->
+                    <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+
+                    <!-- Hidden ID để phân biệt thêm/sửa -->
+                    <input type="hidden" name="productID" th:value="${product != null ? product.productID : 0}" />
+
+                    <div class="row g-2">
+                        <!-- Name -->
+                        <div class="col-md-4">
+                            <label class="form-label">Name</label>
+                            <input class="form-control" name="productName"
+                                   th:value="${product != null ? product.productName : ''}" required>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="col-md-2">
+                            <label class="form-label">Price</label>
+                            <input class="form-control" type="number" min="0" step="1" name="price"
+                                   th:value="${product != null ? product.price : 0}" required>
+                        </div>
+
+                        <!-- Category -->
+                        <div class="col-md-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" name="categoryID" required>
+                                <option value="" disabled th:selected="${product == null}">-- Select --</option>
+                                <option th:each="cat : ${categories}"
+                                        th:value="${cat.categoryID}"
+                                        th:selected="${product != null and product.category != null and product.category.categoryID == cat.categoryID}"
+                                        th:text="${cat.categoryName}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div class="col-md-3">
+                            <label class="form-label">Image</label>
+                            <input class="form-control" type="file" name="image" accept="image/*">
+                        </div>
+
+                        <!-- Hiển thị ảnh hiện tại nếu có -->
+                        <div class="col-md-3 text-center" th:if="${product != null and product.image != null}">
+                            <label class="form-label d-block">Current Image</label>
+                            <img th:src="@{'/admin/dashboard/product/image/' + ${product.productID}}"
+                                 alt="Product Image"
+                                 class="img-thumbnail mt-1"
+                                 style="max-height: 100px;">
+                        </div>
+
+                        <!-- Description -->
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" rows="2" name="description"
+                                      th:text="${product != null ? product.description : ''}"></textarea>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="col-md-3">
+                            <label class="form-label d-block">Status</label>
+                            <input type="checkbox" class="form-check-input" id="status" name="status"
+                                   th:checked="${product != null ? product.status : true}">
+                            <label for="status" class="form-check-label">Active</label>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="col-12" style="margin-top:.5rem;">
+                            <button class="btn-admin btn-sm" type="submit">
+                                <i class="fas"
+                                   th:classappend="${product != null and product.productID > 0} ? ' fa-save' : ' fa-plus'"></i>
+                                <span th:text="${product != null and product.productID > 0} ? 'Update' : 'Create'"></span>
+                            </button>
+
+                            <a class="btn-admin btn-admin-danger btn-sm" th:href="@{/admin/dashboard}">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+
             </div>
 
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-box"></i></div>
-                    <div class="stat-value">156</div>
-                    <div class="stat-label">Total Products</div>
+                    <div class="stat-value" th:text="${products != null ? #lists.size(products) : 0}">0</div>
+                    <div class="stat-label">Total</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                    <div class="stat-value">142</div>
+                    <div class="stat-value" th:text="${activeProductsCount}">0</div>
                     <div class="stat-label">Active</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-pause-circle"></i></div>
-                    <div class="stat-value">14</div>
+                    <div class="stat-value" th:text="${inactiveProductsCount}">0</div>
                     <div class="stat-label">Inactive</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
-                    <div class="stat-value">24.5K</div>
-                    <div class="stat-label">Avg Price</div>
                 </div>
             </div>
 
             <div class="admin-content-panel">
                 <table class="data-table">
                     <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
+                    <tr>
+                         <th>ID</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>iPhone 15 Pro</td>
-                            <td>Smartphone</td>
-                            <td>25,990,000 ₫</td>
-                            <td><span class="badge-table badge-active">Active</span></td>
-                            <td>
-                                <button class="btn-admin btn-sm">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="btn-admin btn-admin-danger btn-sm">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Samsung Galaxy S24</td>
-                            <td>Smartphone</td>
-                            <td>28,990,000 ₫</td>
-                            <td><span class="badge-table badge-active">Active</span></td>
-                            <td>
-                                <button class="btn-admin btn-sm">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="btn-admin btn-admin-danger btn-sm">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>MacBook Pro M3</td>
-                            <td>Laptop</td>
-                            <td>45,990,000 ₫</td>
-                            <td><span class="badge-table badge-active">Active</span></td>
-                            <td>
-                                <button class="btn-admin btn-sm">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="btn-admin btn-admin-danger btn-sm">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr>
+                     <tr th:each="p : ${products}">
+                         <td th:text="${p.productID}"></td>
+                         <td th:text="${p.productName}"></td>
+                         <td th:text="${p.category != null ? p.category.categoryName : 'N/A'}">N/A</td>
+                        <td th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' ₫'"></td>
+                        <td>
+                             <span class="badge-table"
+                                   th:classappend="${p.status} ? 'badge-active' : 'badge-inactive'"
+                                   th:text="${p.status} ? 'Active' : 'Inactive'"></span>
+                        </td>
+                        <td>
+                            <a class="btn-admin btn-sm" th:href="@{/admin/dashboard/product/edit/{id}(id=${p.productID})}">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <a class="btn-admin btn-admin-danger btn-sm"
+                                th:href="@{/admin/dashboard/product/delete/{id}(id=${p.productID})}"
+                               onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                <i class="fas fa-trash"></i> Delete
+                            </a>
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Categories Section -->
-        <div class="content-section" id="categories">
+        <!-- CATEGORIES SECTION -->
+        <div class="content-section" id="categories" th:classappend="${dashboardSection} == 'categories' ? ' active' : ''">
             <div class="admin-header">
-                <h1 class="admin-title">
-                    <i class="fas fa-tags"></i> Manage Categories
-                </h1>
-                <div class="admin-actions">
-                    <button class="btn-admin">
+                <h1 class="admin-title"><i class="fas fa-tags"></i> Manage Categories</h1>
+                <div>
+                    <a th:href="@{/admin/dashboard}" class="btn-admin btn-sm" style="margin-right:0.5rem;">
+                        <i class="fas fa-list"></i> Open page
+                    </a>
+                    <a th:href="@{/admin/dashboard/category/new}" class="btn-add">
                         <i class="fas fa-plus"></i> Add Category
-                    </button>
+                    </a>
                 </div>
             </div>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-tags"></i></div>
-                    <div class="stat-value">5</div>
-                    <div class="stat-label">Total Categories</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-box"></i></div>
-                    <div class="stat-value">142</div>
-                    <div class="stat-label">Products</div>
-                </div>
+            <!-- Category Form (inline) -->
+            <div th:if="${showCategoryForm}" class="admin-content-panel" style="margin-bottom: 1rem;">
+                <form th:action="${category != null and category.categoryID > 0} ? @{/admin/dashboard/category/update/{id}(id=${category.categoryID})} : @{/admin/dashboard/category/add}"
+                      method="post">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Name</label>
+                            <input class="form-control" name="categoryName" th:value="${category != null ? category.categoryName : ''}" required>
+                        </div>
+                        <div class="col-12" style="margin-top:.5rem;">
+                            <button class="btn-admin btn-sm" type="submit">
+                                <i class="fas" th:classappend="${category != null and category.categoryID > 0} ? ' fa-save' : ' fa-plus'"></i>
+                                <span th:text="${category != null and category.categoryID > 0} ? 'Update' : 'Create'"></span>
+                            </button>
+                            <a class="btn-admin btn-admin-danger btn-sm" th:href="@{/admin/dashboard}">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
             </div>
 
             <div class="admin-content-panel">
                 <table class="data-table">
                     <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Product Count</th>
-                            <th>Actions</th>
-                        </tr>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Products</th>
+                        <th>Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>Smartphone</td>
-                            <td>45</td>
-                            <td>
-                                <button class="btn-admin btn-sm">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="btn-admin btn-admin-danger btn-sm">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Laptop</td>
-                            <td>32</td>
-                            <td>
-                                <button class="btn-admin btn-sm">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="btn-admin btn-admin-danger btn-sm">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>Tablet</td>
-                            <td>28</td>
-                            <td>
-                                <button class="btn-admin btn-sm">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="btn-admin btn-admin-danger btn-sm">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </td>
-                        </tr>
+                    <tr th:each="c : ${categories}">
+                        <td th:text="${c.categoryID}"></td>
+                        <td th:text="${c.categoryName}"></td>
+                        <td th:text="${c.products != null ? #lists.size(c.products) : 0}"></td>
+                        <td>
+                            <a class="btn-admin btn-sm" th:href="@{/admin/dashboard/category/edit/{id}(id=${c.categoryID})}">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <a class="btn-admin btn-admin-danger btn-sm"
+                                th:href="@{/admin/dashboard/category/delete/{id}(id=${c.categoryID})}"
+                               onclick="return confirm('Xóa danh mục sẽ ảnh hưởng đến sản phẩm. Bạn có chắc?')">
+                                <i class="fas fa-trash"></i> Delete
+                            </a>
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Orders Section -->
-        <div class="content-section" id="orders">
+        <!-- ORDERS SECTION -->
+        <div class="content-section" id="orders" th:classappend="${dashboardSection} == 'orders' ? ' active' : ''">
             <div class="admin-header">
-                <h1 class="admin-title">
-                    <i class="fas fa-shopping-bag"></i> Manage Orders
-                </h1>
-                <div class="admin-actions">
-                    <button class="btn-admin">
-                        <i class="fas fa-sync"></i> Refresh
-                    </button>
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
-                    <div class="stat-value">89</div>
-                    <div class="stat-label">Total Orders</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                    <div class="stat-value">12</div>
-                    <div class="stat-label">Pending</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-check"></i></div>
-                    <div class="stat-value">65</div>
-                    <div class="stat-label">Completed</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
-                    <div class="stat-value">1.2M</div>
-                    <div class="stat-label">Revenue</div>
+                <h1 class="admin-title"><i class="fas fa-shopping-bag"></i> Manage Orders</h1>
+                <div>
+                    <a th:href="@{/admin/dashboard/orders}" class="btn-admin btn-sm">
+                        <i class="fas fa-list"></i> Open page
+                    </a>
                 </div>
             </div>
 
             <div class="admin-content-panel">
                 <table class="data-table">
                     <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Customer</th>
-                            <th>Products</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>#1001</td>
-                            <td>John Doe</td>
-                            <td>2 items</td>
-                            <td>54,990,000 ₫</td>
-                            <td><span class="badge-table badge-active">Processing</span></td>
-                            <td>
-                                <button class="btn-admin btn-sm">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#1002</td>
-                            <td>Jane Smith</td>
-                            <td>1 item</td>
-                            <td>28,990,000 ₫</td>
-                            <td><span class="badge-table badge-active">Shipped</span></td>
-                            <td>
-                                <button class="btn-admin btn-sm">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                            </td>
-                        </tr>
+                     <tr th:each="o : ${orders}">
+                         <td th:text="'#' + ${o.orderId}"></td>
+                         <td th:text="${o.customer != null && o.customer.account != null ? o.customer.account.username : 'N/A'}"></td>
+                         <td th:text="${o.orderItems != null ? #lists.size(o.orderItems) : 0} + ' items'"></td>
+                        <td th:text="${#numbers.formatDecimal(o.totalPrice, 0, 'POINT', 0, 'COMMA')} + ' ₫'"></td>
+                        <td>
+                             <span class="badge-table"
+                                   th:classappend="${o.orderStatus != null and (o.orderStatus.name() == 'COMPLETED' or o.orderStatus.name() == 'SHIPPED')} ? 'badge-active' : 'badge-inactive'"
+                                   th:text="${o.orderStatus}"></span>
+                        </td>
+                        <td>
+                            <a class="btn-admin btn-sm" th:href="@{/admin/dashboard/orders/{id}(id=${o.orderId})}">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Payments Section -->
-        <div class="content-section" id="payments">
+        <!-- USERS SECTION -->
+        <div class="content-section" id="customers" th:classappend="${dashboardSection} == 'customers' ? ' active' : ''">
             <div class="admin-header">
-                <h1 class="admin-title">
-                    <i class="fas fa-credit-card"></i> Manage Payments
-                </h1>
-                <div class="admin-actions">
-                    <button class="btn-admin">
-                        <i class="fas fa-sync"></i> Refresh
-                    </button>
+                <h1 class="admin-title"><i class="fas fa-users"></i> Manage Users</h1>
+                <div>
+                    <a th:href="@{/admin/dashboard/users}" class="btn-admin btn-sm">
+                        <i class="fas fa-list"></i> Open page
+                    </a>
                 </div>
             </div>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-credit-card"></i></div>
-                    <div class="stat-value">65</div>
-                    <div class="stat-label">Total Payments</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                    <div class="stat-value">60</div>
-                    <div class="stat-label">Successful</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                    <div class="stat-value">5</div>
-                    <div class="stat-label">Failed</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
-                    <div class="stat-value">1.8M</div>
-                    <div class="stat-label">Total Amount</div>
-                </div>
-            </div>
-
+            <!-- Danh sách người dùng -->
             <div class="admin-content-panel">
                 <table class="data-table">
                     <thead>
-                        <tr>
-                            <th>Transaction ID</th>
-                            <th>Order ID</th>
-                            <th>Method</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                        </tr>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Active</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>TXN-2025-001</td>
-                            <td>#1001</td>
-                            <td>Credit Card</td>
-                            <td>54,990,000 ₫</td>
-                            <td><span class="badge-table badge-active">Success</span></td>
-                            <td>2025-10-27</td>
-                        </tr>
-                        <tr>
-                            <td>TXN-2025-002</td>
-                            <td>#1002</td>
-                            <td>Bank Transfer</td>
-                            <td>28,990,000 ₫</td>
-                            <td><span class="badge-table badge-active">Success</span></td>
-                            <td>2025-10-26</td>
-                        </tr>
+                    <tr th:each="u : ${users}">
+                        <td th:text="${u.id}"></td>
+                        <td th:text="${u.fullName != null && u.fullName != '' ? u.fullName : (u.account != null ? u.account.username : '')}"></td>
+                        <td th:text="${u.account != null ? u.account.email : 'N/A'}"></td>
+                        <td>
+                    <span class="badge-table"
+                          th:classappend="${u.active} ? 'badge-active' : 'badge-inactive'"
+                          th:text="${u.active} ? 'Active' : 'Inactive'"></span>
+                        </td>
+                        <td th:text="${u.account != null && u.account.role != null ? u.account.role.name() : 'N/A'}"></td>
+                        <td>
+                            <a class="btn-admin btn-sm" th:href="@{/admin/dashboard/users/{id}(id=${u.id})}">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+
+                            <form th:action="@{/admin/dashboard/users/toggle-status/{id}(id=${u.id})}" method="post" style="display:inline;">
+                                <button class="btn-admin btn-sm" type="submit"
+                                        th:classappend="${u.active} ? 'btn-admin-warning' : 'btn-admin-success'">
+                                    <i class="fas" th:classappend="${u.active} ? ' fa-user-slash' : ' fa-user-check'"></i>
+                                    <span th:text="${u.active} ? 'Deactivate' : 'Activate'"></span>
+                                </button>
+                            </form>
+
+                            <form th:action="@{/admin/dashboard/users/change-role/{id}(id=${u.id})}" method="post" style="display:inline;">
+                                <button class="btn-admin btn-sm btn-admin-secondary" type="submit">
+                                    <i class="fas fa-exchange-alt"></i> Change Role
+                                </button>
+                            </form>
+                        </td>
+
+                    </tr>
                     </tbody>
                 </table>
             </div>
+
+            <!-- 🔹 Chi tiết người dùng -->
+            <div th:if="${showUserDetail}" class="admin-content-panel mt-4">
+                <h4><i class="fas fa-user-circle"></i> User Detail</h4>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <p><strong>ID:</strong> <span th:text="${user.id}">1</span></p>
+                        <p><strong>Full Name:</strong>
+                            <span th:text="${user.fullName != null ? user.fullName : 'N/A'}">N/A</span>
+                        </p>
+                        <p><strong>Username:</strong>
+                            <span th:text="${user.account != null ? user.account.username : 'N/A'}">N/A</span>
+                        </p>
+                        <p><strong>Email:</strong>
+                            <span th:text="${user.account != null ? user.account.email : 'N/A'}">N/A</span>
+                        </p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <p><strong>Role:</strong>
+                            <span th:text="${user.account != null and user.account.role != null ? user.account.role.name() : 'N/A'}">N/A</span>
+                        </p>
+                        <p><strong>Active:</strong>
+                            <span th:classappend="${user.active} ? 'badge-table badge-active' : 'badge-table badge-inactive'"
+                                  th:text="${user.active} ? 'Active' : 'Inactive'">Active</span>
+                        </p>
+                        <p><strong>Created At:</strong>
+                            <span th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm') : 'N/A'}">N/A</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 🔸 Thông tin khách hàng -->
+                <div th:if="${user.customer != null}" class="mt-3">
+                    <h5><i class="fas fa-home"></i> Customer Info</h5>
+
+                    <p><strong>Phone:</strong>
+                        <span th:text="${user.customer.phone != null ? user.customer.phone : 'N/A'}">N/A</span>
+                    </p>
+
+                    <p><strong>Address:</strong>
+                        <span th:text="${user.customer.address != null ? user.customer.address.addressLine : 'N/A'}">N/A</span>
+                        <span th:text="${user.customer.address != null ? ', ' + user.customer.address.commune : ''}"></span>
+                        <span th:text="${user.customer.address != null ? ', ' + user.customer.address.city : ''}"></span>
+                    </p>
+                </div>
+
+                <div class="mt-3">
+                    <a class="btn-admin btn-sm" th:href="@{/admin/dashboard}">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Customers Section -->
-        <div class="content-section" id="customers">
-            <div class="admin-header">
-                <h1 class="admin-title">
-                    <i class="fas fa-users"></i> Manage Customers
-                </h1>
-                <div class="admin-actions">
-                    <button class="btn-admin">
-                        <i class="fas fa-sync"></i> Refresh
-                    </button>
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-users"></i></div>
-                    <div class="stat-value">234</div>
-                    <div class="stat-label">Total Customers</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-user-check"></i></div>
-                    <div class="stat-value">198</div>
-                    <div class="stat-label">Active</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-user-clock"></i></div>
-                    <div class="stat-value">36</div>
-                    <div class="stat-label">Inactive</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
-                    <div class="stat-value">156</div>
-                    <div class="stat-label">Total Orders</div>
-                </div>
-            </div>
-
-            <div class="admin-content-panel">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Orders</th>
-                            <th>Total Spent</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>John Doe</td>
-                            <td>john@example.com</td>
-                            <td>5</td>
-                            <td>142,990,000 ₫</td>
-                            <td><span class="badge-table badge-active">Active</span></td>
-                            <td>
-                                <button class="btn-admin btn-sm">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Jane Smith</td>
-                            <td>jane@example.com</td>
-                            <td>8</td>
-                            <td>234,990,000 ₫</td>
-                            <td><span class="badge-table badge-active">Active</span></td>
-                            <td>
-                                <button class="btn-admin btn-sm">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
     </main>
 </div>
 
-<!-- Modal Container -->
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 class="modal-title" id="modalTitle">Modal Title</h2>
-            <button class="modal-close" onclick="closeModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <form id="modalForm">
-            <div id="modalBody">
-                <!-- Dynamic form content goes here -->
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn-modal btn-modal-secondary" onclick="closeModal()">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <button type="submit" class="btn-modal btn-modal-primary">
-                    <i class="fas fa-save"></i> Save
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
+<!-- JavaScript: Tab Switching -->
 <script>
-    // Navigation switching
     document.querySelectorAll('.sidebar-link').forEach(link => {
-        link.addEventListener('click', (e) => {
+        link.addEventListener('click', e => {
             e.preventDefault();
-            
-            // Remove active class from all links and sections
             document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-            
-            // Add active class to clicked link
             link.classList.add('active');
-            
-            // Show corresponding section
             const sectionId = link.getAttribute('data-section');
             document.getElementById(sectionId).classList.add('active');
         });
     });
-
-    // Modal Functions
-    function openModal(title, formContent, onSubmit) {
-        document.getElementById('modalTitle').textContent = title;
-        document.getElementById('modalBody').innerHTML = formContent;
-        document.getElementById('modalOverlay').classList.add('active');
-        
-        // Store submit handler
-        const form = document.getElementById('modalForm');
-        form.onsubmit = (e) => {
-            e.preventDefault();
-            onSubmit();
-        };
-    }
-
-    function closeModal() {
-        document.getElementById('modalOverlay').classList.remove('active');
-        document.getElementById('modalForm').reset();
-        document.getElementById('modalBody').innerHTML = '';
-    }
-
-    // Close modal when clicking outside
-    document.getElementById('modalOverlay').addEventListener('click', (e) => {
-        if (e.target.id === 'modalOverlay') {
-            closeModal();
-        }
-    });
-
-    // Product Modal Functions
-    function openProductModal(action, productId = null) {
-        const isEdit = action === 'edit';
-        const title = isEdit ? 'Edit Product' : 'Add Product';
-        
-        const formContent = `
-            <div class="form-group">
-                <label class="form-label">Product Name *</label>
-                <input type="text" class="form-control" name="name" id="productName" required placeholder="Enter product name">
-                <div class="error-message" id="nameError"></div>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Price *</label>
-                <input type="number" class="form-control" name="price" id="productPrice" required min="0" step="0.01" placeholder="0.00">
-                <div class="error-message" id="priceError"></div>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Description</label>
-                <textarea class="form-control" name="description" id="productDescription" placeholder="Enter product description"></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Category</label>
-                <select class="form-control" name="categoryID" id="productCategory">
-                    <option value="">Select Category</option>
-                    <option value="1">Smartphone</option>
-                    <option value="2">Laptop</option>
-                    <option value="3">Tablet</option>
-                    <option value="4">Accessories</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Color</label>
-                <input type="text" class="form-control" name="color" id="productColor" placeholder="e.g., Black, White">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Size</label>
-                <input type="number" class="form-control" name="size" id="productSize" placeholder="Enter size">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Product Image</label>
-                <input type="file" class="form-control" name="image" id="productImage" accept="image/*">
-            </div>
-            
-            <div class="form-group">
-                <label class="switch-label">
-                    <span class="form-label">Status</span>
-                    <label class="switch">
-                        <input type="checkbox" name="status" id="productStatus" checked>
-                        <span class="slider"></span>
-                    </label>
-                    <span id="statusText">Active</span>
-                </label>
-            </div>
-            
-            <input type="hidden" name="productId" value="${productId || ''}">
-        `;
-
-        if (isEdit && productId) {
-            // TODO: Load product data from server
-        }
-
-        openModal(title, formContent, () => {
-            if (validateProductForm()) {
-                // Handle save logic
-                console.log('Saving product...');
-                closeModal();
-                alert('Product saved successfully!');
-            }
-        });
-
-        // Status toggle handler
-        document.getElementById('productStatus').addEventListener('change', function() {
-            document.getElementById('statusText').textContent = this.checked ? 'Active' : 'Inactive';
-        });
-    }
-
-    function validateProductForm() {
-        let isValid = true;
-
-        const name = document.getElementById('productName').value.trim();
-        const price = document.getElementById('productPrice').value;
-
-        // Validate name
-        if (name === '') {
-            showError('productName', 'nameError', 'Product name is required');
-            isValid = false;
-        } else {
-            clearError('productName', 'nameError');
-        }
-
-        // Validate price
-        if (price === '' || parseFloat(price) <= 0) {
-            showError('productPrice', 'priceError', 'Valid price is required');
-            isValid = false;
-        } else {
-            clearError('productPrice', 'priceError');
-        }
-
-        return isValid;
-    }
-
-    function showError(inputId, errorId, message) {
-        document.getElementById(inputId).classList.add('input-error');
-        const errorEl = document.getElementById(errorId);
-        errorEl.textContent = message;
-        errorEl.classList.add('show');
-    }
-
-    function clearError(inputId, errorId) {
-        document.getElementById(inputId).classList.remove('input-error');
-        document.getElementById(errorId).classList.remove('show');
-    }
-
-    // Category Modal Functions
-    function openCategoryModal(action, categoryId = null) {
-        const isEdit = action === 'edit';
-        const title = isEdit ? 'Edit Category' : 'Add Category';
-        
-        const formContent = `
-            <div class="form-group">
-                <label class="form-label">Category Name *</label>
-                <input type="text" class="form-control" name="categoryName" id="categoryName" required placeholder="Enter category name">
-                <div class="error-message" id="nameError"></div>
-            </div>
-            
-            <input type="hidden" name="categoryId" value="${categoryId || ''}">
-        `;
-
-        openModal(title, formContent, () => {
-            const name = document.getElementById('categoryName').value.trim();
-            if (name === '') {
-                showError('categoryName', 'nameError', 'Category name is required');
-                return;
-            }
-            console.log('Saving category...');
-            closeModal();
-            alert('Category saved successfully!');
-        });
-    }
-
-    // Order Modal Functions
-    function openOrderModal(orderId) {
-        openModal('View Order', `
-            <div class="form-group">
-                <label class="form-label">Order ID</label>
-                <input type="text" class="form-control" value="#${orderId}" disabled>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Status</label>
-                <select class="form-control">
-                    <option>Processing</option>
-                    <option>Shipped</option>
-                    <option>Delivered</option>
-                    <option>Cancelled</option>
-                </select>
-            </div>
-        `, () => {
-            console.log('Updating order...');
-            closeModal();
-            alert('Order updated successfully!');
-        });
-    }
-
-    // Payment Modal Functions
-    function openPaymentModal(paymentId) {
-        openModal('View Payment', `
-            <div class="form-group">
-                <label class="form-label">Transaction ID</label>
-                <input type="text" class="form-control" value="TXN-2025-001" disabled>
-            </div>
-        `, () => {
-            closeModal();
-        });
-    }
-
-    // Customer Modal Functions
-    function openCustomerModal(customerId) {
-        openModal('View Customer', `
-            <div class="form-group">
-                <label class="form-label">Customer ID</label>
-                <input type="text" class="form-control" value="${customerId}" disabled>
-            </div>
-        `, () => {
-            closeModal();
-        });
-    }
-
-    // Attach event listeners to buttons
-    document.addEventListener('DOMContentLoaded', () => {
-        // Products
-        document.querySelectorAll('.btn-admin').forEach(btn => {
-            if (btn.textContent.includes('Add Product')) {
-                btn.addEventListener('click', () => openProductModal('add'));
-            }
-        });
-
-        document.querySelectorAll('.btn-admin').forEach(btn => {
-            if (btn.textContent.includes('Edit')) {
-                btn.addEventListener('click', function() {
-                    const row = this.closest('tr');
-                    const id = row.querySelector('td:first-child').textContent;
-                    openProductModal('edit', id);
-                });
-            }
-        });
-
-        // Categories
-        document.querySelectorAll('.btn-admin').forEach(btn => {
-            if (btn.textContent.includes('Add Category')) {
-                btn.addEventListener('click', () => openCategoryModal('add'));
-            }
-        });
-
-        // Other modals can be attached similarly
-    });
 </script>
-
 </body>
 </html>
-

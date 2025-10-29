@@ -2,7 +2,10 @@ package com.hometech.hometech.controller.Thymleaf.Admin;
 
 import com.hometech.hometech.enums.OrderStatus;
 import com.hometech.hometech.model.Order;
+import com.hometech.hometech.service.CategoryService;
 import com.hometech.hometech.service.OrderService;
+import com.hometech.hometech.service.ProductService;
+import com.hometech.hometech.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -12,13 +15,23 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-@RequestMapping("/admin/orders")
+@RequestMapping("/admin/dashboard/orders")
 public class AdminOrderController {
 
     private final OrderService orderService;
+    private final ProductService productService;
+    private final CategoryService categoryService;
+    private final UserService userService;
 
-    public AdminOrderController(OrderService orderService) {
+    public AdminOrderController(OrderService orderService,
+                                ProductService productService,
+                                CategoryService categoryService,
+                                UserService userService) {
+
         this.orderService = orderService;
+        this.productService = productService;
+        this.categoryService = categoryService;
+        this.userService = userService;
     }
 
     // ----------------------------------------------------------
@@ -31,10 +44,24 @@ public class AdminOrderController {
 
         model.addAttribute("orders", orders);
         model.addAttribute("orderStats", stats);
-        model.addAttribute("title", "Quản lý đơn hàng");
+        model.addAttribute("title", "Bảng điều khiển quản trị");
 
-        return "admin/orders/index"; // ✅ templates/admin/orders/index.html
+        // ✅ Thêm các dữ liệu khác để dashboard không lỗi khi render
+        model.addAttribute("products", productService.getAll());
+        model.addAttribute("categories", categoryService.getAll());
+        model.addAttribute("users", userService.getAllUsers());
+
+        model.addAttribute("totalUsers", userService.countAll());
+        model.addAttribute("activeUsers", userService.countByStatus(true));
+        model.addAttribute("inactiveUsers", userService.countByStatus(false));
+        model.addAttribute("totalOrders", orders.size());
+        model.addAttribute("totalProducts", productService.getAll().size());
+        model.addAttribute("totalCategories", categoryService.getAll().size());
+
+        // ✅ Hiển thị tất cả trong 1 trang dashboard
+        return "admin/dashboard";
     }
+
 
     // ----------------------------------------------------------
     // 🟢 XEM CHI TIẾT ĐƠN HÀNG
@@ -70,7 +97,7 @@ public class AdminOrderController {
         } catch (RuntimeException e) {
             ra.addFlashAttribute("errorMessage", "❌ " + e.getMessage());
         }
-        return "redirect:/admin/orders/" + orderId;
+        return "redirect:/admin/dashboard/orders/" + orderId;
     }
 
     // ----------------------------------------------------------
@@ -84,7 +111,7 @@ public class AdminOrderController {
         } catch (RuntimeException e) {
             ra.addFlashAttribute("errorMessage", "❌ " + e.getMessage());
         }
-        return "redirect:/admin/orders";
+        return "redirect:/admin/dashboard/orders";
     }
 
     // ----------------------------------------------------------

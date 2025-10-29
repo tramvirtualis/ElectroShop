@@ -73,7 +73,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+
+
                 .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/admin/**"))
+
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // 🔓 Phân quyền truy cập
@@ -81,8 +85,11 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/", "/home",
                                 "/auth/**",
-                                "/admin/login",  // Cho phép truy cập trang login admin
+                                "/admin/login",
+                                "/admin/register",// Cho phép truy cập trang login admin
                                 "/oauth2/**",
+                                "admin/**",
+                                "/api/auth/**",
                                 "/login", "/register",
                                 "/css/**", "/js/**", "/images/**",
                                 "/products/**",
@@ -115,6 +122,7 @@ public class SecurityConfig {
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
+
                 )
 
                 // ⚙️ Quản lý session

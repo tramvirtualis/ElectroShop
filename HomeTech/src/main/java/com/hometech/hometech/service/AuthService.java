@@ -5,10 +5,7 @@ import com.hometech.hometech.Repository.AdminRepository;
 import com.hometech.hometech.Repository.TokenForgetPasswordRepository;
 import com.hometech.hometech.Repository.UserRepository;
 import com.hometech.hometech.enums.RoleType;
-import com.hometech.hometech.model.Account;
-import com.hometech.hometech.model.Admin;
-import com.hometech.hometech.model.TokenForgetPassword;
-import com.hometech.hometech.model.User;
+import com.hometech.hometech.model.*;
 import jakarta.mail.MessagingException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -74,6 +71,26 @@ public class AuthService {
         account.setRole(RoleType.USER);
         account.setEnabled(false);
         account.setEmailVerified(false);
+
+//         3️⃣ Tạo user cơ bản
+        User user = new User();
+        user.setAccount(account);
+        user.setFullName(username);
+        user.setPhone(null);
+        user.setActive(true);
+        userRepository.save(user);
+
+        Customer customer = new Customer();
+        customer.setId(user.getId()); // 🔥 ID kế thừa
+        customer.setUser(user);
+        customer.setLoyalty(0);
+
+        Address address = new Address();
+        address.setCustomer(customer);
+        address.setAddressLine("Chưa cập nhật");
+        address.setCommune("Chưa cập nhật");
+        address.setCity("Chưa cập nhật");
+        customer.setAddress(address);
         
         // Tạo verification token
         String verificationToken = UUID.randomUUID().toString();
@@ -88,8 +105,62 @@ public class AuthService {
 
         return "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.";
     }
+//    @Transactional
+//    public String register(String username, String email, String password) throws MessagingException {
+//        // 1️⃣ Kiểm tra username & email
+//        if (accountRepository.existsByUsername(username)) {
+//            throw new RuntimeException("Tên đăng nhập đã tồn tại");
+//        }
+//        if (accountRepository.existsByEmail(email)) {
+//            throw new RuntimeException("Email đã được sử dụng");
+//        }
+//
+//        // 2️⃣ Tạo tài khoản
+//        Account account = new Account();
+//        account.setUsername(username);
+//        account.setEmail(email);
+//        account.setPassword(passwordEncoder.encode(password));
+//        account.setRole(RoleType.USER);
+//        account.setEnabled(false);
+//        account.setEmailVerified(false);
+//        account.setVerificationToken(UUID.randomUUID().toString());
+//        account.setCreatedAt(LocalDateTime.now());
+//        account.setUpdatedAt(LocalDateTime.now());
+//        accountRepository.save(account);
+//
+//        // 3️⃣ Tạo user cơ bản
+//        User user = new User();
+//        user.setAccount(account);
+//        user.setFullName(username);
+//        user.setPhone(null);
+//        user.setActive(true);
+//        userRepository.save(user);
+//
+//        // 4️⃣ Tạo customer kế thừa user
+//        Customer customer = new Customer();
+//        customer.setId(user.getId()); // 🔥 ID kế thừa
+//        customer.setUser(user);
+//        customer.setLoyalty(0);
+//
+//        // 5️⃣ Tạo address mặc định cho customer
+//        Address address = new Address();
+//        address.setCustomer(customer);
+//        address.setAddressLine("Chưa cập nhật");
+//        address.setCommune("Chưa cập nhật");
+//        address.setCity("Chưa cập nhật");
+//        customer.setAddress(address);
+//
+//        // Lưu customer (cascade ALL => lưu luôn address)
+//        userRepository.save(customer);
+//
+//        // 6️⃣ Gửi email xác thực
+//        emailService.sendVerificationEmail(email, account.getVerificationToken());
+//
+//        return "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.";
+//    }
 
-    @Transactional
+
+    @Transactional(rollbackFor = MessagingException.class)
     public String registerAdmin(String username, String email, String password) throws MessagingException {
         // 1️⃣ Kiểm tra username đã tồn tại
         if (accountRepository.existsByUsername(username)) {
@@ -101,34 +172,41 @@ public class AuthService {
             throw new RuntimeException("Email đã được sử dụng");
         }
 
-        // 3️⃣ Tạo tài khoản ADMIN
+        // 3️⃣ Tạo tài khoản ADMIN (chưa kích hoạt)
         Account account = new Account();
         account.setUsername(username);
         account.setEmail(email);
         account.setPassword(passwordEncoder.encode(password));
         account.setRole(RoleType.ADMIN);
-        account.setEnabled(true);          // kích hoạt sẵn
-        account.setEmailVerified(true);    // không cần xác thực email
+        account.setEnabled(false);          // ❌ chưa kích hoạt, chờ xác thực email
+        account.setEmailVerified(false);
         account.setCreatedAt(LocalDateTime.now());
         account.setUpdatedAt(LocalDateTime.now());
         accountRepository.save(account);
 
-        // 4️⃣ Tạo User liên kết với Account
+        // 4️⃣ Tạo User gắn với Account
         User user = new User();
         user.setAccount(account);
-        user.setFullName(null);
+        user.setFullName(username);
         user.setPhone(null);
         user.setActive(true);
-        userRepository.save(user);
+        user = userRepository.save(user);
 
-        // 5️⃣ Tạo Admin trống, kế thừa User
-        Admin admin = new Admin();
-        admin.setId(user.getId());       // 🔥 rất quan trọng: Admin kế thừa User, phải gán ID của User
-        admin.setResponses(null);        // danh sách phản hồi rỗng
-        adminRepository.save(admin);
 
-        return "Tạo tài khoản quản trị thành công!";
+
+        // 6️⃣ Tạo verification token và lưu lại
+        String verificationToken = UUID.randomUUID().toString();
+        account.setVerificationToken(verificationToken);
+        account.setUpdatedAt(LocalDateTime.now());
+        accountRepository.save(account);
+
+        // 7️⃣ Gửi email xác thực
+        emailService.sendVerificationEmail(email, verificationToken);
+
+        return "Tạo tài khoản quản trị thành công! Vui lòng kiểm tra email để xác nhận.";
     }
+
+
 
     public AuthResponse login(String usernameOrEmail, String password) {
         try {

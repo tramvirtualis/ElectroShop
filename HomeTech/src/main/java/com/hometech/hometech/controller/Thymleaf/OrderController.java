@@ -64,17 +64,33 @@ public class OrderController {
     }
 
     @GetMapping("/history")
-    public String showHistory(HttpServletRequest request, Model model) {
-        addSessionInfo(request, model);
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            // Return empty history page instead of redirecting
+    public String showHistory(HttpSession session, HttpServletRequest request, Model model) {
+        // ✅ Ưu tiên lấy user từ session (được set khi login)
+        User currentUser = (User) session.getAttribute("currentUser");
+
+        // 🟢 Nếu chưa đăng nhập (user == null) → hiển thị danh sách rỗng
+        if (currentUser == null) {
             model.addAttribute("orders", java.util.Collections.emptyList());
-            return "orders/history";
+            model.addAttribute("title", "Lịch sử đơn hàng (khách)");
+            model.addAttribute("emptyMessage", "Vui lòng đăng nhập để xem lịch sử đơn hàng.");
+            return "orders/history"; // ✅ templates/orders/history.html
         }
-        model.addAttribute("orders", service.getOrdersByUserId(userId));
+
+        // 🟢 Nếu đã đăng nhập → lấy danh sách đơn hàng theo userID
+        Long userId = currentUser.getId(); // ⚠️ Dùng đúng getter của bạn
+        var orders = service.getOrdersByUserId(userId);
+        model.addAttribute("orders", orders);
+
+        model.addAttribute("title", "Lịch sử đơn hàng của tôi");
+
+        // Nếu danh sách rỗng → gợi ý người dùng
+        if (orders == null || orders.isEmpty()) {
+            model.addAttribute("emptyMessage", "Bạn chưa có đơn hàng nào.");
+        }
+
         return "orders/history";
     }
+
 
     @GetMapping("/status/{status}")
     public String listOrdersByStatus(@PathVariable OrderStatus status,

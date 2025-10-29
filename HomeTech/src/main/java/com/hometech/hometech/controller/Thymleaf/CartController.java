@@ -61,31 +61,40 @@ public class CartController {
     }
 
     @GetMapping
-    public String viewCart(HttpServletRequest request, Model model) {
-        addSessionInfo(request, model);
-        Long userId = getCurrentUserId();
-        if (userId == null) {
+    public String viewCart(HttpSession session, HttpServletRequest request, Model model) {
+        // ✅ Ưu tiên lấy user từ session (được set khi login)
+        User currentUser = (User) session.getAttribute("currentUser");
+
+        // 🟢 Nếu chưa đăng nhập (user == null) → hiển thị giỏ hàng tạm theo session ID
+        if (currentUser == null) {
             var items = service.getCartItemsForSession(request.getSession(true).getId());
             model.addAttribute("cartItems", items);
+
             double totalGuest = items.stream()
                     .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
                     .sum();
+
             model.addAttribute("totalPrice", totalGuest);
-            return "cart";
+            model.addAttribute("title", "Giỏ hàng tạm");
+            return "cart"; // ✅ templates/cart.html hoặc cart/index.html
         }
 
+        // 🟢 Nếu đã đăng nhập → lấy giỏ hàng theo userID
+        Long userId = currentUser.getId();
         var userItems = service.getCartItemsByUserId(userId);
         model.addAttribute("cartItems", userItems);
-        double total = userItems
-                .stream()
+
+        double total = userItems.stream()
                 .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
                 .sum();
         model.addAttribute("totalPrice", total);
-        // Address for logged-in user
+
+        // 🏠 Lấy địa chỉ giao hàng của user (nếu có)
         Customer customer = customerRepository.findByUser_Id(userId).orElse(null);
         if (customer != null && customer.getAddress() != null) {
             Address a = customer.getAddress();
             StringBuilder sb = new StringBuilder();
+
             if (a.getAddressLine() != null && !a.getAddressLine().isBlank()) sb.append(a.getAddressLine());
             if (a.getCommune() != null && !a.getCommune().isBlank()) {
                 if (sb.length() > 0) sb.append(", ");
@@ -95,10 +104,14 @@ public class CartController {
                 if (sb.length() > 0) sb.append(", ");
                 sb.append(a.getCity());
             }
+
             model.addAttribute("address", sb.toString());
         }
-        return "cart";
+
+        model.addAttribute("title", "Giỏ hàng của tôi");
+        return "cart"; // ✅ templates/cart.html
     }
+
 
     @PostMapping("/add")
     public String addToCart(@RequestParam int productId,
