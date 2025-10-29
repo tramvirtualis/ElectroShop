@@ -92,7 +92,7 @@ public class SecurityConfig {
                                 "/css/**", "/js/**", "/images/**",
                                 "/products/**",
                                 "/cart", "/cart/**", "/orders/**", "/profile",
-                                "/ws/**", "/api/notify/**", "/test-notification"  // WebSocket and notification endpoints
+                                "/ws/**", "/api/notify/**", "/api/notifications/**", "/test-notification", "/websocket-test"  // WebSocket and notification endpoints
                         ).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")  // Yêu cầu role ADMIN cho các trang admin
                         .anyRequest().authenticated()

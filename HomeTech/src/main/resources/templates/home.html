@@ -12,23 +12,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- WebSocket Libraries (MUST be in head before notification-client.js) -->
+    <!-- WebSocket Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
-    <!-- Notification Client -->
-    <script th:src="@{/js/notification-client.js}" defer></script>
-    
-    <!-- Fallback: Define toggleNotifications immediately to prevent errors -->
-    <script>
-        // Temporary stub until notification-client.js loads
-        window.toggleNotifications = window.toggleNotifications || function(event) {
-            console.warn('toggleNotifications called before notification-client.js loaded');
-            event && event.stopPropagation && event.stopPropagation();
-            const dd = document.getElementById('notificationsDropdown');
-            if (!dd) return;
-            dd.style.display = (dd.style.display === 'none' || dd.style.display === '') ? 'block' : 'none';
-        };
-    </script>
+    <!-- Home Notification System -->
+    <script th:src="@{/js/home-notifications.js}" defer></script>
 
     <style>
         * {
@@ -528,7 +516,8 @@
             <div class="d-flex align-items-center gap-2">
                 <!-- Notification bell -->
                 <div style="position: relative;">
-                    <button id="notifyBell" class="btn btn-quick-nav" title="Thông báo" type="button" onclick="window.toggleNotifications?window.toggleNotifications(event):console.error('toggleNotifications not loaded yet')">
+                    <button id="notifyBell" class="btn btn-quick-nav" title="Thông báo" type="button" 
+                            onclick="(function(e){e.stopPropagation();var d=document.getElementById('notificationsDropdown');if(d.style.display==='none'||d.style.display===''){fetch('/api/notifications/unread').then(r=>r.json()).then(n=>{var l=document.getElementById('notificationsList');l.innerHTML='';if(!n||n.length===0){l.innerHTML='<div style=&quot;padding:0.6rem 0.4rem;color:#9fb3c8;&quot;>Bạn hiện không có thông báo mới.</div>';}else{n.forEach(function(notif){var item=document.createElement('div');item.style.cssText='padding:0.6rem 0.8rem;border-radius:6px;border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(0,191,255,0.08);position:relative;padding-right:3rem;';var msgDiv=document.createElement('div');msgDiv.style.cssText='color:#e0e6ed;font-size:0.9rem;font-weight:600;';msgDiv.textContent=notif.message||'Thông báo';item.appendChild(msgDiv);var created=notif.createdAt;if(created){try{var dateDiv=document.createElement('div');dateDiv.style.cssText='color:#6c757d;font-size:0.75rem;margin-top:4px;';dateDiv.textContent=new Date(created).toLocaleString('vi-VN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});item.appendChild(dateDiv);}catch(err){}}var btn=document.createElement('button');btn.innerHTML='<i class=&quot;fas fa-check&quot;></i>';btn.style.cssText='position:absolute;right:0.5rem;top:50%;transform:translateY(-50%);background:transparent;border:1px solid rgba(0,191,255,0.5);color:#00FFFF;padding:0.3rem 0.6rem;border-radius:6px;font-size:0.75rem;cursor:pointer;transition:all 0.2s;';btn.onmouseover=function(){this.style.background='rgba(0,191,255,0.2)';};btn.onmouseout=function(){this.style.background='transparent';};btn.onclick=function(evt){evt.stopPropagation();fetch('/api/notifications/'+notif.id+'/read',{method:'POST'}).then(()=>{item.remove();fetch('/api/notifications/unread/count').then(r=>r.json()).then(d=>{var b=document.getElementById('notifyBadge');if(d.count>0){b.textContent=d.count;b.classList.remove('d-none');}else{b.classList.add('d-none');}if(document.getElementById('notificationsList').children.length===0){document.getElementById('notificationsList').innerHTML='<div style=&quot;padding:0.6rem 0.4rem;color:#9fb3c8;&quot;>Bạn hiện không có thông báo mới.</div>';}});}).catch(err=>console.error('Mark as read failed:',err));};item.appendChild(btn);l.appendChild(item);});}}).catch(err=>{console.error('Failed to load notifications:',err);document.getElementById('notificationsList').innerHTML='<div style=&quot;padding:0.6rem 0.4rem;color:#ff6b6b;&quot;>Lỗi: '+err.message+'</div>';});d.style.display='block';}else{d.style.display='none';}})(event);">
                         <i class="fas fa-bell"></i>
                         <span id="notifyBadge" class="d-none" style="position: absolute; top: 4px; right: 6px; background: #ff6b6b; color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 12px;">0</span>
                     </button>
@@ -537,11 +526,23 @@
                         <div id="notificationsList" style="padding:0.6rem 0.8rem; color:#e0e6ed; font-size:0.95rem;">
                             <div style="padding:0.6rem 0.4rem; border-radius:6px;">Bạn hiện không có thông báo mới.</div>
                         </div>
-                        <div style="padding:0.6rem; text-align:center; border-top:1px solid rgba(255,255,255,0.03);">
-                            <a href="/notifications" style="color:#00FFFF; text-decoration:none; font-weight:600;">Xem tất cả</a>
-                        </div>
                     </div>
                 </div>
+                <script>
+                // Load notification count immediately
+                fetch('/api/notifications/unread/count').then(r=>r.json()).then(d=>{
+                    var b=document.getElementById('notifyBadge');
+                    if(d.count>0){b.textContent=d.count;b.classList.remove('d-none');}
+                }).catch(e=>console.error('Failed to load notification count:',e));
+                // Close dropdown when clicking outside
+                document.addEventListener('click',function(e){
+                    var dd=document.getElementById('notificationsDropdown');
+                    var bell=document.getElementById('notifyBell');
+                    if(dd&&bell&&dd.style.display==='block'&&!dd.contains(e.target)&&!bell.contains(e.target)){
+                        dd.style.display='none';
+                    }
+                });
+                </script>
                 <span class="user-info" th:if="${currentUser != null}">
                     Xin chào, <span th:text="${currentUserName != null ? currentUserName : currentUser}">User</span>
             </span>
@@ -724,18 +725,84 @@ function submitAddToCart(productId, quantity = 1) {
     }
 }
 
-// NOTE: WebSocket and notification functions should be in /js/notification-client.js
-// But if that file fails to load, here's the inline backup:
+// ========================================
+// NOTIFICATION SYSTEM - INLINE BACKUP
+// ========================================
 
-if (typeof window.toggleNotifications === 'undefined' || !window.toggleNotifications.toString().includes('notificationsList')) {
-    console.warn('⚠️ notification-client.js did not load properly, using inline backup');
+console.log('🔧 Preparing notification system (inline backup)...');
+
+// Wait for DOM to be ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNotifications);
+} else {
+    initNotifications();
+}
+
+function initNotifications() {
+    console.log('🚀 Initializing notification system...');
     
-    // Define all notification functions inline
+    // Helper to update unread count from database
+    window.updateUnreadCount = async function() {
+        console.log('🔢 (Inline) Updating unread count from DB...');
+        try {
+            const response = await fetch('/api/notifications/unread/count');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📊 (Inline) Unread count:', data.count);
+                window.setNotificationCount(data.count);
+            }
+        } catch (error) {
+            console.error('❌ (Inline) Error getting unread count:', error);
+        }
+    };
+    
+    // Helper to load notifications from database
+    window.loadNotificationsFromDB = async function() {
+        console.log('📥 (Inline) Loading notifications from DB...');
+        try {
+            const response = await fetch('/api/notifications');
+            if (!response.ok) {
+                console.warn('⚠️ (Inline) Failed to load notifications');
+                return;
+            }
+            const notifications = await response.json();
+            console.log('📦 (Inline) Loaded notifications:', notifications.length);
+            
+            const list = document.getElementById('notificationsList');
+            if (!list) return;
+            list.innerHTML = '';
+            
+            if (notifications.length === 0) {
+                list.innerHTML = '<div style="padding:0.6rem 0.4rem; color:#9fb3c8;">Bạn hiện không có thông báo mới.</div>';
+                return;
+            }
+            
+            notifications.forEach(notif => {
+                const item = document.createElement('div');
+                const isUnread = !(notif.read || notif.isRead);
+                item.style.cssText = 'padding:0.6rem 0.4rem; border-radius:6px; border-bottom:1px solid rgba(255,255,255,0.05);' + 
+                    (isUnread ? ' background:rgba(0,191,255,0.08); font-weight:600;' : '');
+                item.innerHTML = '<div style="color:#e0e6ed; font-size:0.9rem;">' + notif.message + '</div>' +
+                    '<div style="color:#6c757d; font-size:0.75rem; margin-top:4px;">' + new Date(notif.createdAt).toLocaleString('vi-VN') + '</div>';
+                list.appendChild(item);
+            });
+        } catch (error) {
+            console.error('❌ (Inline) Error loading notifications:', error);
+        }
+    };
+    
+    // Define toggleNotifications function
     window.toggleNotifications = function(event) {
         event && event.stopPropagation && event.stopPropagation();
         const dd = document.getElementById('notificationsDropdown');
         if (!dd) return;
-        dd.style.display = (dd.style.display === 'none' || dd.style.display === '') ? 'block' : 'none';
+        
+        if (dd.style.display === 'none' || dd.style.display === '') {
+            window.loadNotificationsFromDB();
+            dd.style.display = 'block';
+        } else {
+            dd.style.display = 'none';
+        }
     };
     
     window.setNotificationCount = function(n) {
@@ -760,12 +827,7 @@ if (typeof window.toggleNotifications === 'undefined' || !window.toggleNotificat
         item.style.cssText = 'padding:0.6rem 0.4rem; border-radius:6px; border-bottom:1px solid rgba(255,255,255,0.05); background:rgba(0,191,255,0.08);';
         item.textContent = message;
         list.prepend(item);
-        let current = 0;
-        const badge = document.getElementById('notifyBadge');
-        if (badge && !badge.classList.contains('d-none')) {
-            current = parseInt(badge.textContent || '0') || 0;
-        }
-        window.setNotificationCount(current + 1);
+        window.updateUnreadCount();
     };
     
     // Initialize WebSocket
@@ -786,7 +848,6 @@ if (typeof window.toggleNotifications === 'undefined' || !window.toggleNotificat
                     toast.innerHTML = '<i class="fas fa-bell"></i> ' + msg;
                     document.body.appendChild(toast);
                     setTimeout(() => { toast.style.animation = 'slideOut 0.3s ease-out'; setTimeout(() => document.body.removeChild(toast), 300); }, 4000);
-                    // Update bell
                     window.addNotification(msg);
                 });
             }, function(error) {
@@ -798,6 +859,41 @@ if (typeof window.toggleNotifications === 'undefined' || !window.toggleNotificat
     } else {
         console.error('❌ SockJS or Stomp not loaded!');
     }
+    
+    // Attach click handler to bell button
+    const bellButton = document.getElementById('notifyBell');
+    console.log('🔍 Looking for bell button...', bellButton);
+    
+    if (bellButton) {
+        console.log('✅ Bell button found!');
+        bellButton.addEventListener('click', function(event) {
+            console.log('🔔 BELL CLICKED!');
+            event.stopPropagation();
+            window.toggleNotifications(event);
+        });
+        console.log('✅ Bell button click handler attached');
+    } else {
+        console.error('❌ Bell button not found!');
+    }
+    
+    // Load initial unread count
+    console.log('📊 (Inline) Loading initial unread count...');
+    setTimeout(() => {
+        window.updateUnreadCount();
+    }, 100);
+    
+    // Add manual test function
+    window.testBellClick = function() {
+        console.log('🧪 Manual test: Simulating bell click...');
+        const btn = document.getElementById('notifyBell');
+        if (btn) {
+            btn.click();
+            console.log('✅ Click event triggered');
+        } else {
+            console.error('❌ Bell button not found');
+        }
+    };
+    console.log('💡 TIP: Type window.testBellClick() in console to test the bell manually');
 }
 
 // Close dropdown when clicking outside

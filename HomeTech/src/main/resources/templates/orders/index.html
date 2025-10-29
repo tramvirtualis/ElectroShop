@@ -11,6 +11,10 @@
     <!-- Bootstrap & FontAwesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- WebSocket Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
 
     <style>
         body {
@@ -84,14 +88,251 @@
             transform: translateY(-2px);
         }
         .btn-primary { margin-top: .6rem; }
+        
+        /* Notification Bell Styles */
+        .notification-bell-container {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+        
+        .bell-button {
+            position: relative;
+            background: rgba(0, 191, 255, 0.15);
+            border: 2px solid rgba(0, 191, 255, 0.4);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(0, 191, 255, 0.2);
+        }
+        
+        .bell-button:hover {
+            background: rgba(0, 191, 255, 0.25);
+            border-color: rgba(0, 191, 255, 0.7);
+            box-shadow: 0 8px 32px rgba(0, 191, 255, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .bell-button .fa-bell {
+            font-size: 1.5rem;
+            color: #00FFFF;
+            transition: all 0.3s ease;
+        }
+        
+        .bell-button:hover .fa-bell {
+            animation: bellRing 0.5s ease-in-out;
+        }
+        
+        @keyframes bellRing {
+            0%, 100% { transform: rotate(0deg); }
+            10%, 30%, 50%, 70%, 90% { transform: rotate(15deg); }
+            20%, 40%, 60%, 80% { transform: rotate(-15deg); }
+        }
+        
+        .bell-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 7px;
+            border-radius: 12px;
+            min-width: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.6);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.9; }
+        }
+        
+        .notifications-dropdown {
+            position: absolute;
+            top: 70px;
+            right: 0;
+            width: 380px;
+            max-height: 480px;
+            overflow-y: auto;
+            background: rgba(10, 14, 39, 0.98);
+            border: 1px solid rgba(0, 191, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transform: translateY(-10px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+        
+        .notifications-dropdown.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+        
+        .notifications-header {
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #00FFFF;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .notifications-list {
+            padding: 0.8rem;
+        }
+        
+        .notification-item {
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            position: relative;
+            padding-right: 3.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s ease;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .notification-item.unread {
+            background: rgba(0, 191, 255, 0.08);
+            border-left: 3px solid #00FFFF;
+        }
+        
+        .notification-item:hover {
+            background: rgba(0, 191, 255, 0.12);
+        }
+        
+        .notification-message {
+            color: #e0e6ed;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        
+        .notification-date {
+            color: #6c757d;
+            font-size: 0.75rem;
+        }
+        
+        .notification-mark-read {
+            position: absolute;
+            right: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: 1px solid rgba(0, 191, 255, 0.4);
+            color: #00FFFF;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .notification-mark-read:hover {
+            background: rgba(0, 191, 255, 0.2);
+            border-color: #00FFFF;
+            transform: translateY(-50%) scale(1.05);
+        }
+        
+        .empty-notifications {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: #9fb3c8;
+        }
+        
+        .toast-notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
+            color: #0a0e27;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 191, 255, 0.6);
+            z-index: 9999;
+            font-weight: 600;
+            animation: slideInRight 0.3s ease-out;
+            max-width: 400px;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
 
+<!-- Notification Bell -->
+<div class="notification-bell-container">
+    <button id="notificationBell" class="bell-button" onclick="toggleNotifications(event)">
+        <i class="fas fa-bell"></i>
+        <span id="notificationBadge" class="bell-badge d-none">0</span>
+    </button>
+    
+    <div id="notificationsDropdown" class="notifications-dropdown">
+        <div class="notifications-header">
+            <i class="fas fa-bell"></i> Thông báo
+        </div>
+        <div id="notificationsList" class="notifications-list">
+            <div class="empty-notifications">
+                Bạn hiện không có thông báo mới.
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container">
-    <h1 class="page-title">
-        <i class="fas fa-shopping-bag"></i> My Orders
-    </h1>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h1 class="page-title" style="margin-bottom: 0;">
+            <i class="fas fa-shopping-bag"></i> My Orders
+        </h1>
+        <a href="/" class="btn-back">
+            <i class="fas fa-home"></i> Back to Home
+        </a>
+    </div>
 
     <!-- Success/Error Toasts -->
     <div th:if="${success != null}" style="background: rgba(0, 191, 255, 0.15); border: 2px solid rgba(0, 191, 255, 0.6); color: #00FFFF; padding: 0.8rem 1rem; border-radius: 12px; margin-bottom: 1rem;">
@@ -135,6 +376,221 @@
         </a>
         </div>
     </div>
+
+<script>
+// ===================================
+// NOTIFICATION SYSTEM
+// ===================================
+
+let stompClient = null;
+let isDropdownOpen = false;
+
+// Toggle notification dropdown
+function toggleNotifications(event) {
+    event.stopPropagation();
+    const dropdown = document.getElementById('notificationsDropdown');
+    isDropdownOpen = !isDropdownOpen;
+    
+    if (isDropdownOpen) {
+        dropdown.classList.add('show');
+        loadNotifications();
+    } else {
+        dropdown.classList.remove('show');
+    }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('notificationsDropdown');
+    const bell = document.getElementById('notificationBell');
+    
+    if (isDropdownOpen && !dropdown.contains(e.target) && !bell.contains(e.target)) {
+        dropdown.classList.remove('show');
+        isDropdownOpen = false;
+    }
+});
+
+// Update notification badge count
+function updateBadgeCount(count) {
+    const badge = document.getElementById('notificationBadge');
+    if (count > 0) {
+        badge.textContent = count;
+        badge.classList.remove('d-none');
+    } else {
+        badge.classList.add('d-none');
+    }
+}
+
+// Load notifications from database
+async function loadNotifications() {
+    try {
+        const response = await fetch('/api/notifications/unread');
+        if (!response.ok) {
+            console.warn('Failed to load notifications');
+            return;
+        }
+        
+        const notifications = await response.json();
+        displayNotifications(notifications);
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+    }
+}
+
+// Display notifications in dropdown
+function displayNotifications(notifications) {
+    const list = document.getElementById('notificationsList');
+    list.innerHTML = '';
+    
+    if (!notifications || notifications.length === 0) {
+        list.innerHTML = '<div class="empty-notifications">Bạn hiện không có thông báo mới.</div>';
+        return;
+    }
+    
+    notifications.forEach(notif => {
+        const item = document.createElement('div');
+        item.className = 'notification-item unread';
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'notification-message';
+        messageDiv.textContent = notif.message || 'Thông báo';
+        item.appendChild(messageDiv);
+        
+        if (notif.createdAt) {
+            try {
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'notification-date';
+                dateDiv.textContent = new Date(notif.createdAt).toLocaleString('vi-VN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                item.appendChild(dateDiv);
+            } catch (err) {
+                console.error('Date parsing error:', err);
+            }
+        }
+        
+        const markReadBtn = document.createElement('button');
+        markReadBtn.className = 'notification-mark-read';
+        markReadBtn.innerHTML = '<i class="fas fa-check"></i>';
+        markReadBtn.onclick = function(e) {
+            e.stopPropagation();
+            markAsRead(notif.id, item);
+        };
+        item.appendChild(markReadBtn);
+        
+        list.appendChild(item);
+    });
+}
+
+// Mark notification as read
+async function markAsRead(notifId, itemElement) {
+    try {
+        const response = await fetch(`/api/notifications/${notifId}/read`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            // Remove notification with animation
+            itemElement.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => {
+                itemElement.remove();
+                
+                // Update badge count
+                updateUnreadCount();
+                
+                // Check if list is empty
+                const list = document.getElementById('notificationsList');
+                if (list.children.length === 0) {
+                    list.innerHTML = '<div class="empty-notifications">Bạn hiện không có thông báo mới.</div>';
+                }
+            }, 300);
+        }
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+    }
+}
+
+// Update unread count
+async function updateUnreadCount() {
+    try {
+        const response = await fetch('/api/notifications/unread/count');
+        if (response.ok) {
+            const data = await response.json();
+            updateBadgeCount(data.count);
+        }
+    } catch (error) {
+        console.error('Error updating unread count:', error);
+    }
+}
+
+// Show toast notification
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = `<i class="fas fa-bell"></i> ${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+        }, 300);
+    }, 4000);
+}
+
+// Initialize WebSocket connection
+function initWebSocket() {
+    if (typeof SockJS === 'undefined' || typeof Stomp === 'undefined') {
+        console.error('SockJS or Stomp not loaded!');
+        return;
+    }
+    
+    try {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        
+        stompClient.connect({}, function(frame) {
+            console.log('✅ WebSocket connected!');
+            
+            // Subscribe to general notifications
+            stompClient.subscribe('/topic/notifications', function(message) {
+                try {
+                    const notification = JSON.parse(message.body);
+                    const msg = notification.message || 'Bạn có thông báo mới!';
+                    
+                    // Show toast
+                    showToast(msg);
+                    
+                    // Update count and reload if dropdown is open
+                    updateUnreadCount();
+                    if (isDropdownOpen) {
+                        loadNotifications();
+                    }
+                } catch (error) {
+                    console.error('Error processing notification:', error);
+                }
+            });
+        }, function(error) {
+            console.error('❌ WebSocket error:', error);
+        });
+    } catch (error) {
+        console.error('❌ WebSocket initialization failed:', error);
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initializing notification system...');
+    initWebSocket();
+    updateUnreadCount();
+});
+</script>
 
 </body>
 </html>

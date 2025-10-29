@@ -8,6 +8,7 @@ import com.hometech.hometech.model.Order;
 import com.hometech.hometech.model.User;
 import com.hometech.hometech.service.OrderService;
 import com.hometech.hometech.service.CartService;
+import com.hometech.hometech.service.NotifyService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.core.Authentication;
@@ -34,13 +35,15 @@ public class OrderController {
     private final UserRepository userRepository;
     private final CartService cartService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final NotifyService notifyService;
 
-    public OrderController(OrderService service, AccountReposirory accountRepository, UserRepository userRepository, CartService cartService, SimpMessagingTemplate messagingTemplate) {
+    public OrderController(OrderService service, AccountReposirory accountRepository, UserRepository userRepository, CartService cartService, SimpMessagingTemplate messagingTemplate, NotifyService notifyService) {
         this.service = service;
         this.accountRepository = accountRepository;
         this.userRepository = userRepository;
         this.cartService = cartService;
         this.messagingTemplate = messagingTemplate;
+        this.notifyService = notifyService;
     }
 
     private void addSessionInfo(HttpServletRequest request, Model model) {
@@ -223,14 +226,21 @@ public class OrderController {
             System.out.println("✅ Order created successfully. Order ID: " + order.getOrderId());
             redirectAttributes.addFlashAttribute("success", "Đặt hàng thành công");
             
-            // Send notification
+            // Send and save notification
             try {
-                Map<String, String> notification = new HashMap<>();
-                notification.put("message", "Bạn có đơn hàng mới! Mã đơn #" + order.getOrderId());
-                notification.put("timestamp", LocalDateTime.now().toString());
-                System.out.println("🔔 Attempting to send notification: " + notification.get("message"));
-                messagingTemplate.convertAndSend("/topic/notifications", notification);
-                System.out.println("✅ Notification sent successfully!");
+                if (userId != null) {
+                    // Save notification to database and send via WebSocket
+                    String message = "Đơn hàng #" + order.getOrderId() + " đã được tạo thành công!";
+                    notifyService.createNotification(userId, message, "ORDER", order.getOrderId());
+                    System.out.println("🔔 Notification saved and sent to user " + userId);
+                } else {
+                    // Guest user - just send via WebSocket without saving
+                    Map<String, String> notification = new HashMap<>();
+                    notification.put("message", "Đơn hàng #" + order.getOrderId() + " đã được tạo thành công!");
+                    notification.put("timestamp", LocalDateTime.now().toString());
+                    messagingTemplate.convertAndSend("/topic/notifications", notification);
+                    System.out.println("🔔 Guest notification sent via WebSocket");
+                }
             } catch (Exception e) {
                 System.err.println("❌ Failed to send notification: " + e.getMessage());
                 e.printStackTrace();

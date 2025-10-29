@@ -21,13 +21,16 @@ public class OrderService {
     private final OrderItemRepository orderItemRepo;
     private final CartItemRepository cartRepo;
     private final CustomerRepository customerRepo;
+    private final NotifyService notifyService;
 
     public OrderService(OrderRepository orderRepo, OrderItemRepository orderItemRepo,
-                        CartItemRepository cartRepo, CustomerRepository customerRepo) {
+                        CartItemRepository cartRepo, CustomerRepository customerRepo,
+                        NotifyService notifyService) {
         this.orderRepo = orderRepo;
         this.orderItemRepo = orderItemRepo;
         this.cartRepo = cartRepo;
         this.customerRepo = customerRepo;
+        this.notifyService = notifyService;
     }
 
     // 🟢 Tạo đơn hàng từ giỏ hàng của user cụ thể
@@ -145,8 +148,43 @@ public class OrderService {
     public Order updateStatus(int orderId, OrderStatus newStatus) {
         Order order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng ID: " + orderId));
+        
+        OrderStatus oldStatus = order.getOrderStatus();
         order.setOrderStatus(newStatus);
-        return orderRepo.save(order);
+        Order savedOrder = orderRepo.save(order);
+        
+        // 🔔 Send notification to customer when status changes
+        if (oldStatus != newStatus && order.getCustomer() != null && order.getCustomer().getUser() != null) {
+            try {
+                Long userId = order.getCustomer().getUser().getId();
+                String statusMessage = getStatusMessage(newStatus);
+                String message = String.format("Đơn hàng #%d %s", orderId, statusMessage);
+                notifyService.createNotification(userId, message, "ORDER_STATUS", orderId);
+                System.out.println("🔔 Notification sent for order #" + orderId + " status change: " + newStatus);
+            } catch (Exception e) {
+                System.err.println("❌ Failed to send notification for order status change: " + e.getMessage());
+            }
+        }
+        
+        return savedOrder;
+    }
+    
+    // Helper method to get Vietnamese status message
+    private String getStatusMessage(OrderStatus status) {
+        switch (status) {
+            case WAITING_CONFIRMATION:
+                return "đang chờ xác nhận";
+            case CONFIRMED:
+                return "đã được xác nhận";
+            case SHIPPING:
+                return "đang được giao";
+            case COMPLETED:
+                return "đã giao thành công! 🎉";
+            case CANCELLED:
+                return "đã bị hủy";
+            default:
+                return "đã thay đổi trạng thái";
+        }
     }
 
     // 🔵 Lấy danh sách đơn hàng (deprecated - chỉ dành cho admin)
@@ -219,7 +257,18 @@ public class OrderService {
         
         // Cập nhật trạng thái đơn hàng thành CANCELLED
         order.setOrderStatus(OrderStatus.CANCELLED);
-        return orderRepo.save(order);
+        Order savedOrder = orderRepo.save(order);
+        
+        // 🔔 Send notification
+        try {
+            String message = String.format("Đơn hàng #%d đã được hủy thành công", orderId);
+            notifyService.createNotification(userId, message, "ORDER_CANCELLED", orderId);
+            System.out.println("🔔 Notification sent for order #" + orderId + " cancellation by user");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send cancellation notification: " + e.getMessage());
+        }
+        
+        return savedOrder;
     }
 
     // 🔴 Hủy đơn hàng bởi admin (không giới hạn thời gian)
@@ -233,7 +282,21 @@ public class OrderService {
         }
         
         order.setOrderStatus(OrderStatus.CANCELLED);
-        return orderRepo.save(order);
+        Order savedOrder = orderRepo.save(order);
+        
+        // 🔔 Send notification to customer
+        if (order.getCustomer() != null && order.getCustomer().getUser() != null) {
+            try {
+                Long userId = order.getCustomer().getUser().getId();
+                String message = String.format("Đơn hàng #%d đã bị hủy bởi quản trị viên", orderId);
+                notifyService.createNotification(userId, message, "ORDER_CANCELLED", orderId);
+                System.out.println("🔔 Notification sent for order #" + orderId + " cancellation by admin");
+            } catch (Exception e) {
+                System.err.println("❌ Failed to send cancellation notification: " + e.getMessage());
+            }
+        }
+        
+        return savedOrder;
     }
     public List<Order> searchOrders(String keyword) {
         return orderRepo.searchOrders(keyword.toLowerCase());
