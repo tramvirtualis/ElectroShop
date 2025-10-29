@@ -208,15 +208,15 @@
     <div class="timeline">
         <!-- Dynamic Order History Items -->
         <a th:each="order : ${orders}" 
-           th:href="@{'/orders/' + ${order.orderId}}"
+           th:href="@{/orders/{id}(id=${order.orderId})}"
            class="timeline-item">
             <div class="history-date">
                 <i class="fas fa-calendar-alt"></i> 
-                <span th:text="${#temporals.format(order.orderDate, 'MMMM dd, yyyy')}">September 15, 2025</span>
+                <span th:text="${#dates.format(order.orderDate, 'MMMM dd, yyyy')}">September 15, 2025</span>
             </div>
             <h5 class="mb-3">Order #<span th:text="${order.orderId}">12341</span></h5>
             
-            <div class="history-products" th:if="${order.orderItems != null and !order.orderItems.empty}">
+            <div class="history-products" th:if="${order.orderItems != null and !#lists.isEmpty(order.orderItems)}">
                 <div class="history-product" th:each="item : ${order.orderItems}">
                     <img th:src="@{'/products/image/' + ${item.product.productID}}" th:alt="${item.product.productName}">
                     <div class="mt-2">

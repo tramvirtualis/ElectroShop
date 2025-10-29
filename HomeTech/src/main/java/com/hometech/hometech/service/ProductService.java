@@ -98,4 +98,10 @@ public class ProductService {
     public List<Product> getTop10BestSellingProductsByCategory(String categoryName) {
         return productRepository.findTop10ByCategory_CategoryNameOrderBySoldCountDesc(categoryName);
     }
+
+    // 🔎 Search products by keyword in name
+    public List<Product> searchByName(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) return getAll();
+        return productRepository.findByProductNameContainingIgnoreCase(keyword.trim());
+    }
 }

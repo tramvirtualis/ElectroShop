@@ -31,4 +31,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     
     @Query(value = "SELECT p.* FROM products p INNER JOIN categories c ON p.categoryid = c.categoryid WHERE c.category_name = :categoryName ORDER BY p.sold_count DESC LIMIT 10", nativeQuery = true)
     List<Product> findTop10ByCategory_CategoryNameOrderBySalesDesc(String categoryName);
+
+    // 🔎 Full-text like search by product name (case-insensitive)
+    List<Product> findByProductNameContainingIgnoreCase(String keyword);
 }

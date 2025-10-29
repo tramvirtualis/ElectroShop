@@ -75,4 +75,19 @@ public class HomeController {
         }
         return "home";
     }
+
+    // 🔎 Search products from the home page search bar
+    @GetMapping("/search")
+    public String search(Model model, @RequestParam("keyword") String keyword) {
+        List<Category> categories = categoryService.getAll();
+        List<Product> newProducts = productService.getProductsAddedInLast7Days();
+        List<Product> results = productService.searchByName(keyword);
+        model.addAttribute("categories", categories);
+        model.addAttribute("newProducts", newProducts);
+        model.addAttribute("topSelling", results); // reuse grid
+        model.addAttribute("pageTitle", "Kết quả tìm kiếm: " + keyword);
+        model.addAttribute("activeCategoryId", null);
+        model.addAttribute("title", "Tìm kiếm - HomeTech");
+        return "home";
+    }
 }

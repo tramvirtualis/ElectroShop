@@ -120,7 +120,17 @@ public class OrderController {
             model.addAttribute("orders", java.util.Collections.emptyList());
             return "orders/index";
         }
-        model.addAttribute("orders", service.getOrdersByUserId(userId));
+        // Show only active/in-progress orders (exclude COMPLETED and CANCELLED)
+        java.util.List<com.hometech.hometech.model.Order> all = service.getOrdersByUserId(userId);
+        java.util.List<com.hometech.hometech.model.Order> active = new java.util.ArrayList<>();
+        for (com.hometech.hometech.model.Order o : all) {
+            if (o.getOrderStatus() != OrderStatus.COMPLETED && o.getOrderStatus() != OrderStatus.CANCELLED) {
+                active.add(o);
+            }
+        }
+        // Sort latest first by date
+        active.sort((a,b) -> b.getOrderDate().compareTo(a.getOrderDate()));
+        model.addAttribute("orders", active);
         return "orders/index";
     }
 
