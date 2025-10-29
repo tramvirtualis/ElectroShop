@@ -68,7 +68,8 @@ public class CartController {
         addSessionInfo(request, model);
         Long userId = getCurrentUserId();
         if (userId == null) {
-            var items = service.getCartItemsForSession(request.getSession(true).getId());
+            var session = request.getSession(true);
+            var items = service.getCartItemsForSession(session.getId());
             model.addAttribute("cartItems", items);
             double totalGuest = items.stream()
                     .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
@@ -99,6 +100,9 @@ public class CartController {
                 sb.append(a.getCity());
             }
             model.addAttribute("address", sb.toString());
+            model.addAttribute("addrLine", a.getAddressLine());
+            model.addAttribute("addrCommune", a.getCommune());
+            model.addAttribute("addrCity", a.getCity());
         }
         return "cart";
     }

@@ -175,19 +175,28 @@ public class OrderController {
     }
 
     @PostMapping("/create")
-    public String createOrder(HttpServletRequest request, RedirectAttributes redirectAttributes) {
+    public String createOrder(HttpServletRequest request, RedirectAttributes redirectAttributes,
+                              @RequestParam(value = "shippingAddress", required = false) String shippingAddress) {
         Long userId = getCurrentUserId();
         try {
             if (userId != null) {
                 // Ensure any session cart items are merged to the user before placing order
                 String sessionId = request.getSession(true).getId();
                 cartService.mergeSessionCartToUser(sessionId, userId);
-                service.createOrder(userId);
+                if (shippingAddress != null && !shippingAddress.isBlank()) {
+                    service.createOrder(userId, shippingAddress);
+                } else {
+                    service.createOrder(userId);
+                }
                 redirectAttributes.addFlashAttribute("success", "Đặt hàng thành công");
                 return "redirect:/orders";
             } else {
                 String sessionId = request.getSession(true).getId();
-                service.createOrderForSession(sessionId);
+                if (shippingAddress != null && !shippingAddress.isBlank()) {
+                    service.createOrderForSession(sessionId, shippingAddress);
+                } else {
+                    service.createOrderForSession(sessionId);
+                }
                 redirectAttributes.addFlashAttribute("success", "Đặt hàng thành công");
                 return "redirect:/orders";
             }

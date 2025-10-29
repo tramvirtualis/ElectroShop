@@ -80,6 +80,15 @@ public class OrderService {
         return order;
     }
 
+    public Order createOrder(Long userId, String shippingAddress) {
+        Order order = createOrder(userId);
+        if (shippingAddress != null && !shippingAddress.isBlank()) {
+            order.setShippingAddress(shippingAddress);
+            orderRepo.save(order);
+        }
+        return order;
+    }
+
     // 🆕 Tạo đơn hàng cho khách (guest) theo session guest_{sessionId}@guest.local
     public Order createOrderForSession(String sessionId) {
         String guestEmail = "guest_" + sessionId + "@guest.local";
@@ -120,6 +129,15 @@ public class OrderService {
         orderRepo.save(order);
         orderItemRepo.saveAll(orderItems);
         cartRepo.deleteAll(cartItems);
+        return order;
+    }
+
+    public Order createOrderForSession(String sessionId, String shippingAddress) {
+        Order order = createOrderForSession(sessionId);
+        if (shippingAddress != null && !shippingAddress.isBlank()) {
+            order.setShippingAddress(shippingAddress);
+            orderRepo.save(order);
+        }
         return order;
     }
 

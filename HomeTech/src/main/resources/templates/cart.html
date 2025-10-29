@@ -279,8 +279,8 @@
                 <h3 class="summary-title">Order Summary</h3>
                 <div class="summary-row">
                     <span>Address:</span>
-                    <span th:if="${address != null}" th:text="${address}">N/A</span>
-                    <a th:if="${address == null}" href="/profile" class="text-decoration-none" style="color:#00FFFF;">Add address</a>
+                    <span id="orderAddressText" th:if="${address != null}" th:text="${address}">N/A</span>
+                    <a href="#" id="btnAddAddress" class="text-decoration-none" style="color:#00FFFF; margin-left: 8px;">Add address</a>
                 </div>
                 
                 <div class="summary-row">
@@ -301,6 +301,7 @@
                 </div>
 
                 <form th:action="@{/orders/create}" method="post">
+                    <input type="hidden" name="shippingAddress" id="shippingAddressInput" th:value="${address}">
                     <button type="submit" class="btn-checkout">
                         <i class="fas fa-lock"></i> Đặt hàng
                     </button>
@@ -327,6 +328,55 @@
 
 </div>
 
+<!-- Address Modal -->
+<div id="addressModal" style="display:none; position: fixed; inset:0; background: rgba(0,0,0,0.5); z-index: 2000; align-items:center; justify-content:center;">
+    <div style="background: rgba(10,14,39,0.98); border:2px solid rgba(0,191,255,0.3); border-radius:16px; padding:1.2rem; width: 520px; max-width: 92%; color: #e0e6ed;">
+        <h4 style="margin-bottom:1rem; font-family: 'Orbitron', sans-serif; color:#00FFFF;">Shipping Address</h4>
+        <div style="display:grid; gap:.8rem;">
+            <div>
+                <label style="font-weight:600; color:#9fb3c8;">Address line</label>
+                <input id="addrLineInput" type="text" class="form-control" th:value="${addrLine}" placeholder="Street, building, etc.">
+            </div>
+            <div>
+                <label style="font-weight:600; color:#9fb3c8;">Commune/Ward</label>
+                <input id="addrCommuneInput" type="text" class="form-control" th:value="${addrCommune}" placeholder="Commune/Ward">
+            </div>
+            <div>
+                <label style="font-weight:600; color:#9fb3c8;">City</label>
+                <input id="addrCityInput" type="text" class="form-control" th:value="${addrCity}" placeholder="City">
+            </div>
+        </div>
+        <div style="display:flex; gap:.6rem; justify-content:flex-end; margin-top:1rem;">
+            <button id="btnCancelAddress" class="btn btn-outline-light">Cancel</button>
+            <button id="btnSaveAddress" class="btn btn-info">Use this address</button>
+        </div>
+    </div>
+    </div>
+
+<script>
+    (function(){
+        const modal = document.getElementById('addressModal');
+        const btnOpen = document.getElementById('btnAddAddress');
+        const btnCancel = document.getElementById('btnCancelAddress');
+        const btnSave = document.getElementById('btnSaveAddress');
+        const addrText = document.getElementById('orderAddressText');
+        const hiddenInput = document.getElementById('shippingAddressInput');
+        function open(){ modal.style.display='flex'; }
+        function close(){ modal.style.display='none'; }
+        if(btnOpen){ btnOpen.addEventListener('click', function(e){ e.preventDefault(); open(); }); }
+        if(btnCancel){ btnCancel.addEventListener('click', function(){ close(); }); }
+        if(btnSave){ btnSave.addEventListener('click', function(){
+            const l = (document.getElementById('addrLineInput').value || '').trim();
+            const c = (document.getElementById('addrCommuneInput').value || '').trim();
+            const ci = (document.getElementById('addrCityInput').value || '').trim();
+            const parts = [l,c,ci].filter(Boolean);
+            const formatted = parts.join(', ');
+            if(addrText){ addrText.textContent = formatted || 'N/A'; }
+            if(hiddenInput){ hiddenInput.value = formatted; }
+            close();
+        }); }
+    })();
+    </script>
 </body>
 </html>
 
