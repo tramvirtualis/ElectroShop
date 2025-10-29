@@ -2,6 +2,11 @@ package com.hometech.hometech.config;
 
 import com.hometech.hometech.Repository.AccountReposirory;
 import com.hometech.hometech.enums.RoleType;
+import com.hometech.hometech.Repository.UserRepository;
+import com.hometech.hometech.Repository.CustomerRepository;
+import com.hometech.hometech.model.User;
+import com.hometech.hometech.model.Customer;
+import com.hometech.hometech.model.Cart;
 import com.hometech.hometech.model.Account;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,9 +24,15 @@ import java.util.Optional;
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final AccountReposirory accountRepository;
+    private final UserRepository userRepository;
+    private final CustomerRepository customerRepository;
 
-    public OAuth2LoginSuccessHandler(AccountReposirory accountRepository) {
+    public OAuth2LoginSuccessHandler(AccountReposirory accountRepository,
+                                     UserRepository userRepository,
+                                     CustomerRepository customerRepository) {
         this.accountRepository = accountRepository;
+        this.userRepository = userRepository;
+        this.customerRepository = customerRepository;
     }
 
     @Override
@@ -35,21 +46,47 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String name = oAuth2User.getAttribute("name");
 
         Optional<Account> existing = accountRepository.findByEmail(email);
-        if (existing.isEmpty()) {
-            Account account = new Account();
-            account.setEmail(email);
-            // Tạo username từ name/email
+        Account account = existing.orElseGet(() -> {
+            Account acc = new Account();
+            acc.setEmail(email);
             String base = (name != null && !name.isBlank())
                     ? name.replaceAll("\\s+", "").toLowerCase()
                     : email.substring(0, email.indexOf('@'));
-            account.setUsername(base);
-            account.setPassword(""); // không dùng password nội bộ cho oauth
-            account.setRole(RoleType.USER);
-            account.setEnabled(true);
-            account.setEmailVerified(true);
-            account.setCreatedAt(LocalDateTime.now());
-            account.setUpdatedAt(LocalDateTime.now());
-            accountRepository.save(account);
+            acc.setUsername(base);
+            acc.setPassword("");
+            acc.setRole(RoleType.USER);
+            acc.setEnabled(true);
+            acc.setEmailVerified(true);
+            acc.setCreatedAt(LocalDateTime.now());
+            acc.setUpdatedAt(LocalDateTime.now());
+            return accountRepository.save(acc);
+        });
+
+        // Ensure User exists and is linked to Account
+        User user = userRepository.findByAccount(account);
+        if (user == null) {
+            user = new User();
+            user.setAccount(account);
+        }
+        user.setEmail(email);
+        user.setName(name);
+        user.setActive(true);
+        userRepository.save(user);
+
+        // Ensure Customer profile and Cart exist
+        Customer customer = customerRepository.findByUser_Id(user.getId()).orElse(null);
+        if (customer == null) {
+            customer = new Customer();
+            customer.setUser(user);
+            Cart cart = new Cart();
+            cart.setCustomer(customer);
+            customer.setCart(cart);
+            customerRepository.save(customer);
+        } else if (customer.getCart() == null) {
+            Cart cart = new Cart();
+            cart.setCustomer(customer);
+            customer.setCart(cart);
+            customerRepository.save(customer);
         }
 
         response.sendRedirect("/");

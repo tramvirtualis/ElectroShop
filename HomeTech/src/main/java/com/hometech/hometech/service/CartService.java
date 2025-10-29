@@ -2,8 +2,10 @@ package com.hometech.hometech.service;
 
 import com.hometech.hometech.Repository.CartItemRepository;
 import com.hometech.hometech.Repository.CustomerRepository;
+import com.hometech.hometech.Repository.UserRepository;
 import com.hometech.hometech.Repository.ProductRepository;
 import com.hometech.hometech.model.CartItem;
+import com.hometech.hometech.model.Cart;
 import com.hometech.hometech.model.Customer;
 import com.hometech.hometech.model.Product;
 import org.springframework.stereotype.Service;
@@ -17,11 +19,13 @@ public class CartService {
     private final CartItemRepository cartRepo;
     private final ProductRepository productRepo;
     private final CustomerRepository customerRepo;
+    private final UserRepository userRepository;
 
-    public CartService(CartItemRepository cartRepo, ProductRepository productRepo, CustomerRepository customerRepo) {
+    public CartService(CartItemRepository cartRepo, ProductRepository productRepo, CustomerRepository customerRepo, UserRepository userRepository) {
         this.cartRepo = cartRepo;
         this.productRepo = productRepo;
         this.customerRepo = customerRepo;
+        this.userRepository = userRepository;
     }
 
     // 🔹 Xem toàn bộ giỏ hàng (deprecated - chỉ dành cho admin)
@@ -51,7 +55,11 @@ public class CartService {
 
         // Đảm bảo customer có cart
         if (customer.getCart() == null) {
-            throw new RuntimeException("Customer cart not found");
+            Cart newCart = new Cart();
+            newCart.setCustomer(customer);
+            customer.setCart(newCart);
+            // Lưu customer để tạo cart (do cascade ALL)
+            customerRepo.save(customer);
         }
 
         // Kiểm tra xem sản phẩm đã có trong giỏ của user này chưa
@@ -73,6 +81,58 @@ public class CartService {
             newItem.setQuantity(quantity);
             return cartRepo.save(newItem);
         }
+    }
+
+    // 🔹 Thêm sản phẩm vào giỏ cho khách (guest) theo session
+    public CartItem addProductForSession(String sessionId, int productId, int quantity) {
+        Customer customer = getOrCreateGuestCustomer(sessionId);
+        Product product = productRepo.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        List<CartItem> existingItems = cartRepo.findByCart(customer.getCart());
+        Optional<CartItem> existingItem = existingItems.stream()
+                .filter(item -> item.getProduct().getProductID() == productId)
+                .findFirst();
+
+        if (existingItem.isPresent()) {
+            CartItem item = existingItem.get();
+            item.setQuantity(item.getQuantity() + quantity);
+            return cartRepo.save(item);
+        } else {
+            CartItem newItem = new CartItem();
+            newItem.setProduct(product);
+            newItem.setCart(customer.getCart());
+            newItem.setQuantity(quantity);
+            return cartRepo.save(newItem);
+        }
+    }
+
+    private Customer getOrCreateGuestCustomer(String sessionId) {
+        String guestEmail = "guest_" + sessionId + "@guest.local";
+        com.hometech.hometech.model.User user = userRepository.findByEmail(guestEmail);
+        if (user == null) {
+            user = new com.hometech.hometech.model.User();
+            user.setEmail(guestEmail);
+            user.setName("Guest");
+            user.setActive(true);
+            user = userRepository.save(user);
+        }
+
+        Customer customer = customerRepo.findByUser_Id(user.getId()).orElse(null);
+        if (customer == null) {
+            customer = new Customer();
+            customer.setUser(user);
+            Cart cart = new Cart();
+            cart.setCustomer(customer);
+            customer.setCart(cart);
+            customer = customerRepo.save(customer);
+        } else if (customer.getCart() == null) {
+            Cart cart = new Cart();
+            cart.setCustomer(customer);
+            customer.setCart(cart);
+            customer = customerRepo.save(customer);
+        }
+        return customer;
     }
 
     // 🔹 Tăng số lượng sản phẩm

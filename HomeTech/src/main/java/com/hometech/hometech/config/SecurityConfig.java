@@ -86,7 +86,7 @@ public class SecurityConfig {
                                 "/login", "/register",
                                 "/css/**", "/js/**", "/images/**",
                                 "/products/**",
-                                "/cart", "/orders/**", "/profile"
+                                "/cart", "/cart/**", "/orders/**", "/profile"
                         ).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")  // Yêu cầu role ADMIN cho các trang admin
                         .anyRequest().authenticated()

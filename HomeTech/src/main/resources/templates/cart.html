@@ -236,47 +236,30 @@
 <div class="container">
     <div class="row">
         <div class="col-lg-8">
-            <!-- Cart Items -->
-            <div class="cart-item">
-                <div class="d-flex align-items-center gap-3">
-                    <img src="/products/image/1" alt="Product" class="product-image-sm">
-                    <div class="flex-grow-1">
-                        <h5 class="mb-1">iPhone 15 Pro</h5>
-                        <p class="text-muted mb-2">Smartphone • 256GB</p>
-                        <p class="price mb-0">25,990,000 ₫</p>
-                    </div>
-                    <div class="quantity-control">
-                        <button class="qty-btn">-</button>
-                        <input type="number" class="qty-input" value="1" min="1">
-                        <button class="qty-btn">+</button>
-                    </div>
-                    <div class="text-end" style="min-width: 150px;">
-                        <p class="price mb-2">25,990,000 ₫</p>
-                        <button class="btn btn-sm" style="color: #ff6b6b;">
-                            <i class="fas fa-trash"></i> Remove
-                        </button>
-                    </div>
-                </div>
+            <!-- Cart Items from DB -->
+            <div th:if="${#lists.isEmpty(cartItems)}" class="empty-cart">
+                <div class="empty-icon"><i class="fas fa-shopping-cart"></i></div>
+                <h3 class="text-muted mb-3">Your cart is empty</h3>
+                <a href="/" class="btn-back"><i class="fas fa-store"></i> Start Shopping</a>
             </div>
 
-            <div class="cart-item">
+            <div class="cart-item" th:each="ci : ${cartItems}">
                 <div class="d-flex align-items-center gap-3">
-                    <img src="/products/image/2" alt="Product" class="product-image-sm">
+                    <img th:src="@{'/products/image/' + ${ci.product.productID}}" th:alt="${ci.product.productName}" class="product-image-sm">
                     <div class="flex-grow-1">
-                        <h5 class="mb-1">Samsung Galaxy S24</h5>
-                        <p class="text-muted mb-2">Smartphone • 512GB</p>
-                        <p class="price mb-0">28,990,000 ₫</p>
+                        <h5 class="mb-1" th:text="${ci.product.productName}">Product</h5>
+                        <p class="price mb-0" th:text="${#numbers.formatDecimal(ci.product.price, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</p>
                     </div>
                     <div class="quantity-control">
-                        <button class="qty-btn">-</button>
-                        <input type="number" class="qty-input" value="1" min="1">
-                        <button class="qty-btn">+</button>
+                        <a th:href="@{'/cart/decrease/' + ${ci.cartItemId}}" class="qty-btn" aria-label="Decrease">-</a>
+                        <input type="number" class="qty-input" th:value="${ci.quantity}" min="1" disabled>
+                        <a th:href="@{'/cart/increase/' + ${ci.cartItemId}}" class="qty-btn" aria-label="Increase">+</a>
                     </div>
                     <div class="text-end" style="min-width: 150px;">
-                        <p class="price mb-2">28,990,000 ₫</p>
-                        <button class="btn btn-sm" style="color: #ff6b6b;">
+                        <p class="price mb-2" th:text="${#numbers.formatDecimal(ci.product.price * ci.quantity, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</p>
+                        <a th:href="@{'/cart/remove/' + ${ci.cartItemId}}" class="btn btn-sm" style="color: #ff6b6b;">
                             <i class="fas fa-trash"></i> Remove
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -288,7 +271,7 @@
                 
                 <div class="summary-row">
                     <span>Subtotal:</span>
-                    <span>54,980,000 ₫</span>
+                    <span th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
                 </div>
                 
                 <div class="summary-row">
@@ -298,12 +281,12 @@
                 
                 <div class="summary-row">
                     <span>Tax:</span>
-                    <span>5,498,000 ₫</span>
+                    <span th:text="${#numbers.formatDecimal(totalPrice * 0.10, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
                 </div>
                 
                 <div class="summary-row summary-total">
                     <span>Total:</span>
-                    <span>60,478,000 ₫</span>
+                    <span th:text="${#numbers.formatDecimal(totalPrice * 1.10, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
                 </div>
 
                 <button class="btn-checkout">

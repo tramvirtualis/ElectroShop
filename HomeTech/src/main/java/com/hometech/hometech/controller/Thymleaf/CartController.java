@@ -1,6 +1,9 @@
 package com.hometech.hometech.controller.Thymleaf;
 
 import com.hometech.hometech.Repository.AccountReposirory;
+import com.hometech.hometech.Repository.UserRepository;
+import com.hometech.hometech.model.Account;
+import com.hometech.hometech.model.User;
 import com.hometech.hometech.service.CartService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -16,10 +19,12 @@ public class CartController {
 
     private final CartService service;
     private final AccountReposirory accountRepository;
+    private final UserRepository userRepository;
 
-    public CartController(CartService service, AccountReposirory accountRepository) {
+    public CartController(CartService service, AccountReposirory accountRepository, UserRepository userRepository) {
         this.service = service;
         this.accountRepository = accountRepository;
+        this.userRepository = userRepository;
     }
 
     private void addSessionInfo(HttpServletRequest request, Model model) {
@@ -41,7 +46,10 @@ public class CartController {
         if (authentication != null && authentication.isAuthenticated()) {
             String username = authentication.getName();
             return accountRepository.findByUsername(username)
-                    .map(account -> account.getAccountId())
+                    .map((Account account) -> {
+                        User u = userRepository.findByAccount(account);
+                        return u != null ? u.getId() : null;
+                    })
                     .orElse(null);
         }
         return null;
@@ -74,10 +82,29 @@ public class CartController {
                             Model model) {
         addSessionInfo(request, model);
         Long userId = getCurrentUserId();
-        if (userId == null) return "redirect:/auth/login";
+        if (userId == null) {
+            service.addProductForSession(request.getSession(true).getId(), productId, quantity);
+            return "redirect:/cart";
+        }
 
         service.addProduct(userId, productId, quantity);
         return "redirect:/cart";
+    }
+
+    @PostMapping("/add-ajax")
+    @ResponseBody
+    public String addToCartAjax(@RequestParam int productId,
+                                @RequestParam(defaultValue = "1") int quantity,
+                                HttpServletRequest request,
+                                Model model) {
+        addSessionInfo(request, model);
+        Long userId = getCurrentUserId();
+        if (userId == null) {
+            service.addProductForSession(request.getSession(true).getId(), productId, quantity);
+            return "OK";
+        }
+        service.addProduct(userId, productId, quantity);
+        return "OK";
     }
 
     @GetMapping("/increase/{id}")

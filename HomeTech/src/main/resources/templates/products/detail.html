@@ -574,18 +574,33 @@
             };
         }
         if (typeof window.handleAddToCart !== 'function') {
-            window.handleAddToCart = function() {
+            window.handleAddToCart = async function() {
                 try {
                     const qty = parseInt(document.getElementById('popupQuantity')?.value || '1') || 1;
                     const id = document.getElementById('formProductId')?.value || null;
-                    const name = document.querySelector('.popup-product-name')?.textContent || 'Product';
-                    const priceText = (document.getElementById('popupPrice')?.textContent || '').replace(/[^\d.]/g,'');
-                    const price = Number(priceText) || (typeof productPrice !== 'undefined' ? Number(productPrice) : 0) || 0;
-                    const cart = JSON.parse(localStorage.getItem('hometech_cart') || '[]');
-                    const ex = cart.find(i => String(i.id||'')===String(id||''))
-                    if (ex) ex.quantity = (ex.quantity||0) + qty; else cart.push({id,name,price,quantity:qty});
-                    localStorage.setItem('hometech_cart', JSON.stringify(cart));
-                } catch(e) {}
+                    const csrfInput = document.querySelector('#addToCartForm input[type="hidden"]:not(#formProductId):not(#formQuantity)');
+                    const csrfName = csrfInput ? csrfInput.getAttribute('name') : '_csrf';
+                    const csrfValue = csrfInput ? csrfInput.value : null;
+                    if (!id) throw new Error('Product ID not found');
+                    const params = new URLSearchParams();
+                    params.set('productId', String(id));
+                    params.set('quantity', String(qty));
+                    if (csrfValue) params.set(csrfName, csrfValue);
+                    const res = await fetch('/cart/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...(csrfValue ? { 'X-CSRF-TOKEN': csrfValue } : {}) },
+                        body: params.toString(),
+                        redirect: 'manual'
+                    });
+                    if (res.ok || res.type === 'opaqueredirect' || res.status === 0 || res.status === 302) {
+                        window.updatePopupTotal && window.updatePopupTotal();
+                        (window.showToast || function(msg){ const t=document.createElement('div');t.style.position='fixed';t.style.bottom='20px';t.style.right='20px';t.style.padding='10px 14px';t.style.background='rgba(0, 191, 255, 0.95)';t.style.color='#0a0e27';t.style.borderRadius='10px';t.style.zIndex='9999';t.style.fontWeight='700';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>{try{document.body.removeChild(t)}catch(e){}},1500);} )('Đã thêm vào giỏ hàng thành công');
+                    } else {
+                        (window.showToast || function(msg){ const t=document.createElement('div');t.style.position='fixed';t.style.bottom='20px';t.style.right='20px';t.style.padding='10px 14px';t.style.background='rgba(255, 77, 77, 0.95)';t.style.color='#fff';t.style.borderRadius='10px';t.style.zIndex='9999';t.style.fontWeight='700';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>{try{document.body.removeChild(t)}catch(e){}},1500);} )('Thêm vào giỏ hàng thất bại');
+                    }
+                } catch(e) {
+                    (window.showToast || function(msg){ const t=document.createElement('div');t.style.position='fixed';t.style.bottom='20px';t.style.right='20px';t.style.padding='10px 14px';t.style.background='rgba(255, 77, 77, 0.95)';t.style.color='#fff';t.style.borderRadius='10px';t.style.zIndex='9999';t.style.fontWeight='700';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>{try{document.body.removeChild(t)}catch(e){}},1500);} )('Thêm vào giỏ hàng thất bại');
+                }
             };
         }
         if (typeof window.updatePopupTotal !== 'function') {
@@ -742,8 +757,8 @@
             <button class="btn-view-cart" onclick="handleViewCart()">
                 <i class="fas fa-shopping-cart"></i> Xem giỏ hàng
             </button>
-            <button class="btn-add-cart" onclick="handleAddToCart()">
-                <i class="fas fa-cart-plus"></i> Add to Cart
+            <button class="btn-add-cart" onclick="handleAddToCart()" type="button">
+                <i class="fas fa-cart-plus"></i> Thêm
             </button>
             <button class="btn-continue" onclick="closeCartPopup()">
                 Tiếp tục mua
@@ -926,10 +941,67 @@ function addOrUpdateCartItem(item) {
     setLocalCart(cart);
 }
 
-function handleAddToCart() {
-    const item = getProductInfoFromPopup();
-    addOrUpdateCartItem(item);
-    updatePopupTotal();
+async function handleAddToCart() {
+    try {
+        const quantity = parseInt(document.getElementById('popupQuantity').value) || 1;
+        const productId = document.getElementById('formProductId') ? document.getElementById('formProductId').value : null;
+        const csrfInput = document.querySelector('#addToCartForm input[type="hidden"]:not(#formProductId):not(#formQuantity)');
+        const csrfName = csrfInput ? csrfInput.getAttribute('name') : '_csrf';
+        const csrfValue = csrfInput ? csrfInput.value : null;
+
+        if (!productId) throw new Error('Product ID not found');
+
+        const params = new URLSearchParams();
+        params.set('productId', productId);
+        params.set('quantity', String(quantity));
+        if (csrfValue) params.set(csrfName, csrfValue);
+
+        const endpoint = '/cart/add-ajax';
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                ...(csrfValue ? { 'X-CSRF-TOKEN': csrfValue } : {})
+            },
+            body: params.toString(),
+            redirect: 'manual',
+            credentials: 'same-origin'
+        });
+
+        // Only treat explicit 2xx as success. Handle redirects (likely to login) as failure.
+        if (res.ok) {
+            addOrUpdateCartItem(getProductInfoFromPopup());
+            updatePopupTotal();
+            showToast('Đã thêm vào giỏ hàng thành công');
+        } else {
+            if (res.status === 302 || res.type === 'opaqueredirect' || res.status === 0) {
+                showToast('Không thể thêm (redirect). Thử lại sau.', true);
+            } else {
+                showToast('Thêm vào giỏ hàng thất bại', true);
+            }
+        }
+    } catch (e) {
+        showToast('Thêm vào giỏ hàng thất bại', true);
+        console.error('Add to cart error:', e);
+    }
+}
+
+function showToast(message, isError) {
+    try {
+        const toast = document.createElement('div');
+        toast.style.position = 'fixed';
+        toast.style.bottom = '20px';
+        toast.style.right = '20px';
+        toast.style.background = isError ? 'rgba(255, 77, 77, 0.95)' : 'rgba(0, 191, 255, 0.95)';
+        toast.style.color = isError ? '#fff' : '#0a0e27';
+        toast.style.padding = '10px 14px';
+        toast.style.borderRadius = '10px';
+        toast.style.zIndex = '9999';
+        toast.style.fontWeight = '700';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => { try { document.body.removeChild(toast); } catch(e){} }, 1500);
+    } catch(e) {}
 }
 
 function handleViewCart() {
