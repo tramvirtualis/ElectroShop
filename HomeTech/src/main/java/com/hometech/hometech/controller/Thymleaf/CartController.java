@@ -3,6 +3,7 @@ package com.hometech.hometech.controller.Thymleaf;
 import com.hometech.hometech.Repository.AccountReposirory;
 import com.hometech.hometech.Repository.UserRepository;
 import com.hometech.hometech.Repository.CustomerRepository;
+import com.hometech.hometech.Repository.AddressRepository;
 import com.hometech.hometech.model.Customer;
 import com.hometech.hometech.model.Address;
 import com.hometech.hometech.model.Account;
@@ -24,12 +25,14 @@ public class CartController {
     private final AccountReposirory accountRepository;
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
+    private final AddressRepository addressRepository;
 
-    public CartController(CartService service, AccountReposirory accountRepository, UserRepository userRepository, CustomerRepository customerRepository) {
+    public CartController(CartService service, AccountReposirory accountRepository, UserRepository userRepository, CustomerRepository customerRepository, AddressRepository addressRepository) {
         this.service = service;
         this.accountRepository = accountRepository;
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
+        this.addressRepository = addressRepository;
     }
 
     private void addSessionInfo(HttpServletRequest request, Model model) {
@@ -83,8 +86,8 @@ public class CartController {
         model.addAttribute("totalPrice", total);
         // Address for logged-in user
         Customer customer = customerRepository.findByUser_Id(userId).orElse(null);
-        if (customer != null && customer.getAddress() != null) {
-            Address a = customer.getAddress();
+        Address a = (customer != null) ? addressRepository.findByCustomer_Id(customer.getId()) .orElse(null) : null;
+        if (a != null) {
             StringBuilder sb = new StringBuilder();
             if (a.getAddressLine() != null && !a.getAddressLine().isBlank()) sb.append(a.getAddressLine());
             if (a.getCommune() != null && !a.getCommune().isBlank()) {

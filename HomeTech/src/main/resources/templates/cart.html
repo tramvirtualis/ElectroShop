@@ -268,9 +268,10 @@
         <div class="col-lg-4">
             <div class="summary-card">
                 <h3 class="summary-title">Order Summary</h3>
-                <div class="summary-row" th:if="${address != null}">
+                <div class="summary-row">
                     <span>Address:</span>
-                    <span th:text="${address}">N/A</span>
+                    <span th:if="${address != null}" th:text="${address}">N/A</span>
+                    <a th:if="${address == null}" href="/profile" class="text-decoration-none" style="color:#00FFFF;">Add address</a>
                 </div>
                 
                 <div class="summary-row">

@@ -6,6 +6,7 @@ import com.hometech.hometech.model.Customer;
 import com.hometech.hometech.model.User;
 import com.hometech.hometech.Repository.CustomerRepository;
 import com.hometech.hometech.Repository.UserRepository;
+import com.hometech.hometech.Repository.AddressRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,13 +21,15 @@ import java.nio.file.StandardCopyOption;
 @Service
 public class ProfileService {
 
-    public ProfileService(CustomerRepository customerRepository, UserRepository userRepository) {
+    public ProfileService(CustomerRepository customerRepository, UserRepository userRepository, AddressRepository addressRepository) {
         this.customerRepository = customerRepository;
         this.userRepository = userRepository;
+        this.addressRepository = addressRepository;
     }
 
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
+    private final AddressRepository addressRepository;
 
     @Transactional
     public User updateOrCreateProfile(Long userId, UpdateProfileDTO dto) {
@@ -42,8 +45,47 @@ public class ProfileService {
             user.setPictureUrl(dto.getPictureUrl());
         }
         
-        // 🔹 Lưu user
-        return userRepository.save(user);
+        // 🔹 Lưu user (keep effectively final for lambda usage below)
+        final User savedUser = userRepository.save(user);
+
+        // 🔹 Cập nhật ngày sinh & địa chỉ vào Customer/Address
+        Customer customer = customerRepository.findByUser_Id(userId)
+                .orElseGet(() -> {
+                    Customer c = new Customer();
+                    c.setUser(savedUser);
+                    return customerRepository.save(c);
+                });
+
+        // Date of birth parsing yyyy-MM-dd
+        if (dto.getDateOfBirth() != null && !dto.getDateOfBirth().isEmpty()) {
+            try {
+                java.util.Date dob = java.sql.Date.valueOf(dto.getDateOfBirth());
+                customer.setDateOfBirth(dob);
+            } catch (IllegalArgumentException ignored) {}
+        }
+
+        // Find existing address using both sides to avoid duplicates
+        Address address = null;
+        if (customer.getAddress() != null) {
+            address = customer.getAddress();
+        }
+        if (address == null) {
+            address = addressRepository.findByCustomer_Id(customer.getId()).orElse(null);
+        }
+        if (address == null) {
+            address = new Address();
+        }
+        if (dto.getAddressLine() != null) address.setAddressLine(dto.getAddressLine());
+        if (dto.getCommune() != null) address.setCommune(dto.getCommune());
+        if (dto.getCity() != null) address.setCity(dto.getCity());
+
+        // Persist address first to obtain address_id, then link to customer and persist customer
+        address.setCustomer(customer);
+        address = addressRepository.save(address);
+        customer.setAddress(address);
+        customerRepository.save(customer);
+
+        return savedUser;
     }
     public UpdateProfileDTO getProfile(Long userId) {
         User user = userRepository.findById(userId)
@@ -55,6 +97,24 @@ public class ProfileService {
         dto.setPhone(user.getPhone());
         dto.setEmail(user.getEmail());
         dto.setPictureUrl(user.getPictureUrl());
+
+        // Address & DOB
+        Customer customer = customerRepository.findByUser_Id(userId).orElse(null);
+        if (customer != null) {
+            if (customer.getDateOfBirth() != null) {
+                dto.setDateOfBirth(new java.text.SimpleDateFormat("yyyy-MM-dd").format(customer.getDateOfBirth()));
+            }
+            // Prefer attached address; fallback to repository using customer.id
+            Address a = customer.getAddress();
+            if (a == null) {
+                a = addressRepository.findByCustomer_Id(customer.getId()).orElse(null);
+            }
+            if (a != null) {
+                dto.setAddressLine(a.getAddressLine());
+                dto.setCommune(a.getCommune());
+                dto.setCity(a.getCity());
+            }
+        }
 
         return dto;
     }
