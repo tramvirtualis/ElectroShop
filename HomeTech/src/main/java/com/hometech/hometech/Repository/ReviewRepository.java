@@ -21,7 +21,15 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
     // 🟢 Lấy tất cả đánh giá chưa ẩn (hiển thị cho người dùng)
     List<Review> findByProductAndHiddenFalse(Product product);
 
+    // 🆕 Lấy đánh giá theo productID (ẩn/không ẩn tùy nhu cầu)
+    List<Review> findByProduct_ProductID(int productID);
+    List<Review> findByProduct_ProductIDAndHiddenFalse(int productID);
+
     // 🟢 Tính trung bình rating chỉ trên các đánh giá không bị ẩn
     @Query("SELECT AVG(r.ratingValue) FROM Review r WHERE r.product = :product AND r.hidden = false")
     Double getAverageRatingByProduct(@Param("product") Product product);
+
+    // 🆕 Tính trung bình theo productID
+    @Query("SELECT AVG(r.ratingValue) FROM Review r WHERE r.product.productID = :productID AND r.hidden = false")
+    Double getAverageRatingByProductId(@Param("productID") int productID);
 }

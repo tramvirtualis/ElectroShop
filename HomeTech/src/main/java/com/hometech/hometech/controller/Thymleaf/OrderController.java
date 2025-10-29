@@ -18,6 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.List;
 
@@ -29,12 +30,14 @@ public class OrderController {
     private final AccountReposirory accountRepository;
     private final UserRepository userRepository;
     private final CartService cartService;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public OrderController(OrderService service, AccountReposirory accountRepository, UserRepository userRepository, CartService cartService) {
+    public OrderController(OrderService service, AccountReposirory accountRepository, UserRepository userRepository, CartService cartService, SimpMessagingTemplate messagingTemplate) {
         this.service = service;
         this.accountRepository = accountRepository;
         this.userRepository = userRepository;
         this.cartService = cartService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     private void addSessionInfo(HttpServletRequest request, Model model) {
@@ -183,21 +186,30 @@ public class OrderController {
                 // Ensure any session cart items are merged to the user before placing order
                 String sessionId = request.getSession(true).getId();
                 cartService.mergeSessionCartToUser(sessionId, userId);
+                Order order;
                 if (shippingAddress != null && !shippingAddress.isBlank()) {
-                    service.createOrder(userId, shippingAddress);
+                    order = service.createOrder(userId, shippingAddress);
                 } else {
-                    service.createOrder(userId);
+                    order = service.createOrder(userId);
                 }
                 redirectAttributes.addFlashAttribute("success", "Đặt hàng thành công");
+                // Notify all clients (Vietnamese message)
+                messagingTemplate.convertAndSend("/topic/notifications", new com.hometech.hometech.controller.Api.NotificationController.Notification(
+                        "Bạn có đơn hàng mới! Mã đơn #" + order.getOrderId(), java.time.LocalDateTime.now().toString()
+                ));
                 return "redirect:/orders";
             } else {
                 String sessionId = request.getSession(true).getId();
+                Order order;
                 if (shippingAddress != null && !shippingAddress.isBlank()) {
-                    service.createOrderForSession(sessionId, shippingAddress);
+                    order = service.createOrderForSession(sessionId, shippingAddress);
                 } else {
-                    service.createOrderForSession(sessionId);
+                    order = service.createOrderForSession(sessionId);
                 }
                 redirectAttributes.addFlashAttribute("success", "Đặt hàng thành công");
+                messagingTemplate.convertAndSend("/topic/notifications", new com.hometech.hometech.controller.Api.NotificationController.Notification(
+                        "Bạn có đơn hàng mới! Mã đơn #" + order.getOrderId(), java.time.LocalDateTime.now().toString()
+                ));
                 return "redirect:/orders";
             }
         } catch (RuntimeException e) {

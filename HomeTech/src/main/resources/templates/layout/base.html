@@ -260,6 +260,46 @@
     <p>© 2025 HomeTech. All rights reserved.</p>
 </footer>
 
+<div id="notification-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+<script>
+    (function(){
+        try{
+            const socket = new SockJS('/ws');
+            const stompClient = Stomp.over(socket);
+            stompClient.connect({}, function() {
+                stompClient.subscribe('/topic/notifications', function(message) {
+                    const notification = JSON.parse(message.body);
+                    const msg = (notification && notification.message) ? notification.message : 'Bạn có thông báo mới!';
+                    showNotification(msg);
+                    // If a page provides an aggregation UI (bell), update it
+                    if (typeof window.addNotification === 'function') {
+                        window.addNotification(msg);
+                    }
+                });
+            });
+
+            function showNotification(msg){
+                const box = document.createElement('div');
+                box.className = 'notification-box';
+                box.textContent = msg;
+                const host = document.getElementById('notification-container');
+                host.appendChild(box);
+                setTimeout(()=>{ try{ host.removeChild(box);}catch(e){} }, 4000);
+            }
+
+            const style = document.createElement('style');
+            style.textContent = `
+                #notification-container{position:fixed;top:20px;right:20px;z-index:9999}
+                .notification-box{background:rgba(10,14,39,.96);color:#e0e6ed;padding:10px 16px;margin-bottom:10px;border-radius:10px;border:1px solid rgba(0,191,255,.35);box-shadow:0 8px 24px rgba(0,191,255,.25);animation:fadeInOut 4s ease;font-weight:700}
+                @keyframes fadeInOut{0%{opacity:0;transform:translateY(-10px)}10%{opacity:1;transform:translateY(0)}90%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+            `;
+            document.head.appendChild(style);
+        }catch(e){ console.error('WS init failed', e); }
+    })();
+    </script>
+
 </body>
 </html>
 

@@ -485,8 +485,24 @@
         </form>
 
             <div class="d-flex align-items-center gap-2">
+                <!-- Notification bell -->
+                <div style="position: relative;">
+                    <button id="notifyBell" class="btn btn-quick-nav" title="Thông báo" type="button" onclick="toggleNotifications(event)">
+                        <i class="fas fa-bell"></i>
+                        <span id="notifyBadge" class="d-none" style="position: absolute; top: 4px; right: 6px; background: #ff6b6b; color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 12px;">0</span>
+                    </button>
+                    <div id="notificationsDropdown" style="display:none; position: absolute; right: 0; top: 46px; width: 320px; max-height: 420px; overflow:auto; background: rgba(10,14,39,0.98); border:1px solid rgba(0,191,255,0.15); border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.5); z-index: 2000;">
+                        <div style="padding:0.8rem 1rem; border-bottom:1px solid rgba(255,255,255,0.03); color:#00FFFF; font-weight:700;">Thông báo</div>
+                        <div id="notificationsList" style="padding:0.6rem 0.8rem; color:#e0e6ed; font-size:0.95rem;">
+                            <div style="padding:0.6rem 0.4rem; border-radius:6px;">Bạn hiện không có thông báo mới.</div>
+                        </div>
+                        <div style="padding:0.6rem; text-align:center; border-top:1px solid rgba(255,255,255,0.03);">
+                            <a href="/notifications" style="color:#00FFFF; text-decoration:none; font-weight:600;">Xem tất cả</a>
+                        </div>
+                    </div>
+                </div>
                 <span class="user-info" th:if="${currentUser != null}">
-                    Xin chào, <span th:text="${currentUser}">User</span>
+                    Xin chào, <span th:text="${currentUserName != null ? currentUserName : currentUser}">User</span>
             </span>
                 
                 <!-- Quick Navigation Buttons -->
@@ -665,6 +681,61 @@ function submitAddToCart(productId, quantity = 1) {
     } else {
         console.error('Add to cart form not found');
     }
+}
+
+// Notifications dropdown toggle
+function toggleNotifications(event) {
+    event && event.stopPropagation && event.stopPropagation();
+    const dd = document.getElementById('notificationsDropdown');
+    if (!dd) return;
+    dd.style.display = (dd.style.display === 'none' || dd.style.display === '') ? 'block' : 'none';
+}
+
+// Close notifications when clicking outside
+document.addEventListener('click', function(e) {
+    const dd = document.getElementById('notificationsDropdown');
+    const bell = document.getElementById('notifyBell');
+    if (!dd || !bell) return;
+    if (dd.style.display === 'block') {
+        if (!dd.contains(e.target) && !bell.contains(e.target)) {
+            dd.style.display = 'none';
+        }
+    }
+});
+
+// Example: update badge count (call from server-side or client-side when new notices arrive)
+function setNotificationCount(n) {
+    const badge = document.getElementById('notifyBadge');
+    if (!badge) return;
+    if (n > 0) {
+        badge.textContent = n;
+        badge.classList.remove('d-none');
+    } else {
+        badge.classList.add('d-none');
+    }
+}
+
+// Allow base layout websocket to push items into the bell dropdown
+window.addNotification = function(message) {
+    const list = document.getElementById('notificationsList');
+    const badge = document.getElementById('notifyBadge');
+    if (!list) return;
+    // Remove placeholder if exists
+    if (list.children.length === 1 && list.children[0].textContent.includes('không có thông báo')) {
+        list.innerHTML = '';
+    }
+    const item = document.createElement('div');
+    item.style.padding = '0.6rem 0.4rem';
+    item.style.borderRadius = '6px';
+    item.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+    item.textContent = message;
+    list.prepend(item);
+    // increase badge
+    let current = 0;
+    if (badge && !badge.classList.contains('d-none')) {
+        current = parseInt(badge.textContent || '0') || 0;
+    }
+    setNotificationCount(current + 1);
 }
 </script>
 

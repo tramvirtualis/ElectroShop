@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,16 +15,25 @@ import com.hometech.hometech.model.Category;
 import com.hometech.hometech.model.Product;
 import com.hometech.hometech.service.CategoryService;
 import com.hometech.hometech.service.ProductService;
+import com.hometech.hometech.Repository.AccountReposirory;
+import com.hometech.hometech.Repository.UserRepository;
+import com.hometech.hometech.model.Account;
+import com.hometech.hometech.model.User;
 
 @Controller
 public class HomeController {
 
     private final ProductService productService;
     private final CategoryService categoryService;
+    private final AccountReposirory accountRepository;
+    private final UserRepository userRepository;
 
-    public HomeController(ProductService productService, CategoryService categoryService) {
+    public HomeController(ProductService productService, CategoryService categoryService,
+                          AccountReposirory accountRepository, UserRepository userRepository) {
         this.productService = productService;
         this.categoryService = categoryService;
+        this.accountRepository = accountRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/")
@@ -72,6 +83,31 @@ public class HomeController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
             model.addAttribute("currentUser", auth.getName());
+            String name = auth.getName();
+            Account account = accountRepository.findByUsername(name)
+                    .or(() -> accountRepository.findByEmail(name))
+                    .orElse(null);
+            if (account == null && auth instanceof OAuth2AuthenticationToken oAuth) {
+                Object principal = oAuth.getPrincipal();
+                if (principal instanceof OAuth2User oUser) {
+                    Object emailAttr = oUser.getAttributes().get("email");
+                    if (emailAttr != null) {
+                        account = accountRepository.findByEmail(String.valueOf(emailAttr)).orElse(null);
+                    }
+                }
+            }
+            if (account != null) {
+                User u = userRepository.findByAccount(account);
+                if (u != null) {
+                    if (u.getFullName() != null && !u.getFullName().isEmpty()) {
+                        model.addAttribute("currentUserName", u.getFullName());
+                    } else if (u.getName() != null && !u.getName().isEmpty()) {
+                        model.addAttribute("currentUserName", u.getName());
+                    } else if (account.getEmail() != null) {
+                        model.addAttribute("currentUserName", account.getEmail());
+                    }
+                }
+            }
         }
         return "home";
     }

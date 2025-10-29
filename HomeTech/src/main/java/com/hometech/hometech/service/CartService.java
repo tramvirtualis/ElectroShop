@@ -28,6 +28,15 @@ public class CartService {
         this.userRepository = userRepository;
     }
 
+    private Customer getCustomerByUserIdOrThrow(Long userId) {
+        // Prefer a unique customer; if duplicates exist, use the first deterministically
+        List<Customer> all = customerRepo.findAllByUser_Id(userId);
+        if (all != null && !all.isEmpty()) {
+            return all.get(0);
+        }
+        throw new RuntimeException("Customer not found");
+    }
+
     // 🔹 Xem toàn bộ giỏ hàng (deprecated - chỉ dành cho admin)
     public List<CartItem> getAllItems() {
         return cartRepo.findAll();
@@ -35,8 +44,7 @@ public class CartService {
 
     // 🔹 Xem giỏ hàng của user cụ thể
     public List<CartItem> getCartItemsByUserId(Long userId) {
-        Customer customer = customerRepo.findByUser_Id(userId)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        Customer customer = getCustomerByUserIdOrThrow(userId);
         
         if (customer.getCart() == null) {
             return List.of(); // Trả về danh sách rỗng nếu chưa có cart
@@ -54,8 +62,7 @@ public class CartService {
 
     // 🔹 Thêm sản phẩm vào giỏ
     public CartItem addProduct(Long userId, int productId, int quantity) {
-        Customer customer = customerRepo.findByUser_Id(userId)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        Customer customer = getCustomerByUserIdOrThrow(userId);
         
         Product product = productRepo.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -148,8 +155,7 @@ public class CartService {
                 .orElseThrow(() -> new RuntimeException("Cart item not found"));
         
         // Kiểm tra xem item có thuộc về user này không
-        Customer customer = customerRepo.findByUser_Id(userId)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        Customer customer = getCustomerByUserIdOrThrow(userId);
         
         if (item.getCart().getCartId() != customer.getCart().getCartId()) {
             throw new RuntimeException("Unauthorized: Cart item does not belong to this user");
@@ -165,8 +171,7 @@ public class CartService {
                 .orElseThrow(() -> new RuntimeException("Cart item not found"));
         
         // Kiểm tra xem item có thuộc về user này không
-        Customer customer = customerRepo.findByUser_Id(userId)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        Customer customer = getCustomerByUserIdOrThrow(userId);
         
         if (item.getCart().getCartId() != customer.getCart().getCartId()) {
             throw new RuntimeException("Unauthorized: Cart item does not belong to this user");

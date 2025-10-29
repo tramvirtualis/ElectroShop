@@ -81,6 +81,20 @@ public class ReviewService {
         return avg != null ? avg : 0.0;
     }
 
+    // === API as requested ===
+    public List<Review> findByProductId(int productId) {
+        return reviewRepository.findByProduct_ProductIDAndHiddenFalse(productId);
+    }
+
+    public Double calculateAverageRating(int productId) {
+        Double avg = reviewRepository.getAverageRatingByProductId(productId);
+        return avg != null ? avg : 0.0;
+    }
+
+    public Review saveReview(Review review) {
+        return reviewRepository.save(review);
+    }
+
     // 🟢 Admin xem tất cả review trong hệ thống
     public List<Review> getAllReviews() {
         return reviewRepository.findAll();

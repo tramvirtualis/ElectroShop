@@ -1,6 +1,10 @@
 package com.hometech.hometech.controller.Thymleaf;
 
 import com.hometech.hometech.model.Category;
+import com.hometech.hometech.Repository.AccountReposirory;
+import com.hometech.hometech.Repository.UserRepository;
+import com.hometech.hometech.model.Account;
+import com.hometech.hometech.model.User;
 import com.hometech.hometech.model.Product;
 import com.hometech.hometech.model.Review;
 import com.hometech.hometech.service.CategoryService;
@@ -17,23 +21,32 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @Controller
 @RequestMapping("/products")
 public class ProductController {
+    private static final Logger log = LoggerFactory.getLogger(ProductController.class);
 
     private final ProductService productService;
     private final CategoryService categoryService;
     private final ReviewService reviewService;
+    private final AccountReposirory accountRepository;
+    private final UserRepository userRepository;
 
     public ProductController(ProductService productService,
                              CategoryService categoryService,
-                             ReviewService reviewService) {
+                             ReviewService reviewService,
+                             AccountReposirory accountRepository,
+                             UserRepository userRepository) {
         this.productService = productService;
         this.categoryService = categoryService;
         this.reviewService = reviewService;
+        this.accountRepository = accountRepository;
+        this.userRepository = userRepository;
     }
 
     // --- 🧩 Thông tin Session người dùng ---
@@ -48,6 +61,14 @@ public class ProductController {
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
             model.addAttribute("currentUser", auth.getName());
             model.addAttribute("userAuthorities", auth.getAuthorities());
+            // Resolve current userId for forms (reviews)
+            Long userId = accountRepository.findByUsername(auth.getName())
+                    .map((Account acc) -> {
+                        User u = userRepository.findByAccount(acc);
+                        return u != null ? u.getId() : null;
+                    })
+                    .orElse(null);
+            model.addAttribute("currentUserId", userId);
         }
     }
 
@@ -91,12 +112,14 @@ public class ProductController {
         Product product = productService.getById(id);
 
         // ✅ Chỉ lấy các review chưa bị ẩn
-        List<Review> reviews = reviewService.getVisibleReviewsByProduct(id);
-        double averageRating = reviewService.getAverageRating(id);
+        List<Review> reviews = reviewService.findByProductId(id);
+        double averageRating = reviewService.calculateAverageRating(id);
 
         model.addAttribute("product", product);
         model.addAttribute("reviews", reviews);
         model.addAttribute("averageRating", averageRating);
+
+        log.info("[ProductDetail] productId={}, reviewsCount={}, averageRating={}", id, (reviews != null ? reviews.size() : 0), averageRating);
 
         return "products/detail";
     }
@@ -129,8 +152,10 @@ public class ProductController {
         try {
             reviewService.addOrUpdateReview(productId, userId, ratingValue, comment, imageFile);
             ra.addFlashAttribute("successMessage", "Cảm ơn bạn đã đánh giá sản phẩm!");
+            log.info("[SubmitReview] OK productId={}, userId={}, rating={} ", productId, userId, ratingValue);
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Không thể gửi đánh giá: " + e.getMessage());
+            log.error("[SubmitReview] FAIL productId={}, userId={}, err={}", productId, userId, e.getMessage());
         }
 
         return "redirect:/products/" + productId;

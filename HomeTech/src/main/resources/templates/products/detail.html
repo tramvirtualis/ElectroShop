@@ -776,6 +776,90 @@
     
 </form>
 
+<!-- Reviews Section -->
+<section style="margin: 60px 0;">
+    <div style="background: rgba(255,255,255,0.04); border:1px solid rgba(0,0,0,0.06); border-radius:16px; padding:20px; box-shadow: 0 8px 24px rgba(0,0,0,0.25);">
+        <h3 style="font-family:'Orbitron',sans-serif; color:#fff; margin-bottom:14px;">Product Reviews</h3>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+            <div id="avgStars">
+                <span th:each="i : ${#numbers.sequence(1,5)}"
+                      th:classappend="${i <= (averageRating != null ? averageRating : 0)} ? 'fas fa-star' : 'far fa-star'"
+                      class="far fa-star" style="color:#FFD54F; margin-right:4px;"></span>
+            </div>
+            <div style="color:#cfd6df; font-weight:600;">
+                <span th:text="${#numbers.formatDecimal(averageRating,1,0,'POINT',1,'POINT')}">0</span>/5 ·
+                <span th:text="${reviews != null ? reviews.size() : 0}">0</span> reviews
+            </div>
+        </div>
+
+        <!-- Reviews list -->
+        <div th:if="${reviews != null and !#lists.isEmpty(reviews)}">
+            <div th:each="r : ${reviews}" style="padding:12px 6px; border-bottom:1px solid rgba(255,255,255,0.08);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="color:#fff;" th:text="${r.username != null ? r.username : (r.customer?.user?.fullName)}">User</strong>
+                    <small style="color:#9fb3c8;" th:text="${r.createdDate != null ? #dates.format(r.createdDate,'yyyy-MM-dd') : (r.createdAt != null ? #temporals.format(r.createdAt,'yyyy-MM-dd') : '')}">2025-01-01</small>
+                </div>
+                <div style="margin:6px 0;">
+                    <span th:each="i : ${#numbers.sequence(1,5)}"
+                          th:classappend="${i <= (r.rating != null ? r.rating : r.ratingValue)} ? 'fas fa-star' : 'far fa-star'"
+                          class="far fa-star" style="color:#FFD54F; margin-right:3px;"></span>
+                </div>
+                <div style="color:#e0e6ed;" th:text="${r.comment}">Great product!</div>
+            </div>
+        </div>
+        <div th:if="${reviews == null or #lists.isEmpty(reviews)}" style="color:#cfd6df;">No reviews yet for this product.</div>
+
+        <!-- Review form -->
+        <div style="background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:14px; margin-top:16px;">
+            <form th:action="@{/reviews/add}" method="post" id="reviewForm" style="display:grid; gap:10px;">
+                <input type="hidden" name="productId" th:value="${product.productID}">
+                <input type="hidden" name="userId" th:value="${currentUserId}">
+                <input type="hidden" name="rating" id="revRating" value="5">
+                <div>
+                    <label style="font-weight:700; color:#cfd6df;">Your rating</label>
+                    <div id="revStars" style="display:inline-flex; gap:6px; margin-left:8px;">
+                        <i class="far fa-star" data-val="1" style="color:#FFD54F"></i>
+                        <i class="far fa-star" data-val="2" style="color:#FFD54F"></i>
+                        <i class="far fa-star" data-val="3" style="color:#FFD54F"></i>
+                        <i class="far fa-star" data-val="4" style="color:#FFD54F"></i>
+                        <i class="far fa-star" data-val="5" style="color:#FFD54F"></i>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-weight:700; color:#cfd6df;">Comment</label>
+                    <textarea name="comment" id="revComment" rows="3" class="form-control" placeholder="Share your thoughts..." th:disabled="${currentUserId == null}" required></textarea>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button type="submit" id="revSubmit" class="btn" style="min-width:160px; background:#FFD54F; color:#0a0e27; font-weight:800; border:none; border-radius:14px; padding:.7rem 1.2rem;"
+                            th:disabled="${currentUserId == null}">Submit Review</button>
+                    <span th:if="${currentUserId == null}" style="color:#cfd6df;">Please log in to leave a review.</span>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script>
+// interactive star selector
+(function(){
+  // New review star selector
+  const revWrap = document.getElementById('revStars');
+  const revInput = document.getElementById('revRating');
+  if(revWrap && revInput){
+    const paint = (n)=>{[...revWrap.children].forEach((el,i)=>{ el.classList.remove('fas'); el.classList.add('far'); if(i < n){ el.classList.remove('far'); el.classList.add('fas'); } el.style.color='#FFD54F'; el.style.cursor='pointer'; });};
+    paint(parseInt(revInput.value||'5'));
+    revWrap.addEventListener('click', (e)=>{ const t=e.target.closest('i[data-val]'); if(!t) return; revInput.value=t.getAttribute('data-val'); paint(parseInt(revInput.value)); });
+  }
+  const form = document.getElementById('reviewForm');
+  if(form){
+    form.addEventListener('submit', function(){
+      // Let normal submit proceed; also show quick message
+      alert('Thanks! Your review has been submitted.');
+    });
+  }
+})();
+</script>
+
 <!-- Footer -->
 <footer class="premium-footer">
     <p style="margin: 0; font-size: 0.9rem;">© 2025 HomeTech. All rights reserved.</p>
