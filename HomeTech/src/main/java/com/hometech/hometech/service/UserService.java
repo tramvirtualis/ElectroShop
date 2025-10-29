@@ -8,6 +8,7 @@ import com.hometech.hometech.Repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -38,6 +39,10 @@ public class UserService {
         account.setRole(roleName);
         accountReposirory.save(account);
     }
+    public User getById(long id) {
+        Optional<User> userOpt = userRepository.findById(id);
+        return userOpt.orElse(null);
+    }
     public long countAll() { return userRepository.count(); }
     public long countByStatus(boolean active) { return userRepository.countByActive(active); }
     // 🟢 Tìm kiếm người dùng
@@ -46,5 +51,8 @@ public class UserService {
             return userRepository.findAll(); // nếu ô tìm kiếm trống -> trả tất cả
         }
         return userRepository.findByFullNameContainingIgnoreCaseOrAccount_EmailContainingIgnoreCase(keyword, keyword);
+    }
+    public void save(User user) {
+        userRepository.save(user);
     }
 }

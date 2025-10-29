@@ -67,29 +67,37 @@ public class CartController {
     public String viewCart(HttpServletRequest request, Model model) {
         addSessionInfo(request, model);
         Long userId = getCurrentUserId();
+        
+        // If not logged in, show guest cart
         if (userId == null) {
             var session = request.getSession(true);
             var items = service.getCartItemsForSession(session.getId());
             model.addAttribute("cartItems", items);
+
             double totalGuest = items.stream()
                     .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
                     .sum();
+
             model.addAttribute("totalPrice", totalGuest);
+            model.addAttribute("title", "Giỏ hàng tạm");
             return "cart";
         }
 
+        // If logged in, show user cart
         var userItems = service.getCartItemsByUserId(userId);
         model.addAttribute("cartItems", userItems);
-        double total = userItems
-                .stream()
+
+        double total = userItems.stream()
                 .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
                 .sum();
         model.addAttribute("totalPrice", total);
-        // Address for logged-in user
+
+        // Get user's shipping address
         Customer customer = customerRepository.findByUser_Id(userId).orElse(null);
-        Address a = (customer != null) ? addressRepository.findByCustomer_Id(customer.getId()) .orElse(null) : null;
+        Address a = (customer != null) ? addressRepository.findByCustomer_Id(customer.getId()).orElse(null) : null;
         if (a != null) {
             StringBuilder sb = new StringBuilder();
+
             if (a.getAddressLine() != null && !a.getAddressLine().isBlank()) sb.append(a.getAddressLine());
             if (a.getCommune() != null && !a.getCommune().isBlank()) {
                 if (sb.length() > 0) sb.append(", ");
@@ -99,13 +107,17 @@ public class CartController {
                 if (sb.length() > 0) sb.append(", ");
                 sb.append(a.getCity());
             }
+
             model.addAttribute("address", sb.toString());
             model.addAttribute("addrLine", a.getAddressLine());
             model.addAttribute("addrCommune", a.getCommune());
             model.addAttribute("addrCity", a.getCity());
         }
+
+        model.addAttribute("title", "Giỏ hàng của tôi");
         return "cart";
     }
+
 
     @PostMapping("/add")
     public String addToCart(@RequestParam int productId,

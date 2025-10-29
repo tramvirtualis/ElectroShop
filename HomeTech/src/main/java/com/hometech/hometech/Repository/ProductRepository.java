@@ -3,7 +3,9 @@ package com.hometech.hometech.Repository;
 import com.hometech.hometech.model.Category;
 import com.hometech.hometech.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -34,4 +36,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     // 🔎 Full-text like search by product name (case-insensitive)
     List<Product> findByProductNameContainingIgnoreCase(String keyword);
+    
+    // Xoá ảnh phụ thuộc trước khi xoá product để tránh lỗi ràng buộc FK
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM product_images WHERE product_id = :productId", nativeQuery = true)
+    void deleteImagesByProductId(int productId);
 }

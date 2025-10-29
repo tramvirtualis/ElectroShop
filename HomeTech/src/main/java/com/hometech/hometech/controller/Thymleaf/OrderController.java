@@ -86,22 +86,35 @@ public class OrderController {
     public String showHistory(HttpServletRequest request, Model model) {
         addSessionInfo(request, model);
         Long userId = getCurrentUserId();
+        
+        // If not logged in, show empty list
         if (userId == null) {
-            // Return empty history page instead of redirecting
             model.addAttribute("orders", java.util.Collections.emptyList());
+            model.addAttribute("title", "Lịch sử đơn hàng (khách)");
+            model.addAttribute("emptyMessage", "Vui lòng đăng nhập để xem lịch sử đơn hàng.");
             return "orders/history";
         }
-        // Show only delivered success (COMPLETED) or cancelled
+        
+        // Show only COMPLETED or CANCELLED orders
         java.util.List<com.hometech.hometech.model.Order> done = service.getOrdersByUserIdAndStatus(userId, OrderStatus.COMPLETED);
         java.util.List<com.hometech.hometech.model.Order> cancelled = service.getOrdersByUserIdAndStatus(userId, OrderStatus.CANCELLED);
         java.util.List<com.hometech.hometech.model.Order> merged = new java.util.ArrayList<>();
         merged.addAll(done);
         merged.addAll(cancelled);
+        
         // Sort latest first by date
         merged.sort((a,b) -> b.getOrderDate().compareTo(a.getOrderDate()));
         model.addAttribute("orders", merged);
+        model.addAttribute("title", "Lịch sử đơn hàng của tôi");
+        
+        // If empty, show message
+        if (merged.isEmpty()) {
+            model.addAttribute("emptyMessage", "Bạn chưa có đơn hàng đã hoàn thành hoặc đã hủy.");
+        }
+        
         return "orders/history";
     }
+
 
     @GetMapping("/status/{status}")
     public String listOrdersByStatus(@PathVariable OrderStatus status,
