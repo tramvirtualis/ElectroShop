@@ -266,18 +266,27 @@
 <script>
     (function(){
         try{
+            console.log('🔌 Connecting to WebSocket...');
             const socket = new SockJS('/ws');
             const stompClient = Stomp.over(socket);
             stompClient.connect({}, function() {
+                console.log('✅ WebSocket connected!');
                 stompClient.subscribe('/topic/notifications', function(message) {
+                    console.log('📨 Received notification:', message.body);
                     const notification = JSON.parse(message.body);
                     const msg = (notification && notification.message) ? notification.message : 'Bạn có thông báo mới!';
+                    console.log('📢 Showing notification:', msg);
                     showNotification(msg);
                     // If a page provides an aggregation UI (bell), update it
                     if (typeof window.addNotification === 'function') {
+                        console.log('🔔 Calling window.addNotification');
                         window.addNotification(msg);
+                    } else {
+                        console.warn('⚠️ window.addNotification not available');
                     }
                 });
+            }, function(error) {
+                console.error('❌ WebSocket connection error:', error);
             });
 
             function showNotification(msg){

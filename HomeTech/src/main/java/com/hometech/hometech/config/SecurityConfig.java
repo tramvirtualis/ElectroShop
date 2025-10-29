@@ -73,7 +73,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/ws/**", "/api/notify/**")
+                        .disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // 🔓 Phân quyền truy cập
@@ -86,7 +88,8 @@ public class SecurityConfig {
                                 "/login", "/register",
                                 "/css/**", "/js/**", "/images/**",
                                 "/products/**",
-                                "/cart", "/cart/**", "/orders/**", "/profile"
+                                "/cart", "/cart/**", "/orders/**", "/profile",
+                                "/ws/**", "/api/notify/**", "/test-notification"  // WebSocket and notification endpoints
                         ).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")  // Yêu cầu role ADMIN cho các trang admin
                         .anyRequest().authenticated()

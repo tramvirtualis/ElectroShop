@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Notifications</title>
+    <style>
+        body {
+            background: #0a0e27;
+            color: #00FFFF;
+            font-family: Arial, sans-serif;
+            padding: 50px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%);
+            color: #0a0e27;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .btn:hover {
+            box-shadow: 0 5px 20px rgba(0, 191, 255, 0.5);
+        }
+        #status {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0, 191, 255, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔔 Test Notification System</h1>
+    <p>Click the button below to send a test notification:</p>
+    
+    <button class="btn" onclick="sendTestNotification()">Send Test Notification</button>
+    <button class="btn" onclick="window.location.href='/'">Back to Home</button>
+    
+    <div id="status">
+        <p>Status: <span id="statusText">Ready</span></p>
+        <p>Console: Check browser console (F12) for WebSocket logs</p>
+    </div>
+
+    <script>
+        function sendTestNotification() {
+            document.getElementById('statusText').textContent = 'Sending...';
+            fetch('/api/notify/test')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('statusText').textContent = data + ' - Check home page bell!';
+                    console.log('Test notification sent:', data);
+                })
+                .catch(error => {
+                    document.getElementById('statusText').textContent = 'Error: ' + error;
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+</html>
+

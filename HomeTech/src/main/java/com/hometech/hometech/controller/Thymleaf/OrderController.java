@@ -19,6 +19,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 import java.util.List;
 
@@ -180,39 +183,50 @@ public class OrderController {
     @PostMapping("/create")
     public String createOrder(HttpServletRequest request, RedirectAttributes redirectAttributes,
                               @RequestParam(value = "shippingAddress", required = false) String shippingAddress) {
+        System.out.println("🛒 createOrder called");
         Long userId = getCurrentUserId();
         try {
+            Order order;
             if (userId != null) {
+                System.out.println("👤 Creating order for authenticated user: " + userId);
                 // Ensure any session cart items are merged to the user before placing order
                 String sessionId = request.getSession(true).getId();
                 cartService.mergeSessionCartToUser(sessionId, userId);
-                Order order;
                 if (shippingAddress != null && !shippingAddress.isBlank()) {
                     order = service.createOrder(userId, shippingAddress);
                 } else {
                     order = service.createOrder(userId);
                 }
-                redirectAttributes.addFlashAttribute("success", "Đặt hàng thành công");
-                // Notify all clients (Vietnamese message)
-                messagingTemplate.convertAndSend("/topic/notifications", new com.hometech.hometech.controller.Api.NotificationController.Notification(
-                        "Bạn có đơn hàng mới! Mã đơn #" + order.getOrderId(), java.time.LocalDateTime.now().toString()
-                ));
-                return "redirect:/orders";
             } else {
+                System.out.println("👥 Creating order for guest session");
                 String sessionId = request.getSession(true).getId();
-                Order order;
                 if (shippingAddress != null && !shippingAddress.isBlank()) {
                     order = service.createOrderForSession(sessionId, shippingAddress);
                 } else {
                     order = service.createOrderForSession(sessionId);
                 }
-                redirectAttributes.addFlashAttribute("success", "Đặt hàng thành công");
-                messagingTemplate.convertAndSend("/topic/notifications", new com.hometech.hometech.controller.Api.NotificationController.Notification(
-                        "Bạn có đơn hàng mới! Mã đơn #" + order.getOrderId(), java.time.LocalDateTime.now().toString()
-                ));
-                return "redirect:/orders";
             }
+            
+            System.out.println("✅ Order created successfully. Order ID: " + order.getOrderId());
+            redirectAttributes.addFlashAttribute("success", "Đặt hàng thành công");
+            
+            // Send notification
+            try {
+                Map<String, String> notification = new HashMap<>();
+                notification.put("message", "Bạn có đơn hàng mới! Mã đơn #" + order.getOrderId());
+                notification.put("timestamp", LocalDateTime.now().toString());
+                System.out.println("🔔 Attempting to send notification: " + notification.get("message"));
+                messagingTemplate.convertAndSend("/topic/notifications", notification);
+                System.out.println("✅ Notification sent successfully!");
+            } catch (Exception e) {
+                System.err.println("❌ Failed to send notification: " + e.getMessage());
+                e.printStackTrace();
+            }
+            
+            return "redirect:/orders";
         } catch (RuntimeException e) {
+            System.err.println("❌ Error creating order: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/cart";
         }

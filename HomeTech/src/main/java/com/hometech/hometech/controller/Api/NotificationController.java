@@ -6,9 +6,10 @@ import lombok.NoArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 
@@ -46,7 +47,17 @@ public class NotificationController {
             notification = new Notification("(trống)", LocalDateTime.now().toString());
         }
         notification.setTimestamp(LocalDateTime.now().toString());
+        System.out.println("🔔 Sending test notification: " + notification.getMessage());
         messagingTemplate.convertAndSend("/topic/notifications", notification);
+    }
+    
+    // GET endpoint for easy testing
+    @GetMapping("/api/notify/test")
+    public String sendTestNotification() {
+        Notification notification = new Notification("Đây là thông báo thử nghiệm!", LocalDateTime.now().toString());
+        System.out.println("🔔 Sending GET test notification: " + notification.getMessage());
+        messagingTemplate.convertAndSend("/topic/notifications", notification);
+        return "Notification sent!";
     }
 }
 

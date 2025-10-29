@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+    <style>
+        body { background: #0a0e27; color: #00FFFF; font-family: monospace; padding: 20px; }
+        .log { background: #1a1f35; padding: 10px; margin: 5px 0; border-left: 3px solid #00BFFF; }
+        .success { border-left-color: #00ff00; }
+        .error { border-left-color: #ff0000; color: #ff6b6b; }
+        button { background: #00BFFF; color: #0a0e27; padding: 10px 20px; border: none; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔌 WebSocket Connection Test</h1>
+    <p>This page tests ONLY the WebSocket connection, nothing else.</p>
+    
+    <button onclick="connectWebSocket()">Connect WebSocket</button>
+    <button onclick="sendTestNotification()">Send Test Notification</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+    
+    <h2>Logs:</h2>
+    <div id="logs"></div>
+    
+    <script>
+        let stompClient = null;
+        
+        function log(message, type = 'log') {
+            const div = document.createElement('div');
+            div.className = 'log ' + type;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            document.getElementById('logs').appendChild(div);
+            console.log(message);
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        function connectWebSocket() {
+            try {
+                log('🔧 Checking libraries...');
+                log('SockJS available: ' + (typeof SockJS !== 'undefined'), typeof SockJS !== 'undefined' ? 'success' : 'error');
+                log('Stomp available: ' + (typeof Stomp !== 'undefined'), typeof Stomp !== 'undefined' ? 'success' : 'error');
+                
+                if (typeof SockJS === 'undefined' || typeof Stomp === 'undefined') {
+                    log('❌ Libraries not loaded!', 'error');
+                    return;
+                }
+                
+                log('🔌 Connecting to WebSocket at /ws...');
+                const socket = new SockJS('/ws');
+                stompClient = Stomp.over(socket);
+                
+                stompClient.connect({}, function(frame) {
+                    log('✅ WebSocket connected successfully!', 'success');
+                    log('Frame: ' + JSON.stringify(frame));
+                    
+                    stompClient.subscribe('/topic/notifications', function(message) {
+                        log('📨 Received notification: ' + message.body, 'success');
+                        try {
+                            const notification = JSON.parse(message.body);
+                            log('📢 Message: ' + notification.message, 'success');
+                        } catch (e) {
+                            log('Error parsing: ' + e, 'error');
+                        }
+                    });
+                    
+                    log('📡 Subscribed to /topic/notifications', 'success');
+                    
+                }, function(error) {
+                    log('❌ WebSocket connection error: ' + JSON.stringify(error), 'error');
+                });
+                
+            } catch (e) {
+                log('❌ Exception: ' + e.message, 'error');
+                console.error(e);
+            }
+        }
+        
+        function sendTestNotification() {
+            log('🔔 Sending test notification via API...');
+            fetch('/api/notify/test')
+                .then(response => response.text())
+                .then(data => {
+                    log('✅ API response: ' + data, 'success');
+                })
+                .catch(error => {
+                    log('❌ API error: ' + error, 'error');
+                });
+        }
+        
+        // Auto-connect on load
+        window.addEventListener('load', function() {
+            log('📄 Page loaded');
+            setTimeout(connectWebSocket, 500);
+        });
+    </script>
+</body>
+</html>
+

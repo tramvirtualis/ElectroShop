@@ -11,6 +11,24 @@
     <!-- Bootstrap & FontAwesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- WebSocket Libraries (MUST be in head before notification-client.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+    <!-- Notification Client -->
+    <script th:src="@{/js/notification-client.js}" defer></script>
+    
+    <!-- Fallback: Define toggleNotifications immediately to prevent errors -->
+    <script>
+        // Temporary stub until notification-client.js loads
+        window.toggleNotifications = window.toggleNotifications || function(event) {
+            console.warn('toggleNotifications called before notification-client.js loaded');
+            event && event.stopPropagation && event.stopPropagation();
+            const dd = document.getElementById('notificationsDropdown');
+            if (!dd) return;
+            dd.style.display = (dd.style.display === 'none' || dd.style.display === '') ? 'block' : 'none';
+        };
+    </script>
 
     <style>
         * {
@@ -47,6 +65,29 @@
         @keyframes backgroundFloat {
             0%, 100% { transform: translate(0, 0); }
             50% { transform: translate(30px, -30px); }
+        }
+
+        /* Toast notification animations */
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
         }
 
         /* Header Styles */
@@ -487,7 +528,7 @@
             <div class="d-flex align-items-center gap-2">
                 <!-- Notification bell -->
                 <div style="position: relative;">
-                    <button id="notifyBell" class="btn btn-quick-nav" title="Thông báo" type="button" onclick="toggleNotifications(event)">
+                    <button id="notifyBell" class="btn btn-quick-nav" title="Thông báo" type="button" onclick="window.toggleNotifications?window.toggleNotifications(event):console.error('toggleNotifications not loaded yet')">
                         <i class="fas fa-bell"></i>
                         <span id="notifyBadge" class="d-none" style="position: absolute; top: 4px; right: 6px; background: #ff6b6b; color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 12px;">0</span>
                     </button>
@@ -683,60 +724,91 @@ function submitAddToCart(productId, quantity = 1) {
     }
 }
 
-// Notifications dropdown toggle
-function toggleNotifications(event) {
-    event && event.stopPropagation && event.stopPropagation();
-    const dd = document.getElementById('notificationsDropdown');
-    if (!dd) return;
-    dd.style.display = (dd.style.display === 'none' || dd.style.display === '') ? 'block' : 'none';
+// NOTE: WebSocket and notification functions should be in /js/notification-client.js
+// But if that file fails to load, here's the inline backup:
+
+if (typeof window.toggleNotifications === 'undefined' || !window.toggleNotifications.toString().includes('notificationsList')) {
+    console.warn('⚠️ notification-client.js did not load properly, using inline backup');
+    
+    // Define all notification functions inline
+    window.toggleNotifications = function(event) {
+        event && event.stopPropagation && event.stopPropagation();
+        const dd = document.getElementById('notificationsDropdown');
+        if (!dd) return;
+        dd.style.display = (dd.style.display === 'none' || dd.style.display === '') ? 'block' : 'none';
+    };
+    
+    window.setNotificationCount = function(n) {
+        const badge = document.getElementById('notifyBadge');
+        if (!badge) return;
+        if (n > 0) {
+            badge.textContent = n;
+            badge.classList.remove('d-none');
+        } else {
+            badge.classList.add('d-none');
+        }
+    };
+    
+    window.addNotification = function(message) {
+        console.log('🔔 addNotification (inline) called with:', message);
+        const list = document.getElementById('notificationsList');
+        if (!list) return;
+        if (list.children.length === 1 && list.children[0].textContent.includes('không có thông báo')) {
+            list.innerHTML = '';
+        }
+        const item = document.createElement('div');
+        item.style.cssText = 'padding:0.6rem 0.4rem; border-radius:6px; border-bottom:1px solid rgba(255,255,255,0.05); background:rgba(0,191,255,0.08);';
+        item.textContent = message;
+        list.prepend(item);
+        let current = 0;
+        const badge = document.getElementById('notifyBadge');
+        if (badge && !badge.classList.contains('d-none')) {
+            current = parseInt(badge.textContent || '0') || 0;
+        }
+        window.setNotificationCount(current + 1);
+    };
+    
+    // Initialize WebSocket
+    if (typeof SockJS !== 'undefined' && typeof Stomp !== 'undefined') {
+        console.log('🔌 Connecting to WebSocket (inline)...');
+        try {
+            const socket = new SockJS('/ws');
+            const stompClient = Stomp.over(socket);
+            stompClient.connect({}, function() {
+                console.log('✅ WebSocket connected (inline)!');
+                stompClient.subscribe('/topic/notifications', function(message) {
+                    console.log('📨 Received notification (inline):', message.body);
+                    const notification = JSON.parse(message.body);
+                    const msg = (notification && notification.message) ? notification.message : 'Bạn có thông báo mới!';
+                    // Show toast
+                    const toast = document.createElement('div');
+                    toast.style.cssText = 'position:fixed; top:100px; right:20px; background:rgba(0,191,255,0.95); color:#0a0e27; padding:1rem 1.5rem; border-radius:10px; box-shadow:0 10px 40px rgba(0,191,255,0.5); z-index:9999; animation:slideIn 0.3s ease-out; font-weight:600;';
+                    toast.innerHTML = '<i class="fas fa-bell"></i> ' + msg;
+                    document.body.appendChild(toast);
+                    setTimeout(() => { toast.style.animation = 'slideOut 0.3s ease-out'; setTimeout(() => document.body.removeChild(toast), 300); }, 4000);
+                    // Update bell
+                    window.addNotification(msg);
+                });
+            }, function(error) {
+                console.error('❌ WebSocket error (inline):', error);
+            });
+        } catch (e) {
+            console.error('❌ WebSocket init failed (inline):', e);
+        }
+    } else {
+        console.error('❌ SockJS or Stomp not loaded!');
+    }
 }
 
-// Close notifications when clicking outside
+// Close dropdown when clicking outside
 document.addEventListener('click', function(e) {
     const dd = document.getElementById('notificationsDropdown');
     const bell = document.getElementById('notifyBell');
     if (!dd || !bell) return;
-    if (dd.style.display === 'block') {
-        if (!dd.contains(e.target) && !bell.contains(e.target)) {
-            dd.style.display = 'none';
-        }
+    if (dd.style.display === 'block' && !dd.contains(e.target) && !bell.contains(e.target)) {
+        dd.style.display = 'none';
     }
 });
-
-// Example: update badge count (call from server-side or client-side when new notices arrive)
-function setNotificationCount(n) {
-    const badge = document.getElementById('notifyBadge');
-    if (!badge) return;
-    if (n > 0) {
-        badge.textContent = n;
-        badge.classList.remove('d-none');
-    } else {
-        badge.classList.add('d-none');
-    }
-}
-
-// Allow base layout websocket to push items into the bell dropdown
-window.addNotification = function(message) {
-    const list = document.getElementById('notificationsList');
-    const badge = document.getElementById('notifyBadge');
-    if (!list) return;
-    // Remove placeholder if exists
-    if (list.children.length === 1 && list.children[0].textContent.includes('không có thông báo')) {
-        list.innerHTML = '';
-    }
-    const item = document.createElement('div');
-    item.style.padding = '0.6rem 0.4rem';
-    item.style.borderRadius = '6px';
-    item.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
-    item.textContent = message;
-    list.prepend(item);
-    // increase badge
-    let current = 0;
-    if (badge && !badge.classList.contains('d-none')) {
-        current = parseInt(badge.textContent || '0') || 0;
-    }
-    setNotificationCount(current + 1);
-}
 </script>
 
 </body>
