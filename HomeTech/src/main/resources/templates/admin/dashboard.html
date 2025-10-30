@@ -316,6 +316,13 @@
                     <i class="fas fa-users sidebar-icon"></i> Users
                 </a>
             </li>
+            <li class="sidebar-item mt-3">
+                <a href="#" class="sidebar-link w-100 text-start"
+                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <i class="fas fa-sign-out-alt sidebar-icon"></i> Logout
+                </a>
+                <form id="logout-form" th:action="@{/logout}" method="post" style="display: none;"></form>
+            </li>
         </ul>
     </aside>
 
@@ -341,7 +348,7 @@
             <div th:if="${showProductForm}" class="admin-content-panel" style="margin-bottom:1rem;">
                 <form th:action="@{/admin/dashboard/product/save}" method="post" enctype="multipart/form-data">
                     <!-- Nếu dùng CSRF -->
-                    <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+<!--                    <input type="hidden" name="_csrf" th:value="${_csrf.token}" />-->
 
                     <!-- Hidden ID để phân biệt thêm/sửa -->
                     <input type="hidden" name="productID" th:value="${product != null ? product.productID : 0}" />
@@ -550,12 +557,25 @@
             <div class="admin-header">
                 <h1 class="admin-title"><i class="fas fa-shopping-bag"></i> Manage Orders</h1>
                 <div>
-                    <a th:href="@{/admin/dashboard/orders}" class="btn-admin btn-sm">
-                        <i class="fas fa-list"></i> Open page
+                    <a th:href="@{/admin/dashboard?dashboardSection=orders}" class="btn-admin btn-sm">
+                        <i class="fas fa-list"></i> Refresh
                     </a>
                 </div>
             </div>
 
+            <!-- 🟢 Lọc trạng thái -->
+            <form method="get" th:action="@{/admin/dashboard/orders}" class="mb-3">
+                <label for="status">Lọc theo trạng thái:</label>
+                <select id="status" name="status" onchange="this.form.submit()" class="form-select w-auto d-inline">
+                    <option value="">Tất cả</option>
+                    <option th:each="s : ${statuses}"
+                            th:value="${s.name()}"
+                            th:text="${s.name()}"
+                            th:selected="${selectedStatus == s.name()}"></option>
+                </select>
+            </form>
+
+            <!-- 🟣 Danh sách đơn hàng -->
             <div class="admin-content-panel">
                 <table class="data-table">
                     <thead>
@@ -565,22 +585,35 @@
                         <th>Items</th>
                         <th>Total</th>
                         <th>Status</th>
+                        <th>Update</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
                     <tbody>
-                     <tr th:each="o : ${orders}">
-                         <td th:text="'#' + ${o.orderId}"></td>
-                         <td th:text="${o.customer != null && o.customer.account != null ? o.customer.account.username : 'N/A'}"></td>
-                         <td th:text="${o.orderItems != null ? #lists.size(o.orderItems) : 0} + ' items'"></td>
+                    <tr th:each="o : ${orders}">
+                        <td th:text="'#' + ${o.orderId}"></td>
+                        <td th:text="${o.customer != null && o.customer.account != null ? o.customer.account.username : 'N/A'}"></td>
+                        <td th:text="${o.orderItems != null ? #lists.size(o.orderItems) : 0} + ' items'"></td>
                         <td th:text="${#numbers.formatDecimal(o.totalPrice, 0, 'POINT', 0, 'COMMA')} + ' ₫'"></td>
                         <td>
-                             <span class="badge-table"
-                                   th:classappend="${o.orderStatus != null and (o.orderStatus.name() == 'COMPLETED' or o.orderStatus.name() == 'SHIPPED')} ? 'badge-active' : 'badge-inactive'"
-                                   th:text="${o.orderStatus}"></span>
+                    <span class="badge-table"
+                          th:classappend="${o.orderStatus.name() == 'COMPLETED' ? 'badge-active' : 'badge-inactive'}"
+                          th:text="${o.orderStatus}"></span>
                         </td>
                         <td>
-                            <a class="btn-admin btn-sm" th:href="@{/admin/dashboard/orders/{id}(id=${o.orderId})}">
+                            <form th:action="@{'/admin/orders/' + ${o.orderId} + '/update-status'}" method="post" class="d-flex gap-1">
+                                <select name="status" class="form-select form-select-sm w-auto">
+                                    <option th:each="s : ${statuses}"
+                                            th:value="${s.name()}"
+                                            th:text="${s.name()}"
+                                            th:selected="${s.name() == o.orderStatus.name()}"></option>
+                                </select>
+                                <button class="btn-admin btn-sm" type="submit"><i class="fas fa-sync"></i></button>
+                            </form>
+                        </td>
+                        <td>
+                            <a class="btn-admin btn-sm"
+                               th:href="@{/admin/dashboard/orders(orderId=${o.orderId})}">
                                 <i class="fas fa-eye"></i> View
                             </a>
                         </td>
@@ -588,7 +621,58 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- 🟡 Hiển thị chi tiết đơn hàng khi được chọn -->
+            <div class="admin-content-panel mt-4" th:if="${showOrderDetail}">
+                <h4 class="text-primary mb-3">Chi tiết đơn hàng #<span th:text="${selectedOrder.orderId}"></span></h4>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>Khách hàng:</strong>
+                            <span th:text="${selectedOrder.customer != null && selectedOrder.customer.account != null ? selectedOrder.customer.account.username : 'N/A'}"></span>
+                        </p>
+                        <p><strong>Trạng thái:</strong>
+                            <span class="badge-table badge-active" th:text="${selectedOrder.orderStatus}"></span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Tổng tiền:</strong>
+                            <span th:text="${#numbers.formatDecimal(selectedOrder.totalPrice, 0, 'POINT', 0, 'COMMA')} + ' ₫'"></span>
+                        </p>
+                        <p><strong>Ngày tạo:</strong>
+                            <span th:text="${#temporals.format(selectedOrder.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <h5 class="text-warning">Sản phẩm trong đơn hàng:</h5>
+                <table class="table table-bordered table-dark align-middle">
+                    <thead>
+                    <tr>
+                        <th>Tên sản phẩm</th>
+                        <th>Số lượng</th>
+                        <th>Giá</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${selectedOrder.orderItems}">
+                        <td th:text="${item.product != null ? item.product.productName : 'N/A'}"></td>
+                        <td th:text="${item.quantity}"></td>
+                        <td th:text="${#numbers.formatDecimal(item.price, 0, 'POINT', 0, 'COMMA')} + ' ₫'"></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div class="mt-3">
+                    <a th:href="@{/admin/dashboard?dashboardSection=orders}" class="btn-admin btn-admin-danger btn-sm">
+                        <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                    </a>
+                </div>
+            </div>
         </div>
+
+
+
 
         <!-- USERS SECTION -->
         <div class="content-section" id="customers" th:classappend="${dashboardSection} == 'customers' ? ' active' : ''">

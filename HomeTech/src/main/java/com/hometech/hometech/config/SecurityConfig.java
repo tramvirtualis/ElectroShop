@@ -4,6 +4,8 @@ import com.hometech.hometech.service.CustomUserDetailsService;
 import com.hometech.hometech.service.JwtAuthenticationFilter;
 import com.hometech.hometech.service.OAuth2UserService;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -116,13 +118,13 @@ public class SecurityConfig {
 
                 // 🚪 Cấu hình logout
                 .logout(logout -> logout
-                        .logoutUrl("/auth/logout")
-                        .logoutSuccessUrl("/")
+                        .logoutUrl("/logout")  // URL dùng trong form hoặc link
+                        .logoutSuccessUrl("/admin/login?logout=true")  // sau khi logout
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
-
                 )
+
 
                 // ⚙️ Quản lý session
                 .sessionManagement(session -> session

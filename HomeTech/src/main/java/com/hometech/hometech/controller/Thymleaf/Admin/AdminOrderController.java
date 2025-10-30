@@ -2,151 +2,94 @@ package com.hometech.hometech.controller.Thymleaf.Admin;
 
 import com.hometech.hometech.enums.OrderStatus;
 import com.hometech.hometech.model.Order;
-import com.hometech.hometech.service.CategoryService;
 import com.hometech.hometech.service.OrderService;
-import com.hometech.hometech.service.ProductService;
-import com.hometech.hometech.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 @Controller
-@RequestMapping("/admin/dashboard/orders")
+@RequestMapping("/admin/dashboard")
 public class AdminOrderController {
 
     private final OrderService orderService;
-    private final ProductService productService;
-    private final CategoryService categoryService;
-    private final UserService userService;
 
-    public AdminOrderController(OrderService orderService,
-                                ProductService productService,
-                                CategoryService categoryService,
-                                UserService userService) {
-
+    public AdminOrderController(OrderService orderService) {
         this.orderService = orderService;
-        this.productService = productService;
-        this.categoryService = categoryService;
-        this.userService = userService;
     }
 
-    // ----------------------------------------------------------
-    // 🟢 XEM TẤT CẢ ĐƠN HÀNG + THỐNG KÊ
-    // ----------------------------------------------------------
-    @GetMapping
-    public String viewAllOrders(Model model) {
-        List<Order> orders = orderService.getAllOrders();
-        Map<OrderStatus, Long> stats = orderService.countAllOrdersByStatus();
+    // 🟢 XEM DANH SÁCH / LỌC / XEM CHI TIẾT ĐƠN HÀNG
+    @GetMapping("/orders")
+    public String viewOrders(@RequestParam(value = "status", required = false) String status,
+                             @RequestParam(value = "orderId", required = false) int orderId,
+                             Model model) {
+
+        List<Order> orders;
+        if (status != null && !status.isEmpty()) {
+            try {
+                OrderStatus filter = OrderStatus.valueOf(status.toUpperCase());
+                orders = orderService.getOrdersByStatus(filter);
+                model.addAttribute("selectedStatus", status.toUpperCase());
+            } catch (Exception e) {
+                orders = orderService.getAllOrders();
+                model.addAttribute("selectedStatus", "ALL");
+            }
+        } else {
+            orders = orderService.getAllOrders();
+            model.addAttribute("selectedStatus", "ALL");
+        }
 
         model.addAttribute("orders", orders);
-        model.addAttribute("orderStats", stats);
-        model.addAttribute("title", "Bảng điều khiển quản trị");
+        model.addAttribute("statuses", Arrays.asList(OrderStatus.values()));
+        model.addAttribute("dashboardSection", "orders");
+        model.addAttribute("title", "Quản lý đơn hàng");
 
-        // ✅ Thêm các dữ liệu khác để dashboard không lỗi khi render
-        model.addAttribute("products", productService.getAll());
-        model.addAttribute("categories", categoryService.getAll());
-        model.addAttribute("users", userService.getAllUsers());
+        // Khi click View
+        if (orderId >0) {
+            Order order = orderService.getOrderById(orderId);
+            if (order != null) {
+                model.addAttribute("selectedOrder", order);
+                model.addAttribute("showOrderDetail", true);
+            }
+        }
 
-        model.addAttribute("totalUsers", userService.countAll());
-        model.addAttribute("activeUsers", userService.countByStatus(true));
-        model.addAttribute("inactiveUsers", userService.countByStatus(false));
-        model.addAttribute("totalOrders", orders.size());
-        model.addAttribute("totalProducts", productService.getAll().size());
-        model.addAttribute("totalCategories", categoryService.getAll().size());
-
-        // ✅ Hiển thị tất cả trong 1 trang dashboard
         return "admin/dashboard";
     }
 
-
-    // ----------------------------------------------------------
-    // 🟢 XEM CHI TIẾT ĐƠN HÀNG
-    // ----------------------------------------------------------
-    @GetMapping("/{orderId}")
-    public String viewOrderDetail(@PathVariable int orderId, Model model, RedirectAttributes ra) {
+    // 🟢 CẬP NHẬT TRẠNG THÁI
+    @PostMapping("/orders/{id}/update-status")
+    public String updateOrderStatus(@PathVariable("id") int orderId,
+                                    @RequestParam("status") String status,
+                                    RedirectAttributes redirectAttributes) {
         try {
-            Order order = orderService.getOrderById(orderId);
-            if (order == null) {
-                ra.addFlashAttribute("errorMessage", "Không tìm thấy đơn hàng #" + orderId);
-                return "redirect:/admin/orders";
-            }
-
-            model.addAttribute("order", order);
-            model.addAttribute("title", "Chi tiết đơn hàng #" + orderId);
-            return "admin/orders/detail";
-        } catch (RuntimeException e) {
-            ra.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/admin/orders";
+            OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
+            orderService.updateOrderStatus(orderId, newStatus);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "✅ Cập nhật trạng thái đơn hàng #" + orderId + " thành công!");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "⚠️ Trạng thái không hợp lệ!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "❌ Lỗi khi cập nhật đơn hàng!");
         }
-    }
 
-    // ----------------------------------------------------------
-    // 🟡 CẬP NHẬT TRẠNG THÁI
-    // ----------------------------------------------------------
-    @PostMapping("/update-status")
-    public String updateOrderStatus(@RequestParam("orderId") int orderId,
-                                    @RequestParam("status") OrderStatus status,
-                                    RedirectAttributes ra) {
-        try {
-            orderService.updateStatus(orderId, status);
-            ra.addFlashAttribute("successMessage", "✅ Cập nhật trạng thái đơn hàng #" + orderId + " thành công!");
-        } catch (RuntimeException e) {
-            ra.addFlashAttribute("errorMessage", "❌ " + e.getMessage());
-        }
-        return "redirect:/admin/dashboard/orders/" + orderId;
-    }
-
-    // ----------------------------------------------------------
-    // 🔴 HỦY ĐƠN HÀNG (ADMIN)
-    // ----------------------------------------------------------
-    @PostMapping("/cancel/{orderId}")
-    public String cancelOrderByAdmin(@PathVariable int orderId, RedirectAttributes ra) {
-        try {
-            orderService.cancelOrderByAdmin(orderId);
-            ra.addFlashAttribute("successMessage", "🗑 Đã hủy đơn hàng #" + orderId + " thành công!");
-        } catch (RuntimeException e) {
-            ra.addFlashAttribute("errorMessage", "❌ " + e.getMessage());
-        }
         return "redirect:/admin/dashboard/orders";
     }
 
-    // ----------------------------------------------------------
-    // 🔍 TÌM KIẾM ĐƠN HÀNG
-    // ----------------------------------------------------------
-    @GetMapping("/search")
-    public String searchOrders(@RequestParam("keyword") String keyword, Model model) {
-        List<Order> results = orderService.searchOrders(keyword);
-        Map<OrderStatus, Long> stats = orderService.countAllOrdersByStatus();
-
-        model.addAttribute("orders", results);
-        model.addAttribute("orderStats", stats);
-        model.addAttribute("title", "Kết quả tìm kiếm: " + keyword);
-        model.addAttribute("keyword", keyword);
-
-        if (results.isEmpty()) {
-            model.addAttribute("infoMessage", "Không tìm thấy đơn hàng phù hợp.");
+    // 🔴 HỦY ĐƠN HÀNG
+    @PostMapping("/orders/{id}/cancel")
+    public String cancelOrder(@PathVariable("id") int orderId,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            orderService.updateOrderStatus(orderId, OrderStatus.CANCELLED);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "🛑 Đơn hàng #" + orderId + " đã bị hủy!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "❌ Lỗi khi hủy đơn hàng #" + orderId);
         }
-
-        return "admin/orders/index";
-    }
-
-    // ----------------------------------------------------------
-    // 🟣 LỌC THEO TRẠNG THÁI
-    // ----------------------------------------------------------
-    @GetMapping("/status/{status}")
-    public String filterByStatus(@PathVariable("status") OrderStatus status, Model model) {
-        List<Order> orders = orderService.getOrdersByStatus(status);
-        Map<OrderStatus, Long> stats = orderService.countAllOrdersByStatus();
-
-        model.addAttribute("orders", orders);
-        model.addAttribute("orderStats", stats);
-        model.addAttribute("currentStatus", status);
-        model.addAttribute("title", "Đơn hàng trạng thái: " + status);
-
-        return "admin/orders/index";
+        return "redirect:/admin/dashboard/orders";
     }
 }

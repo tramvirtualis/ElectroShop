@@ -322,6 +322,11 @@ public class AdminAuthController {
 
         return "redirect:/admin/dashboard";
     }
+    @GetMapping("/admin/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        return "redirect:/admin/login?logout=true";
+    }
 
 
 

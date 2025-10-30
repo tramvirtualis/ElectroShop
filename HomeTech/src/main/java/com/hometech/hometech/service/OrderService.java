@@ -176,7 +176,7 @@ public class OrderService {
                 return "đang chờ xác nhận";
             case CONFIRMED:
                 return "đã được xác nhận";
-            case SHIPPING:
+            case SHIPPED:
                 return "đang được giao";
             case COMPLETED:
                 return "đã giao thành công! 🎉";
@@ -340,5 +340,11 @@ public class OrderService {
         }
 
         return stats;
+    }
+    public void updateOrderStatus(int orderId, OrderStatus newStatus) {
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng #" + orderId));
+        order.setOrderStatus(newStatus);
+        orderRepo.save(order);
     }
 }
