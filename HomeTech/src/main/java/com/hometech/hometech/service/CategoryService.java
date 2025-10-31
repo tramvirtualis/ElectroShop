@@ -26,7 +26,29 @@ public class CategoryService {
         return repo.findById(id).orElse(null);
     }
 
+    /**
+     * Generate the next available category ID by finding the maximum ID and adding 1
+     */
+    private int generateNextId() {
+        List<Category> allCategories = repo.findAll();
+        if (allCategories.isEmpty()) {
+            return 1; // First category gets ID 1
+        }
+        // Find the maximum category ID
+        int maxId = allCategories.stream()
+                .mapToInt(Category::getCategoryID)
+                .max()
+                .orElse(0);
+        return maxId + 1;
+    }
+
     public void save(Category category) {
+        // If category ID is 0 or not set, it's a new category - generate the next ID
+        if (category.getCategoryID() == 0) {
+            int nextId = generateNextId();
+            category.setCategoryID(nextId);
+            System.out.println("🟢 Generated new category ID: " + nextId);
+        }
         repo.save(category);
     }
 

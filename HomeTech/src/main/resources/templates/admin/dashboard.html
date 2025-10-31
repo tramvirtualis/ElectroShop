@@ -363,22 +363,30 @@
         </div>
         <ul class="sidebar-menu">
             <li class="sidebar-item">
-                <a href="javascript:void(0);" class="sidebar-link active" data-section="products" onclick="switchTab('products'); return false;">
+                <a href="javascript:void(0);" class="sidebar-link" data-section="products" 
+                   th:classappend="${dashboardSection == null or dashboardSection == 'products' ? 'active' : ''}"
+                   onclick="switchTab('products'); return false;">
                     <i class="fas fa-box sidebar-icon"></i> Products
                 </a>
             </li>
             <li class="sidebar-item">
-                <a href="javascript:void(0);" class="sidebar-link" data-section="categories" onclick="switchTab('categories'); return false;">
+                <a href="javascript:void(0);" class="sidebar-link" data-section="categories" 
+                   th:classappend="${dashboardSection == 'categories' ? 'active' : ''}"
+                   onclick="switchTab('categories'); return false;">
                     <i class="fas fa-tags sidebar-icon"></i> Categories
                 </a>
             </li>
             <li class="sidebar-item">
-                <a href="javascript:void(0);" class="sidebar-link" data-section="orders" onclick="switchTab('orders'); return false;">
+                <a href="javascript:void(0);" class="sidebar-link" data-section="orders" 
+                   th:classappend="${dashboardSection == 'orders' ? 'active' : ''}"
+                   onclick="switchTab('orders'); return false;">
                     <i class="fas fa-shopping-bag sidebar-icon"></i> Orders
                 </a>
             </li>
             <li class="sidebar-item">
-                <a href="javascript:void(0);" class="sidebar-link" data-section="customers" onclick="switchTab('customers'); return false;">
+                <a href="javascript:void(0);" class="sidebar-link" data-section="customers" 
+                   th:classappend="${dashboardSection == 'customers' ? 'active' : ''}"
+                   onclick="switchTab('customers'); return false;">
                     <i class="fas fa-users sidebar-icon"></i> Users
                 </a>
             </li>
@@ -576,17 +584,38 @@
 
             <!-- Category Form (inline) -->
             <div th:if="${showCategoryForm}" class="admin-content-panel" style="margin-bottom: 1rem;">
-                <form th:action="${(category != null and category.categoryID > 0) ? @{/admin/dashboard/category/update/{id}(id=${category.categoryID})} : @{/admin/dashboard/category/add}}"
+                <form th:if="${category != null and category.categoryID > 0}" 
+                      th:action="@{/admin/dashboard/category/update/{id}(id=${category.categoryID})}"
+                      method="post">
+                    <input type="hidden" name="categoryID" th:value="${category.categoryID}" />
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Name</label>
+                            <input class="form-control" name="categoryName" th:value="${category.categoryName}" required>
+                        </div>
+                        <div class="col-12" style="margin-top:.5rem;">
+                            <button class="btn-admin btn-sm" type="submit">
+                                <i class="fas fa-save"></i>
+                                <span>Update</span>
+                            </button>
+                            <a class="btn-admin btn-admin-danger btn-sm" th:href="@{/admin/dashboard}">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+                <form th:unless="${category != null and category.categoryID > 0}" 
+                      th:action="@{/admin/dashboard/category/add}"
                       method="post">
                     <div class="row g-2">
                         <div class="col-md-6">
                             <label class="form-label">Name</label>
-                            <input class="form-control" name="categoryName" th:value="${category != null ? category.categoryName : ''}" required>
+                            <input class="form-control" name="categoryName" value="" required>
                         </div>
                         <div class="col-12" style="margin-top:.5rem;">
                             <button class="btn-admin btn-sm" type="submit">
-                                <i class="fas" th:classappend="${category != null and category.categoryID > 0} ? ' fa-save' : ' fa-plus'"></i>
-                                <span th:text="${category != null and category.categoryID > 0} ? 'Update' : 'Create'"></span>
+                                <i class="fas fa-plus"></i>
+                                <span>Create</span>
                             </button>
                             <a class="btn-admin btn-admin-danger btn-sm" th:href="@{/admin/dashboard}">
                                 <i class="fas fa-times"></i> Cancel
@@ -617,7 +646,7 @@
                             </a>
                             <a class="btn-admin btn-admin-danger btn-sm"
                                 th:href="@{/admin/dashboard/category/delete/{id}(id=${c.categoryID})}"
-                               onclick="return confirm('XÃ³a danh má»¥c sáº½ áº£nh hÆ°á»Ÿng Ä‘áº¿n sáº£n pháº©m. Báº¡n cÃ³ cháº¯c?')">
+                               onclick="return confirm('Xác nhận xóa danh mục này?')">
                                 <i class="fas fa-trash"></i> Delete
                             </a>
                         </td>
@@ -798,23 +827,55 @@
     document.addEventListener('DOMContentLoaded', function() {
         console.log('DOM Content Loaded - Initializing tabs...');
         
-        // Ensure the active section is visible on page load
-        var activeLink = document.querySelector('.sidebar-link.active');
-        if (activeLink) {
-            var sectionId = activeLink.getAttribute('data-section');
-            if (sectionId && window.switchTab) {
-                window.switchTab(sectionId);
+        // First, check if any content section already has the 'active' class (set by Thymeleaf)
+        var activeSection = document.querySelector('.content-section.active');
+        if (activeSection && activeSection.id) {
+            console.log('Found active section from Thymeleaf:', activeSection.id);
+            // Make sure the corresponding sidebar link is also active
+            var correspondingLink = document.querySelector('.sidebar-link[data-section="' + activeSection.id + '"]');
+            if (correspondingLink) {
+                // Remove active from all links first
+                document.querySelectorAll('.sidebar-link').forEach(function(link) {
+                    link.classList.remove('active');
+                });
+                correspondingLink.classList.add('active');
+            }
+            // Ensure the section stays visible (in case switchTab was called earlier)
+            activeSection.classList.add('active');
+            activeSection.style.display = 'block';
+        } else {
+            // Fallback: Use active sidebar link
+            var activeLink = document.querySelector('.sidebar-link.active');
+            if (activeLink && window.switchTab) {
+                var sectionId = activeLink.getAttribute('data-section');
+                if (sectionId) {
+                    window.switchTab(sectionId);
+                }
             }
         }
     });
     
     // Also run immediately if DOM is already loaded
     if (document.readyState !== 'loading') {
-        var activeLink = document.querySelector('.sidebar-link.active');
-        if (activeLink && window.switchTab) {
-            var sectionId = activeLink.getAttribute('data-section');
-            if (sectionId) {
-                window.switchTab(sectionId);
+        // Check for Thymeleaf-set active section first
+        var activeSection = document.querySelector('.content-section.active');
+        if (activeSection && activeSection.id) {
+            var correspondingLink = document.querySelector('.sidebar-link[data-section="' + activeSection.id + '"]');
+            if (correspondingLink) {
+                document.querySelectorAll('.sidebar-link').forEach(function(link) {
+                    link.classList.remove('active');
+                });
+                correspondingLink.classList.add('active');
+            }
+            activeSection.classList.add('active');
+            activeSection.style.display = 'block';
+        } else {
+            var activeLink = document.querySelector('.sidebar-link.active');
+            if (activeLink && window.switchTab) {
+                var sectionId = activeLink.getAttribute('data-section');
+                if (sectionId) {
+                    window.switchTab(sectionId);
+                }
             }
         }
     }
