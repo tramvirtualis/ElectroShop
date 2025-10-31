@@ -160,4 +160,23 @@ public class ProductController {
 
         return "redirect:/products/" + productId;
     }
+    @PostMapping("/review/add-or-update")
+    public String addOrUpdateReview(
+            @RequestParam int productId,
+            @RequestParam int userId,
+            @RequestParam int rating,
+            @RequestParam String comment,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            reviewService.addOrUpdateReview(productId, userId, rating, comment, imageFile);
+            redirectAttributes.addFlashAttribute("success", "Đánh giá của bạn đã được lưu!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi gửi đánh giá: " + e.getMessage());
+        }
+
+        return "redirect:/products/" + productId;
+    }
 }

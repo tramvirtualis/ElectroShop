@@ -43,8 +43,7 @@ public class NotificationController {
     }
 
     @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
+
     public static class Notification {
         public String getMessage() {
             return message;

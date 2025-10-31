@@ -88,21 +88,29 @@
             <version>1.18.34</version> <!-- dùng bản mới nhất -->
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>com.google.api-client</groupId>
-            <artifactId>google-api-client</artifactId>
-            <version>2.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-oauth2-client</artifactId>
-        </dependency>
+
         <!-- MySQL Driver -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- ✅ Google API Client for verifying Google ID Tokens -->
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+
+        <!-- ✅ HTTP Client + JSON parser for Google API -->
+        <dependency>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>google-http-client-gson</artifactId>
+            <version>1.43.3</version>
+        </dependency>
+
+
+
 
         <!-- H2 Database (for local testing) -->
         <dependency>
@@ -139,6 +147,12 @@
     </dependencies>
 
     <build>
+            <resources>
+                <resource>
+                    <directory>src/main/resources</directory>
+                    <filtering>false</filtering> <!-- 🚫 tắt lọc file -->
+                </resource>
+            </resources>
         <plugins>
             <!-- Compiler plugin -->
             <plugin>
@@ -171,4 +185,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>
