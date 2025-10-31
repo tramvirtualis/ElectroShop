@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -323,7 +323,7 @@
     <main class="admin-main">
 
         <!-- PRODUCTS SECTION -->
-        <div class="content-section" id="products" th:classappend="${dashboardSection} == null or ${dashboardSection} == 'products' ? ' active' : ''">
+        <div class="content-section" id="products" th:classappend="${dashboardSection == null or dashboardSection == 'products' ? ' active' : ''">
             <div class="admin-header">
                 <h1 class="admin-title"><i class="fas fa-box"></i> Manage Products</h1>
                 <div>
@@ -340,10 +340,10 @@
             <!-- Product Form (inline area) -->
             <div th:if="${showProductForm}" class="admin-content-panel" style="margin-bottom:1rem;">
                 <form th:action="@{/admin/dashboard/product/save}" method="post" enctype="multipart/form-data">
-                    <!-- Nếu dùng CSRF -->
+                    <!-- Náº¿u dÃ¹ng CSRF -->
                     <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
 
-                    <!-- Hidden ID để phân biệt thêm/sửa -->
+                    <!-- Hidden ID Ä‘á»ƒ phÃ¢n biá»‡t thÃªm/sá»­a -->
                     <input type="hidden" name="productID" th:value="${product != null ? product.productID : 0}" />
 
                     <div class="row g-2">
@@ -380,7 +380,7 @@
                             <input class="form-control" type="file" name="image" accept="image/*">
                         </div>
 
-                        <!-- Hiển thị ảnh hiện tại nếu có -->
+                        <!-- Hiá»ƒn thá»‹ áº£nh hiá»‡n táº¡i náº¿u cÃ³ -->
                         <div class="col-md-3 text-center" th:if="${product != null and product.image != null}">
                             <label class="form-label d-block">Current Image</label>
                             <img th:src="@{'/admin/dashboard/product/image/' + ${product.productID}}"
@@ -456,7 +456,7 @@
                          <td th:text="${p.productID}"></td>
                          <td th:text="${p.productName}"></td>
                          <td th:text="${p.category != null ? p.category.categoryName : 'N/A'}">N/A</td>
-                        <td th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' ₫'"></td>
+                        <td th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' â‚«'"></td>
                         <td>
                              <span class="badge-table"
                                    th:classappend="${p.status} ? 'badge-active' : 'badge-inactive'"
@@ -468,7 +468,7 @@
                             </a>
                             <a class="btn-admin btn-admin-danger btn-sm"
                                 th:href="@{/admin/dashboard/product/delete/{id}(id=${p.productID})}"
-                               onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                               onclick="return confirm('Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a sáº£n pháº©m nÃ y?')">
                                 <i class="fas fa-trash"></i> Delete
                             </a>
                         </td>
@@ -479,7 +479,7 @@
         </div>
 
         <!-- CATEGORIES SECTION -->
-        <div class="content-section" id="categories" th:classappend="${dashboardSection} == 'categories' ? ' active' : ''">
+        <div class="content-section" id="categories" th:classappend="${dashboardSection == 'categories' ? ' active' : ''">
             <div class="admin-header">
                 <h1 class="admin-title"><i class="fas fa-tags"></i> Manage Categories</h1>
                 <div>
@@ -494,7 +494,7 @@
 
             <!-- Category Form (inline) -->
             <div th:if="${showCategoryForm}" class="admin-content-panel" style="margin-bottom: 1rem;">
-                <form th:action="${category != null and category.categoryID > 0} ? @{/admin/dashboard/category/update/{id}(id=${category.categoryID})} : @{/admin/dashboard/category/add}"
+                <form th:action="${(category != null and category.categoryID > 0) ? '/admin/dashboard/category/update/' + category.categoryID : '/admin/dashboard/category/add'}"
                       method="post">
                     <div class="row g-2">
                         <div class="col-md-6">
@@ -535,7 +535,7 @@
                             </a>
                             <a class="btn-admin btn-admin-danger btn-sm"
                                 th:href="@{/admin/dashboard/category/delete/{id}(id=${c.categoryID})}"
-                               onclick="return confirm('Xóa danh mục sẽ ảnh hưởng đến sản phẩm. Bạn có chắc?')">
+                               onclick="return confirm('XÃ³a danh má»¥c sáº½ áº£nh hÆ°á»Ÿng Ä‘áº¿n sáº£n pháº©m. Báº¡n cÃ³ cháº¯c?')">
                                 <i class="fas fa-trash"></i> Delete
                             </a>
                         </td>
@@ -546,7 +546,7 @@
         </div>
 
         <!-- ORDERS SECTION -->
-        <div class="content-section" id="orders" th:classappend="${dashboardSection} == 'orders' ? ' active' : ''">
+        <div class="content-section" id="orders" th:classappend="${dashboardSection == 'orders' ? ' active' : ''">
             <div class="admin-header">
                 <h1 class="admin-title"><i class="fas fa-shopping-bag"></i> Manage Orders</h1>
                 <div>
@@ -570,10 +570,10 @@
                     </thead>
                     <tbody>
                      <tr th:each="o : ${orders}">
-                         <td th:text="'#' + ${o.orderId}"></td>
+                         <td th:text="''#'' + o.orderId"></td>
                          <td th:text="${o.customer != null && o.customer.account != null ? o.customer.account.username : 'N/A'}"></td>
                          <td th:text="${o.orderItems != null ? #lists.size(o.orderItems) : 0} + ' items'"></td>
-                        <td th:text="${#numbers.formatDecimal(o.totalPrice, 0, 'POINT', 0, 'COMMA')} + ' ₫'"></td>
+                        <td th:text="${#numbers.formatDecimal(o.totalPrice, 0, 'POINT', 0, 'COMMA')} + ' â‚«'"></td>
                         <td>
                              <span class="badge-table"
                                    th:classappend="${o.orderStatus != null and (o.orderStatus.name() == 'COMPLETED' or o.orderStatus.name() == 'SHIPPED')} ? 'badge-active' : 'badge-inactive'"
@@ -591,7 +591,7 @@
         </div>
 
         <!-- USERS SECTION -->
-        <div class="content-section" id="customers" th:classappend="${dashboardSection} == 'customers' ? ' active' : ''">
+        <div class="content-section" id="customers" th:classappend="${dashboardSection == 'customers' ? ' active' : ''">
             <div class="admin-header">
                 <h1 class="admin-title"><i class="fas fa-users"></i> Manage Users</h1>
                 <div>
@@ -601,7 +601,7 @@
                 </div>
             </div>
 
-            <!-- Danh sách người dùng -->
+            <!-- Danh sÃ¡ch ngÆ°á»i dÃ¹ng -->
             <div class="admin-content-panel">
                 <table class="data-table">
                     <thead>
@@ -650,7 +650,7 @@
                 </table>
             </div>
 
-            <!-- 🔹 Chi tiết người dùng -->
+            <!-- ðŸ”¹ Chi tiáº¿t ngÆ°á»i dÃ¹ng -->
             <div th:if="${showUserDetail}" class="admin-content-panel mt-4">
                 <h4><i class="fas fa-user-circle"></i> User Detail</h4>
 
@@ -682,7 +682,7 @@
                     </div>
                 </div>
 
-                <!-- 🔸 Thông tin khách hàng -->
+                <!-- ðŸ”¸ ThÃ´ng tin khÃ¡ch hÃ ng -->
                 <div th:if="${user.customer != null}" class="mt-3">
                     <h5><i class="fas fa-home"></i> Customer Info</h5>
 

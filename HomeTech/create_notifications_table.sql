@@ -22,3 +22,5 @@ CREATE TABLE IF NOT EXISTS notifications (
 --   (1, 'Đơn hàng #123 đã được tạo thành công!', 'ORDER', 123, FALSE),
 --   (1, 'Chào mừng bạn đến với HomeTech!', 'SYSTEM', NULL, FALSE);
 
+
+
