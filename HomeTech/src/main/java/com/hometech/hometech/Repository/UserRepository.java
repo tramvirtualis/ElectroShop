@@ -14,5 +14,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     User findByEmail(String email);
     long countByActive(boolean active);
     List<User> findByFullNameContainingIgnoreCaseOrAccount_EmailContainingIgnoreCase(String fullName, String email);
+    List<User> findByAccount_EmailIsNotNull();
 
 }

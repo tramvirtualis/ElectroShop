@@ -1,9 +1,11 @@
 package com.hometech.hometech.Repository;
 
+import com.hometech.hometech.enums.RoleType;
 import com.hometech.hometech.model.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -13,4 +15,5 @@ public interface AccountReposirory extends JpaRepository<Account, Long> {
     Optional<Account> findByVerificationToken(String verificationToken);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
+    List<Account> findByRole(RoleType role);
 }

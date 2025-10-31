@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details - Order #<span th:text="${order.orderId}">12345</span> - Admin</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap & FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e1e2f, #2d1b3a);
+            min-height: 100vh;
+            font-family: 'Rajdhani', sans-serif;
+            color: #fff;
+            padding: 2rem;
+        }
+
+        .container-fluid {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #6C5CE7;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-actions {
+            border: 2px solid #6C5CE7;
+            border-radius: 8px;
+            padding: 0.6rem 1.5rem;
+            color: #6C5CE7;
+            background: rgba(108, 92, 231, 0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+        }
+
+        .btn-actions:hover {
+            background: #6C5CE7;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        .btn-actions.danger {
+            border-color: #FF7675;
+            color: #FF7675;
+        }
+
+        .btn-actions.danger:hover {
+            background: #FF7675;
+            color: white;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #6C5CE7;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid rgba(108, 92, 231, 0.3);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            color: #aaa;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .info-value.price {
+            color: #6C5CE7;
+            font-size: 1.3rem;
+        }
+
+        .badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-block;
+        }
+
+        .badge.active {
+            background: #00B894;
+            color: white;
+        }
+
+        .badge.inactive {
+            background: #FF7675;
+            color: white;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1rem;
+        }
+
+        .items-table thead {
+            background: rgba(108, 92, 231, 0.2);
+        }
+
+        .items-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+            color: #6C5CE7;
+            border-bottom: 2px solid rgba(108, 92, 231, 0.3);
+        }
+
+        .items-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(108, 92, 231, 0.1);
+            color: #fff;
+        }
+
+        .items-table tbody tr:hover {
+            background: rgba(108, 92, 231, 0.1);
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(108, 92, 231, 0.3), transparent);
+            margin: 2rem 0;
+        }
+
+        .status-form {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(108, 92, 231, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #aaa;
+            font-weight: 600;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.6rem;
+            border-radius: 8px;
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #6C5CE7;
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+        }
+
+        .btn-primary {
+            background: #6C5CE7;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: #5a4fcf;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            Order Details - #<span th:text="${order.orderId}">12345</span>
+        </h1>
+        <div class="header-actions">
+            <a th:href="@{/admin/dashboard/orders}" class="btn-actions">
+                <i class="fas fa-arrow-left"></i> Back to Orders
+            </a>
+        </div>
+    </div>
+
+    <!-- Order Summary Card -->
+    <div class="info-card">
+        <h3 class="section-title">Order Information</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Order ID</span>
+                <span class="info-value" th:text="'#' + ${order.orderId}">#12345</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Order Date</span>
+                <span class="info-value" th:text="${order.orderDate != null ? #dates.format(order.orderDate, 'dd/MM/yyyy HH:mm') : 'N/A'}">27/10/2024 14:30</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status</span>
+                <span class="badge" 
+                      th:classappend="${order.orderStatus != null and (order.orderStatus.name() == 'COMPLETED' or order.orderStatus.name() == 'SHIPPED')} ? 'active' : 'inactive'"
+                      th:text="${order.orderStatus}">WAITING_CONFIRMATION</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Total Amount</span>
+                <span class="info-value price" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'POINT', 0, 'COMMA')} + ' ₫'">25,990,000 ₫</span>
+            </div>
+        </div>
+        
+        <!-- Status Update Form -->
+        <div class="status-form">
+            <form th:action="@{/admin/dashboard/orders/update-status}" method="post">
+                <input type="hidden" name="orderId" th:value="${order.orderId}"/>
+                <div class="form-group">
+                    <label for="status">Update Order Status</label>
+                    <select class="form-select" id="status" name="status" required>
+                        <option value="">-- Select Status --</option>
+                        <option th:each="status : ${orderStatuses}"
+                                th:value="${status}"
+                                th:selected="${order.orderStatus == status}"
+                                th:text="${status}">WAITING_CONFIRMATION</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Update Status
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Customer Information Card -->
+    <div class="info-card">
+        <h3 class="section-title">Customer Information</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Name</span>
+                <span class="info-value" th:text="${order.customer != null and order.customer.fullName != null and order.customer.fullName != '' ? order.customer.fullName : (order.customer != null and order.customer.name != null ? order.customer.name : 'N/A')}">Nguyen Van A</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Email</span>
+                <span class="info-value" th:text="${order.customer != null and order.customer.email != null ? order.customer.email : 'N/A'}">nguyenvana@email.com</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Phone</span>
+                <span class="info-value" th:text="${order.customer != null and order.customer.phone != null ? order.customer.phone : 'N/A'}">0123 456 789</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Shipping Address</span>
+                <span class="info-value" th:text="${order.shippingAddress != null ? order.shippingAddress : 'N/A'}">123 Main Street, District 1, HCMC</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Order Items Card -->
+    <div class="info-card">
+        <h3 class="section-title">Order Items (<span th:text="${order.orderItems != null ? #lists.size(order.orderItems) : 0}">2</span> items)</h3>
+        <table class="items-table" th:if="${order.orderItems != null and !order.orderItems.empty}">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${order.orderItems}">
+                    <td th:text="${item.product != null ? item.product.productName : 'N/A'}">iPhone 15 Pro</td>
+                    <td th:text="${item.product != null and item.product.category != null ? item.product.category.categoryName : 'N/A'}">Smartphone</td>
+                    <td th:text="${item.quantity}">1</td>
+                    <td th:text="${#numbers.formatDecimal(item.price, 0, 'POINT', 0, 'COMMA')} + ' ₫'">25,990,000 ₫</td>
+                    <td th:text="${#numbers.formatDecimal(item.price * item.quantity, 0, 'POINT', 0, 'COMMA')} + ' ₫'">25,990,000 ₫</td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="text-align: center; padding: 2rem; color: #6c757d;" th:if="${order.orderItems == null or order.orderItems.empty}">
+            <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+            No items in this order
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Payment Summary Card -->
+    <div class="info-card">
+        <h3 class="section-title">Payment Summary</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Subtotal</span>
+                <span class="info-value" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'POINT', 0, 'COMMA')} + ' ₫'">37,970,000 ₫</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Total</span>
+                <span class="info-value price" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'POINT', 0, 'COMMA')} + ' ₫'">37,970,000 ₫</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+        <form th:action="@{/admin/dashboard/orders/cancel/{id}(id=${order.orderId})}" method="post" style="display: inline;"
+              th:if="${order.orderStatus != null and order.orderStatus.name() != 'COMPLETED' and order.orderStatus.name() != 'CANCELLED'}">
+            <button type="submit" class="btn-actions danger" onclick="return confirm('Are you sure you want to cancel this order?');">
+                <i class="fas fa-times"></i> Cancel Order
+            </button>
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>
+

@@ -26,6 +26,11 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    // Lấy danh sách người dùng có email (không null)
+    public List<User> getUsersWithEmail() {
+        return userRepository.findByAccount_EmailIsNotNull();
+    }
+
     // Cập nhật trạng thái hoạt động
     public void updateUserStatus(Long id, boolean active) {
         User user = userRepository.findById(id)

@@ -237,12 +237,42 @@
         </a>
     </div>
 
+    <!-- Pagination -->
+    <div th:if="${totalPages > 1}" style="margin-top: 2rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+        <!-- Previous Button -->
+        <a th:if="${currentPage > 0}" 
+           th:href="@{/orders/history(page=${currentPage - 1}, size=5)}"
+           class="btn-back" 
+           style="min-width: auto; padding: 0.6rem 1rem;">
+            <i class="fas fa-chevron-left"></i> Previous
+        </a>
+        
+        <!-- Page Numbers -->
+        <div style="display: flex; gap: 0.5rem;">
+            <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+               th:href="@{/orders/history(page=${i}, size=5)}"
+               th:style="${i == currentPage} ? 'background: linear-gradient(135deg, #00BFFF 0%, #00FFFF 100%); color: #0a0e27; border: none;' : ''"
+               class="btn-back"
+               style="min-width: 40px; padding: 0.6rem; text-align: center; text-decoration: none;">
+                <span th:text="${i + 1}">1</span>
+            </a>
+        </div>
+        
+        <!-- Next Button -->
+        <a th:if="${currentPage < totalPages - 1}"
+           th:href="@{/orders/history(page=${currentPage + 1}, size=5)}"
+           class="btn-back"
+           style="min-width: auto; padding: 0.6rem 1rem;">
+            Next <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+
     <!-- Empty State -->
     <div class="empty-history" th:if="${orders == null or orders.empty}">
         <div class="empty-icon">
             <i class="fas fa-history"></i>
         </div>
-        <h3 class="text-muted mb-3">No purchase history</h3>
+        <h3 class="text-muted mb-3" th:text="${emptyMessage != null ? emptyMessage : 'No purchase history'}">No purchase history</h3>
         <p class="text-muted mb-4">Your completed orders will appear here</p>
         <a href="/" class="btn-back">
             <i class="fas fa-store"></i> Start Shopping

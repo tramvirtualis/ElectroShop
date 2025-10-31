@@ -584,14 +584,14 @@
     <h2 class="section-title">Danh mục</h2>
     <div class="category-pills">
         <!-- Show All button -->
-        <a href="/"
+        <a th:href="${selectedSort != null and selectedSort != '' ? '/?sort=' + selectedSort : '/'}"
            class="category-pill"
            th:classappend="${activeCategoryId == null} ? 'active' : ''">
             <i class="fas fa-globe"></i> Tất cả
         </a>
         <!-- Category buttons -->
         <a th:each="c, iterStat : ${categories}"
-           th:href="@{'/?category=' + ${c.categoryID}}"
+           th:href="${'/?category=' + c.categoryID + (selectedSort != null and selectedSort != '' ? '&sort=' + selectedSort : '')}"
            th:text="${c.categoryName}"
            class="category-pill"
            th:classappend="${activeCategoryId != null and c.categoryID == activeCategoryId} ? 'active' : ''"
@@ -599,7 +599,89 @@
     </div>
 
     <!-- 🔥 Sản phẩm bán chạy -->
-    <h2 class="section-title" th:text="${pageTitle != null ? pageTitle : 'Sản phẩm bán chạy'}">Sản phẩm bán chạy</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 class="section-title" th:text="${pageTitle != null ? pageTitle : 'Sản phẩm bán chạy'}" style="margin-bottom: 0;">Sản phẩm bán chạy</h2>
+        
+        <!-- Price Sort Dropdown -->
+        <div style="position: relative;">
+            <select id="priceSort" 
+                    onchange="handleSortChange(this.value)"
+                    style="background: rgba(255, 255, 255, 0.05);
+                           border: 1px solid rgba(0, 191, 255, 0.3);
+                           border-radius: 25px;
+                           color: #00FFFF;
+                           padding: 0.5rem 2.5rem 0.5rem 1rem;
+                           font-weight: 600;
+                           font-size: 0.9rem;
+                           cursor: pointer;
+                           outline: none;
+                           appearance: none;
+                           transition: all 0.3s ease;
+                           font-family: 'Rajdhani', sans-serif;">
+                <option value="" th:selected="${selectedSort == null or selectedSort == ''}">Sắp xếp theo giá</option>
+                <option value="price_asc" th:selected="${selectedSort == 'price_asc'}">Giá: Thấp → Cao</option>
+                <option value="price_desc" th:selected="${selectedSort == 'price_desc'}">Giá: Cao → Thấp</option>
+            </select>
+            <i class="fas fa-chevron-down" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #00FFFF; pointer-events: none; font-size: 0.8rem;"></i>
+        </div>
+    </div>
+    
+    <style>
+        #priceSort:hover {
+            border-color: #00BFFF;
+            box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        #priceSort:focus {
+            border-color: #00BFFF;
+            box-shadow: 0 0 20px rgba(0, 191, 255, 0.4);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        #priceSort option {
+            background: #0a0e27;
+            color: #00FFFF;
+            padding: 0.5rem;
+        }
+    </style>
+    
+    <script>
+        function handleSortChange(value) {
+            const url = new URL(window.location.href);
+            const category = url.searchParams.get('category') || 'all';
+            
+            // Remove sort parameter first
+            url.searchParams.delete('sort');
+            
+            // Only add sort if value is not empty
+            if (value && value.trim() !== '') {
+                url.searchParams.set('sort', value);
+            }
+            
+            // Preserve category filter
+            if (category && category !== 'all') {
+                url.searchParams.set('category', category);
+            } else {
+                url.searchParams.delete('category');
+            }
+            
+            // Clean up URL - remove empty parameters
+            let cleanUrl = url.pathname;
+            const params = [];
+            url.searchParams.forEach((val, key) => {
+                if (val && val.trim() !== '') {
+                    params.push(key + '=' + encodeURIComponent(val));
+                }
+            });
+            if (params.length > 0) {
+                cleanUrl += '?' + params.join('&');
+            }
+            
+            window.location.href = cleanUrl;
+        }
+    </script>
+    
     <div class="product-grid">
         <a th:each="p, iterStat : ${topSelling}" 
            th:href="@{'/products/' + ${p.productID}}"

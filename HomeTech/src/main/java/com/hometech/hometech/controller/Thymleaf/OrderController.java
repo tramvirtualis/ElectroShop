@@ -20,6 +20,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.data.domain.Page;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -86,7 +87,9 @@ public class OrderController {
     }
 
     @GetMapping("/history")
-    public String showHistory(HttpServletRequest request, Model model) {
+    public String showHistory(HttpServletRequest request, Model model,
+                             @RequestParam(defaultValue = "0") int page,
+                             @RequestParam(defaultValue = "5") int size) {
         addSessionInfo(request, model);
         Long userId = getCurrentUserId();
         
@@ -95,23 +98,21 @@ public class OrderController {
             model.addAttribute("orders", java.util.Collections.emptyList());
             model.addAttribute("title", "Lịch sử đơn hàng (khách)");
             model.addAttribute("emptyMessage", "Vui lòng đăng nhập để xem lịch sử đơn hàng.");
+            model.addAttribute("currentPage", 0);
+            model.addAttribute("totalPages", 0);
             return "orders/history";
         }
         
-        // Show only COMPLETED or CANCELLED orders
-        java.util.List<com.hometech.hometech.model.Order> done = service.getOrdersByUserIdAndStatus(userId, OrderStatus.COMPLETED);
-        java.util.List<com.hometech.hometech.model.Order> cancelled = service.getOrdersByUserIdAndStatus(userId, OrderStatus.CANCELLED);
-        java.util.List<com.hometech.hometech.model.Order> merged = new java.util.ArrayList<>();
-        merged.addAll(done);
-        merged.addAll(cancelled);
-        
-        // Sort latest first by date
-        merged.sort((a,b) -> b.getOrderDate().compareTo(a.getOrderDate()));
-        model.addAttribute("orders", merged);
+        // Get completed and cancelled orders with pagination
+        Page<Order> orderPage = service.getCompletedAndCancelledOrdersByUserId(userId, page, size);
+        model.addAttribute("orders", orderPage.getContent());
+        model.addAttribute("currentPage", orderPage.getNumber());
+        model.addAttribute("totalPages", orderPage.getTotalPages());
+        model.addAttribute("totalElements", orderPage.getTotalElements());
         model.addAttribute("title", "Lịch sử đơn hàng của tôi");
         
         // If empty, show message
-        if (merged.isEmpty()) {
+        if (orderPage.getContent().isEmpty()) {
             model.addAttribute("emptyMessage", "Bạn chưa có đơn hàng đã hoàn thành hoặc đã hủy.");
         }
         
@@ -134,25 +135,26 @@ public class OrderController {
     }
 
     @GetMapping({"", "/", "/index"})
-    public String listOrders(HttpServletRequest request, Model model) {
+    public String listOrders(HttpServletRequest request, Model model,
+                             @RequestParam(defaultValue = "0") int page,
+                             @RequestParam(defaultValue = "5") int size) {
         addSessionInfo(request, model);
         Long userId = getCurrentUserId();
         if (userId == null) {
             // Return empty orders page instead of redirecting
             model.addAttribute("orders", java.util.Collections.emptyList());
+            model.addAttribute("currentPage", 0);
+            model.addAttribute("totalPages", 0);
             return "orders/index";
         }
-        // Show only active/in-progress orders (exclude COMPLETED and CANCELLED)
-        java.util.List<com.hometech.hometech.model.Order> all = service.getOrdersByUserId(userId);
-        java.util.List<com.hometech.hometech.model.Order> active = new java.util.ArrayList<>();
-        for (com.hometech.hometech.model.Order o : all) {
-            if (o.getOrderStatus() != OrderStatus.COMPLETED && o.getOrderStatus() != OrderStatus.CANCELLED) {
-                active.add(o);
-            }
-        }
-        // Sort latest first by date
-        active.sort((a,b) -> b.getOrderDate().compareTo(a.getOrderDate()));
-        model.addAttribute("orders", active);
+        
+        // Get active orders with pagination
+        Page<Order> orderPage = service.getActiveOrdersByUserId(userId, page, size);
+        model.addAttribute("orders", orderPage.getContent());
+        model.addAttribute("currentPage", orderPage.getNumber());
+        model.addAttribute("totalPages", orderPage.getTotalPages());
+        model.addAttribute("totalElements", orderPage.getTotalElements());
+        
         return "orders/index";
     }
 
@@ -241,6 +243,10 @@ public class OrderController {
                     messagingTemplate.convertAndSend("/topic/notifications", notification);
                     System.out.println("🔔 Guest notification sent via WebSocket");
                 }
+                
+                // Notify all admins about new order
+                String adminMessage = "Đơn hàng mới #" + order.getOrderId() + " đã được tạo!";
+                notifyService.notifyAllAdmins(adminMessage, "NEW_ORDER", order.getOrderId());
             } catch (Exception e) {
                 System.err.println("❌ Failed to send notification: " + e.getMessage());
                 e.printStackTrace();

@@ -37,7 +37,13 @@ public class HomeController {
     }
 
     @GetMapping("/")
-    public String home(Model model, @RequestParam(required = false) String category) {
+    public String home(Model model, 
+                      @RequestParam(required = false) String category,
+                      @RequestParam(required = false) String sort) {
+        // Normalize empty sort parameter to null
+        if (sort != null && sort.trim().isEmpty()) {
+            sort = null;
+        }
         // Get all categories for navigation
         List<Category> categories = categoryService.getAll();
         List<Product> newProducts = productService.getProductsAddedInLast7Days();
@@ -71,6 +77,23 @@ public class HomeController {
             // Show all products if no category selected
             displayProducts = productService.getTop10BestSellingProducts();
         }
+        
+        // Sort products by price if sort parameter is provided
+        if (sort != null && !sort.trim().isEmpty()) {
+            if ("price_asc".equals(sort)) {
+                displayProducts.sort((p1, p2) -> {
+                    double price1 = p1.getPrice();
+                    double price2 = p2.getPrice();
+                    return Double.compare(price1, price2);
+                });
+            } else if ("price_desc".equals(sort)) {
+                displayProducts.sort((p1, p2) -> {
+                    double price1 = p1.getPrice();
+                    double price2 = p2.getPrice();
+                    return Double.compare(price2, price1);
+                });
+            }
+        }
 
         model.addAttribute("categories", categories);
         model.addAttribute("newProducts", newProducts);
@@ -79,6 +102,7 @@ public class HomeController {
         model.addAttribute("pageTitle", pageTitle);
         model.addAttribute("activeCategoryId", activeCategoryId);
         model.addAttribute("selectedCategory", category != null ? category : "all");
+        model.addAttribute("selectedSort", (sort != null && !sort.trim().isEmpty()) ? sort : "");
         
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {

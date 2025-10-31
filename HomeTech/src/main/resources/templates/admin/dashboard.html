@@ -12,6 +12,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
+    <!-- WebSocket Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+
     <style>
         :root {
             --primary: #6C5CE7;
@@ -212,6 +216,28 @@
             background: rgba(255,255,255,0.05);
         }
 
+        /* Search Bar Styles */
+        .search-input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+        
+        .search-input-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(108, 92, 231, 0.4);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .search-input-wrapper .fa-search {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+            pointer-events: none;
+        }
+
         .badge-table {
             padding: 0.35rem 0.75rem;
             border-radius: 50px;
@@ -262,6 +288,53 @@
             padding: 0.35rem 0.7rem;
         }
 
+        .pagination-container {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .pagination {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            gap: 0.5rem;
+        }
+
+        .page-item {
+            margin: 0;
+        }
+
+        .page-link {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            color: #ddd;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .page-link:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.4);
+        }
+
+        .page-item.active .page-link {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .page-item.disabled .page-link {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
         .content-section {
             display: none !important;
         }
@@ -274,6 +347,216 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Notification Bell Styles - Admin Theme */
+        .notification-bell-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+        
+        .bell-button {
+            position: relative;
+            background: rgba(108, 92, 231, 0.2);
+            border: 2px solid rgba(108, 92, 231, 0.5);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(108, 92, 231, 0.3);
+        }
+        
+        .bell-button:hover {
+            background: rgba(108, 92, 231, 0.3);
+            border-color: rgba(108, 92, 231, 0.8);
+            box-shadow: 0 8px 32px rgba(108, 92, 231, 0.5);
+            transform: scale(1.05);
+        }
+        
+        .bell-button .fa-bell {
+            font-size: 1.5rem;
+            color: var(--primary);
+            transition: all 0.3s ease;
+        }
+        
+        .bell-button:hover .fa-bell {
+            animation: bellRing 0.5s ease-in-out;
+        }
+        
+        @keyframes bellRing {
+            0%, 100% { transform: rotate(0deg); }
+            10%, 30%, 50%, 70%, 90% { transform: rotate(15deg); }
+            20%, 40%, 60%, 80% { transform: rotate(-15deg); }
+        }
+        
+        .bell-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff4757;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(255, 107, 107, 0.6);
+            animation: pulse 2s infinite;
+            border: 2px solid rgba(30, 30, 47, 0.98);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.9; }
+        }
+        
+        .notifications-dropdown {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 380px;
+            max-height: 480px;
+            overflow-y: auto;
+            background: rgba(30, 30, 47, 0.98);
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            border-radius: 16px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transform: translateY(10px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+        
+        .notifications-dropdown.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+        
+        .notifications-header {
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .notifications-list {
+            padding: 0.8rem;
+        }
+        
+        .notification-item {
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            position: relative;
+            padding-right: 3.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s ease;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .notification-item.unread {
+            background: rgba(108, 92, 231, 0.15);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .notification-item:hover {
+            background: rgba(108, 92, 231, 0.2);
+        }
+        
+        .notification-message {
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        
+        .notification-date {
+            color: #aaa;
+            font-size: 0.75rem;
+        }
+        
+        .notification-mark-read {
+            position: absolute;
+            right: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: 1px solid rgba(108, 92, 231, 0.4);
+            color: var(--primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .notification-mark-read:hover {
+            background: rgba(108, 92, 231, 0.2);
+            border-color: var(--primary);
+            transform: translateY(-50%) scale(1.05);
+        }
+        
+        .empty-notifications {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: #aaa;
+        }
+        
+        .toast-notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, #5a4fcf 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(108, 92, 231, 0.6);
+            z-index: 9999;
+            font-weight: 600;
+            animation: slideInRight 0.3s ease-out;
+            max-width: 400px;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
         }
 
         @media (max-width: 992px) {
@@ -354,6 +637,26 @@
     </script>
 </head>
 <body>
+
+<!-- Notification Bell -->
+<div class="notification-bell-container">
+    <button id="notificationBell" class="bell-button" onclick="toggleNotifications(event)">
+        <i class="fas fa-bell"></i>
+        <span id="notificationBadge" class="bell-badge d-none"></span>
+    </button>
+    
+    <div id="notificationsDropdown" class="notifications-dropdown">
+        <div class="notifications-header">
+            <i class="fas fa-bell"></i> Thông báo
+        </div>
+        <div id="notificationsList" class="notifications-list">
+            <div class="empty-notifications">
+                Bạn hiện không có thông báo mới.
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="admin-container">
 
     <!-- Sidebar -->
@@ -529,6 +832,36 @@
                 </div>
             </div>
 
+            <!-- Search Bar -->
+            <div class="admin-content-panel" style="margin-bottom: 1rem; padding: 1rem;">
+                <form method="get" action="/admin/dashboard" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="hidden" name="section" value="products">
+                    <div class="search-input-wrapper">
+                        <input type="text" 
+                               name="search" 
+                               th:value="${searchKeyword != null ? searchKeyword : ''}"
+                               placeholder="Search products by name..." 
+                               class="form-control"
+                               style="background: rgba(255, 255, 255, 0.05);
+                                      border: 1px solid rgba(108, 92, 231, 0.3);
+                                      color: #fff;
+                                      padding: 0.6rem 2.5rem 0.6rem 1rem;
+                                      border-radius: 8px;
+                                      transition: all 0.3s ease;">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <button type="submit" class="btn-admin btn-sm" style="white-space: nowrap;">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a th:if="${searchKeyword != null}" 
+                       th:href="@{/admin/dashboard(section='products')}" 
+                       class="btn-admin btn-sm" 
+                       style="white-space: nowrap; background: rgba(255, 77, 77, 0.2); border-color: rgba(255, 77, 77, 0.5); color: #ff6b6b;">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </form>
+            </div>
+
             <div class="admin-content-panel">
                 <table class="data-table">
                     <thead>
@@ -661,10 +994,48 @@
             <div class="admin-header">
                 <h1 class="admin-title"><i class="fas fa-shopping-bag"></i> Manage Orders</h1>
                 <div>
-                    <a th:href="@{/admin/dashboard/orders}" class="btn-admin btn-sm">
+                    <a th:href="@{/admin/dashboard}" class="btn-admin btn-sm">
                         <i class="fas fa-list"></i> Open page
                     </a>
                 </div>
+            </div>
+
+            <!-- Sort Dropdown -->
+            <div class="admin-content-panel" style="margin-bottom: 1rem; padding: 1rem;">
+                <form method="get" action="/admin/dashboard/orders" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <input type="hidden" name="page" value="0">
+                    <input type="hidden" name="size" value="7">
+                    <label style="color: #fff; margin-right: 0.5rem; white-space: nowrap;">Sort by:</label>
+                    <select name="sortBy" 
+                            onchange="this.form.submit()" 
+                            style="background: rgba(255, 255, 255, 0.05);
+                                   border: 1px solid rgba(108, 92, 231, 0.3);
+                                   color: #fff;
+                                   padding: 0.6rem 1rem;
+                                   border-radius: 8px;
+                                   outline: none;
+                                   cursor: pointer;
+                                   min-width: 150px;">
+                        <option value="">Default (ID)</option>
+                        <option value="date" th:selected="${sortBy == 'date'}">Date</option>
+                        <option value="price" th:selected="${sortBy == 'price'}">Total Price</option>
+                    </select>
+                    <select name="sortDir" 
+                            onchange="this.form.submit()" 
+                            style="background: rgba(255, 255, 255, 0.05);
+                                   border: 1px solid rgba(108, 92, 231, 0.3);
+                                   color: #fff;
+                                   padding: 0.6rem 1rem;
+                                   border-radius: 8px;
+                                   outline: none;
+                                   cursor: pointer;
+                                   min-width: 120px;">
+                        <option value="desc" th:selected="${sortDir == 'desc' or sortDir == null}">Descending</option>
+                        <option value="asc" th:selected="${sortDir == 'asc'}">Ascending</option>
+                    </select>
+                    <input th:if="${sortBy != null and sortBy != ''}" type="hidden" th:name="sortBy" th:value="${sortBy}">
+                    <input th:if="${sortDir != null and sortDir != ''}" type="hidden" th:name="sortDir" th:value="${sortDir}">
+                </form>
             </div>
 
             <div class="admin-content-panel">
@@ -672,7 +1043,6 @@
                     <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Customer</th>
                         <th>Items</th>
                         <th>Total</th>
                         <th>Status</th>
@@ -682,7 +1052,6 @@
                     <tbody>
                      <tr th:each="o : ${orders}">
                          <td th:text="'#' + ${o.orderId}"></td>
-                         <td th:text="${o.customer != null and o.customer.account != null ? o.customer.account.username : 'N/A'}"></td>
                          <td th:text="${o.orderItems != null ? #lists.size(o.orderItems) : 0} + ' items'"></td>
                         <td th:text="${#numbers.formatDecimal(o.totalPrice, 0, 'POINT', 0, 'COMMA')} + ' ₫'"></td>
                         <td>
@@ -698,6 +1067,43 @@
                     </tr>
                     </tbody>
                 </table>
+                
+                <!-- Pagination -->
+                <div class="pagination-container" th:if="${totalPages > 1}">
+                    <nav aria-label="Order pagination">
+                        <ul class="pagination">
+                            <!-- Previous button -->
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                                <a class="page-link" 
+                                   th:href="${(sortBy != null and sortBy != '') and (sortDir != null and sortDir != '') ? 
+                                             '/admin/dashboard/orders?page=' + (currentPage > 0 ? currentPage - 1 : 0) + '&size=7&sortBy=' + sortBy + '&sortDir=' + sortDir : 
+                                             '/admin/dashboard/orders?page=' + (currentPage > 0 ? currentPage - 1 : 0) + '&size=7'}"
+                                   th:if="${currentPage > 0}">« Previous</a>
+                                <span class="page-link" th:if="${currentPage == 0}">« Previous</span>
+                            </li>
+                            
+                            <!-- Page numbers -->
+                            <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}"
+                                th:classappend="${pageNum == currentPage} ? 'active' : ''">
+                                <a class="page-link" 
+                                   th:href="${(sortBy != null and sortBy != '') and (sortDir != null and sortDir != '') ? 
+                                             '/admin/dashboard/orders?page=' + pageNum + '&size=7&sortBy=' + sortBy + '&sortDir=' + sortDir : 
+                                             '/admin/dashboard/orders?page=' + pageNum + '&size=7'}"
+                                   th:text="${pageNum + 1}">1</a>
+                            </li>
+                            
+                            <!-- Next button -->
+                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled' : ''">
+                                <a class="page-link" 
+                                   th:href="${(sortBy != null and sortBy != '') and (sortDir != null and sortDir != '') ? 
+                                             '/admin/dashboard/orders?page=' + (currentPage + 1) + '&size=7&sortBy=' + sortBy + '&sortDir=' + sortDir : 
+                                             '/admin/dashboard/orders?page=' + (currentPage + 1) + '&size=7'}"
+                                   th:if="${currentPage < totalPages - 1}">Next »</a>
+                                <span class="page-link" th:if="${currentPage >= totalPages - 1}">Next »</span>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </div>
 
@@ -706,10 +1112,40 @@
             <div class="admin-header">
                 <h1 class="admin-title"><i class="fas fa-users"></i> Manage Users</h1>
                 <div>
-                    <a th:href="@{/admin/dashboard/users}" class="btn-admin btn-sm">
+                    <a th:href="@{/admin/dashboard}" class="btn-admin btn-sm">
                         <i class="fas fa-list"></i> Open page
                     </a>
                 </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="admin-content-panel" style="margin-bottom: 1rem; padding: 1rem;">
+                <form method="get" action="/admin/dashboard" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="hidden" name="section" value="customers">
+                    <div class="search-input-wrapper">
+                        <input type="text" 
+                               name="userSearch" 
+                               th:value="${userSearchKeyword != null ? userSearchKeyword : ''}"
+                               placeholder="Search users by name or email..." 
+                               class="form-control"
+                               style="background: rgba(255, 255, 255, 0.05);
+                                      border: 1px solid rgba(108, 92, 231, 0.3);
+                                      color: #fff;
+                                      padding: 0.6rem 2.5rem 0.6rem 1rem;
+                                      border-radius: 8px;
+                                      transition: all 0.3s ease;">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <button type="submit" class="btn-admin btn-sm" style="white-space: nowrap;">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a th:if="${userSearchKeyword != null}" 
+                       th:href="@{/admin/dashboard(section='customers')}" 
+                       class="btn-admin btn-sm" 
+                       style="white-space: nowrap; background: rgba(255, 77, 77, 0.2); border-color: rgba(255, 77, 77, 0.5); color: #ff6b6b;">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </form>
             </div>
 
             <!-- Danh sÃ¡ch ngÆ°á»i dÃ¹ng -->
@@ -786,9 +1222,6 @@
                         <p><strong>Active:</strong>
                             <span th:classappend="${user.active} ? 'badge-table badge-active' : 'badge-table badge-inactive'"
                                   th:text="${user.active} ? 'Active' : 'Inactive'">Active</span>
-                        </p>
-                        <p><strong>Created At:</strong>
-                            <span th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm') : 'N/A'}">N/A</span>
                         </p>
                     </div>
                 </div>
@@ -878,7 +1311,386 @@
                 }
             }
         }
+        }
+    </script>
+
+    <!-- Notification System JavaScript -->
+    <script>
+    // ===================================
+    // NOTIFICATION SYSTEM FOR ADMIN
+    // ===================================
+
+    let stompClient = null;
+    let isDropdownOpen = false;
+
+    // Toggle notification dropdown
+    function toggleNotifications(event) {
+        event.stopPropagation();
+        const dropdown = document.getElementById('notificationsDropdown');
+        isDropdownOpen = !isDropdownOpen;
+        
+        if (isDropdownOpen) {
+            dropdown.classList.add('show');
+            loadNotifications();
+        } else {
+            dropdown.classList.remove('show');
+        }
     }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('notificationsDropdown');
+        const bell = document.getElementById('notificationBell');
+        
+        if (isDropdownOpen && !dropdown.contains(e.target) && !bell.contains(e.target)) {
+            dropdown.classList.remove('show');
+            isDropdownOpen = false;
+        }
+    });
+
+    // Update notification badge count
+    function updateBadgeCount(count) {
+        const badge = document.getElementById('notificationBadge');
+        if (!badge) {
+            console.error('❌ Badge element not found!');
+            return;
+        }
+        console.log('🔔 Updating badge (show/hide) based on count:', count);
+        if (count > 0) {
+            // Show red dot (no text, just the dot)
+            badge.classList.remove('d-none');
+            badge.style.display = 'block';
+            console.log('✅ Badge shown (red dot)');
+        } else {
+            // Hide badge
+            badge.classList.add('d-none');
+            badge.style.display = 'none';
+            console.log('✅ Badge hidden (no unread notifications)');
+        }
+    }
+
+    // Load notifications from database
+    async function loadNotifications() {
+        try {
+            console.log('📥 Loading notifications from API...');
+            // Load all notifications (both read and unread) to show full list
+            const response = await fetch('/api/notifications');
+            if (!response.ok) {
+                console.warn('⚠️ Failed to load notifications, status:', response.status);
+                if (response.status === 401) {
+                    console.error('❌ User not authenticated');
+                }
+                // Fallback to unread only if all fails
+                const unreadResponse = await fetch('/api/notifications/unread');
+                if (unreadResponse.ok) {
+                    const unreadNotifications = await unreadResponse.json();
+                    console.log('✅ Loaded unread notifications as fallback:', unreadNotifications.length);
+                    displayNotifications(unreadNotifications);
+                }
+                return;
+            }
+            
+            const notifications = await response.json();
+            console.log('✅ Loaded all notifications:', notifications.length);
+            console.log('📋 Notifications data:', notifications);
+            
+            if (!notifications || notifications.length === 0) {
+                console.log('ℹ️ No notifications found');
+            } else {
+                console.log('📝 First notification sample:', notifications[0]);
+            }
+            
+            displayNotifications(notifications);
+        } catch (error) {
+            console.error('❌ Error loading notifications:', error);
+            console.error('Error details:', error.stack);
+        }
+    }
+
+    // Display notifications in dropdown
+    function displayNotifications(notifications) {
+        const list = document.getElementById('notificationsList');
+        if (!list) {
+            console.error('❌ Notifications list element not found!');
+            return;
+        }
+        
+        list.innerHTML = '';
+        console.log('🔄 Displaying notifications, count:', notifications ? notifications.length : 0);
+        
+        if (!notifications || notifications.length === 0) {
+            list.innerHTML = '<div class="empty-notifications">Bạn hiện không có thông báo mới.</div>';
+            console.log('ℹ️ No notifications to display');
+            return;
+        }
+        
+        // Sort notifications by date (newest first)
+        const sortedNotifications = [...notifications].sort((a, b) => {
+            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return dateB - dateA; // Newest first
+        });
+        
+        console.log('📋 Displaying', sortedNotifications.length, 'notifications');
+        
+        sortedNotifications.forEach((notif, index) => {
+            console.log(`📌 Processing notification ${index + 1}:`, notif);
+            
+            const item = document.createElement('div');
+            // Add 'unread' class only if notification is not read
+            const isRead = notif.isRead === true || notif.read === true;
+            item.className = isRead ? 'notification-item' : 'notification-item unread';
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'notification-message';
+            messageDiv.textContent = notif.message || 'Thông báo';
+            item.appendChild(messageDiv);
+            
+            if (notif.createdAt) {
+                try {
+                    const dateDiv = document.createElement('div');
+                    dateDiv.className = 'notification-date';
+                    const date = new Date(notif.createdAt);
+                    dateDiv.textContent = date.toLocaleString('vi-VN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    item.appendChild(dateDiv);
+                } catch (err) {
+                    console.error('Date parsing error:', err, 'Date string:', notif.createdAt);
+                    // Still show the date string if parsing fails
+                    const dateDiv = document.createElement('div');
+                    dateDiv.className = 'notification-date';
+                    dateDiv.textContent = notif.createdAt;
+                    item.appendChild(dateDiv);
+                }
+            }
+            
+            // Only show mark as read button for unread notifications
+            if (!isRead) {
+                const markReadBtn = document.createElement('button');
+                markReadBtn.className = 'notification-mark-read';
+                markReadBtn.innerHTML = '<i class="fas fa-check"></i>';
+                markReadBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    markAsRead(notif.id, item);
+                };
+                item.appendChild(markReadBtn);
+            }
+            
+            list.appendChild(item);
+        });
+        
+        console.log('✅ Finished displaying notifications');
+    }
+
+    // Mark notification as read
+    async function markAsRead(notifId, itemElement) {
+        try {
+            const response = await fetch(`/api/notifications/${notifId}/read`, {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                // Remove notification with animation
+                itemElement.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => {
+                    itemElement.remove();
+                    
+                    // Update badge count
+                    updateUnreadCount();
+                    
+                    // Check if list is empty
+                    const list = document.getElementById('notificationsList');
+                    if (list.children.length === 0) {
+                        list.innerHTML = '<div class="empty-notifications">Bạn hiện không có thông báo mới.</div>';
+                    }
+                }, 300);
+            }
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+        }
+    }
+
+    // Update unread count
+    async function updateUnreadCount() {
+        try {
+            console.log('🔄 Updating unread notification count...');
+            const response = await fetch('/api/notifications/unread/count');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📊 Unread count received:', data.count);
+                updateBadgeCount(data.count);
+            } else {
+                console.warn('⚠️ Failed to get unread count, status:', response.status);
+            }
+        } catch (error) {
+            console.error('❌ Error updating unread count:', error);
+        }
+    }
+
+    // Show toast notification
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.innerHTML = `<i class="fas fa-bell"></i> ${message}`;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    document.body.removeChild(toast);
+                }
+            }, 300);
+        }, 4000);
+    }
+
+    // Initialize WebSocket connection for admin notifications
+    function initWebSocket() {
+        if (typeof SockJS === 'undefined' || typeof Stomp === 'undefined') {
+            console.error('SockJS or Stomp not loaded!');
+            return;
+        }
+        
+        try {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function(frame) {
+                console.log('✅ Admin WebSocket connected!');
+                
+                // Subscribe to admin-specific notifications
+                stompClient.subscribe('/topic/admin/notifications', function(message) {
+                    try {
+                        console.log('📨 Received admin notification:', message.body);
+                        const notification = JSON.parse(message.body);
+                        const msg = notification.message || 'Bạn có thông báo mới!';
+                        
+                        console.log('📢 Notification message:', msg);
+                        console.log('📋 Notification type:', notification.type);
+                        
+                        // Check if it's an order-related notification (new order or cancelled)
+                        const isOrderNotification = msg.includes('Đơn hàng') || 
+                                                     msg.includes('đơn hàng') ||
+                                                     notification.type === 'NEW_ORDER' ||
+                                                     notification.type === 'ORDER_CANCELLED';
+                        
+                        console.log('🔍 Is order notification?', isOrderNotification);
+                        
+                        // Always process admin notifications (they're all important)
+                        // Show toast for all admin notifications
+                        console.log('✅ Showing toast for admin notification');
+                        showToast(msg);
+                        
+                        // Immediately show red dot (optimistic update)
+                        const badge = document.getElementById('notificationBadge');
+                        if (badge) {
+                            badge.classList.remove('d-none');
+                            badge.style.display = 'block';
+                            console.log('🔔 Badge shown (red dot)');
+                        }
+                        
+                        // Then update count from database (to ensure accuracy)
+                        console.log('🔄 Updating notification count from database...');
+                        // Add small delay to ensure database transaction is committed
+                        setTimeout(function() {
+                            updateUnreadCount();
+                        }, 300);
+                        
+                        if (isDropdownOpen) {
+                            console.log('🔄 Loading notifications (dropdown is open)...');
+                            // Also add small delay for loading notifications
+                            setTimeout(function() {
+                                loadNotifications();
+                            }, 300);
+                        }
+                        
+                        // Animate bell
+                        const bell = document.getElementById('notificationBell');
+                        if (bell) {
+                            console.log('🔔 Animating bell...');
+                            bell.style.animation = 'bellRing 0.5s ease-in-out';
+                            setTimeout(() => {
+                                bell.style.animation = '';
+                            }, 500);
+                        }
+                    } catch (error) {
+                        console.error('❌ Error processing admin notification:', error);
+                        console.error('Error details:', error.stack);
+                    }
+                });
+                
+                // Also subscribe to general notifications (for backward compatibility and user-specific notifications)
+                stompClient.subscribe('/topic/notifications', function(message) {
+                    try {
+                        const notification = JSON.parse(message.body);
+                        const msg = notification.message || 'Bạn có thông báo mới!';
+                        
+                        // Only show if it's a general admin notification (not user-specific)
+                        // This handles cases where notifications are sent to both topics
+                        if (notification.type === 'NEW_ORDER' || notification.type === 'ORDER_CANCELLED') {
+                            showToast(msg);
+                            
+                            // Immediately show red dot (optimistic update)
+                            const badge = document.getElementById('notificationBadge');
+                            if (badge) {
+                                badge.classList.remove('d-none');
+                                badge.style.display = 'block';
+                                console.log('🔔 Badge shown (red dot)');
+                            }
+                            
+                            // Then update count from database (to ensure accuracy)
+                            setTimeout(function() {
+                                updateUnreadCount();
+                            }, 300);
+                            
+                            if (isDropdownOpen) {
+                                setTimeout(function() {
+                                    loadNotifications();
+                                }, 300);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error processing notification:', error);
+                    }
+                });
+            }, function(error) {
+                console.error('❌ WebSocket error:', error);
+            });
+        } catch (error) {
+            console.error('❌ WebSocket initialization failed:', error);
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Initializing admin notification system...');
+        console.log('🔍 Checking for badge element...');
+        const badge = document.getElementById('notificationBadge');
+        if (badge) {
+            console.log('✅ Badge element found:', badge);
+        } else {
+            console.error('❌ Badge element not found!');
+        }
+        
+        // Load initial notification count
+        console.log('🔄 Loading initial notification count...');
+        updateUnreadCount();
+        
+        // Initialize WebSocket
+        console.log('🔌 Initializing WebSocket connection...');
+        initWebSocket();
+        
+        // Also update count after a short delay to ensure everything is loaded
+        setTimeout(() => {
+            console.log('🔄 Re-checking notification count after delay...');
+            updateUnreadCount();
+        }, 1000);
+    });
 </script>
 </body>
 </html>

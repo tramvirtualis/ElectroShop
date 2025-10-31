@@ -32,6 +32,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+
 @Controller
 @RequestMapping("/admin")
 public class AdminAuthController {
@@ -64,17 +66,17 @@ public class AdminAuthController {
     // 🟢 Hiển thị danh sách người dùng
     @GetMapping("/dashboard/users")
     public String listUsers(Model model) {
-        model.addAttribute("users", userService.getAllUsers());
+        model.addAttribute("users", userService.getUsersWithEmail());
         return "admin/user-list"; // => src/main/resources/templates/admin/user-list.html
     }
 
     // 🟡 Cập nhật trạng thái hoạt động của người dùng
     @PostMapping("/dashboard/update-status/{id}")
     public String updateUserStatus(@PathVariable("id") Long id,
-                                   @RequestParam("active") boolean active,
-                                   Model model) {
+                                    @RequestParam("active") boolean active,
+                                    Model model) {
         userService.updateUserStatus(id, active);
-        model.addAttribute("users", userService.getAllUsers());
+        model.addAttribute("users", userService.getUsersWithEmail());
         model.addAttribute("successMessage", "Cập nhật trạng thái thành công!");
         return "admin/user-list";
     }
@@ -175,17 +177,36 @@ public class AdminAuthController {
     }
     @GetMapping("/dashboard/users/search")
     public String searchUsers(@RequestParam("keyword") String keyword, Model model) {
-        model.addAttribute("users", userService.searchUsers(keyword));
+        // Filter search results to only show users with non-null emails
+        List<User> allUsers = userService.searchUsers(keyword);
+        List<User> usersWithEmail = allUsers.stream()
+                .filter(u -> u.getAccount() != null && u.getAccount().getEmail() != null)
+                .toList();
+        model.addAttribute("users", usersWithEmail);
         model.addAttribute("keyword", keyword);
         return "admin/user-list";
     }
     @GetMapping("/dashboard")
-    public String adminDashboard(Model model) {
+    public String adminDashboard(@RequestParam(value = "section", required = false) String section,
+                                 @RequestParam(value = "search", required = false) String searchKeyword,
+                                 @RequestParam(value = "userSearch", required = false) String userSearchKeyword,
+                                 Model model) {
         long totalUsers = userService.countAll();
         long activeUsers = userService.countByStatus(true);
         long inactiveUsers = userService.countByStatus(false);
 
-        var products = productService.getAll();
+        // Get products - filter by search if provided
+        var allProducts = productService.getAll();
+        java.util.List<com.hometech.hometech.model.Product> products;
+        
+        if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+            // Search products by name
+            products = productService.searchByName(searchKeyword.trim());
+            model.addAttribute("searchKeyword", searchKeyword.trim());
+        } else {
+            products = allProducts;
+        }
+        
         long activeProductsCount = products.stream().filter(p -> p.isStatus()).count();
         long inactiveProductsCount = products.size() - activeProductsCount;
 
@@ -195,12 +216,32 @@ public class AdminAuthController {
 
         model.addAttribute("categories", categoryService.getAll());
         model.addAttribute("orders", orderService.getAllOrders());
-        model.addAttribute("users", userService.getAllUsers());
+        
+        // Get users - filter by search if provided
+        java.util.List<com.hometech.hometech.model.User> users;
+        if (userSearchKeyword != null && !userSearchKeyword.trim().isEmpty()) {
+            // Search users by name or email
+            java.util.List<com.hometech.hometech.model.User> allUsers = userService.searchUsers(userSearchKeyword.trim());
+            // Filter to only show users with non-null emails
+            users = allUsers.stream()
+                    .filter(u -> u.getAccount() != null && u.getAccount().getEmail() != null)
+                    .toList();
+            model.addAttribute("userSearchKeyword", userSearchKeyword.trim());
+        } else {
+            users = userService.getUsersWithEmail();
+        }
+        model.addAttribute("users", users);
 
         model.addAttribute("totalUsers", totalUsers);
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("inactiveUsers", inactiveUsers);
         model.addAttribute("title", "Bảng điều khiển quản trị");
+        
+        // Set dashboard section if provided
+        if (section != null && !section.isEmpty()) {
+            model.addAttribute("dashboardSection", section);
+        }
+        
         return "admin/dashboard"; // ✅ templates/admin/dashboard.html
     }
     @GetMapping("/register")
@@ -248,7 +289,7 @@ public class AdminAuthController {
 
             // 🧩 Thêm dữ liệu cho dashboard
             model.addAttribute("user", user);
-            model.addAttribute("users", userService.getAllUsers());
+            model.addAttribute("users", userService.getUsersWithEmail());
             model.addAttribute("showUserDetail", true);
             model.addAttribute("dashboardSection", "customers");
             model.addAttribute("title", "Chi tiết người dùng");
@@ -275,7 +316,7 @@ public class AdminAuthController {
             User user = userService.getById(id);
             if (user == null) {
                 ra.addFlashAttribute("error", "Không tìm thấy người dùng!");
-                return "redirect:/admin/dashboard";
+                return "redirect:/admin/dashboard?section=customers";
             }
 
             // Đổi trạng thái
@@ -287,7 +328,7 @@ public class AdminAuthController {
             e.printStackTrace();
             ra.addFlashAttribute("error", "Lỗi khi cập nhật trạng thái: " + e.getMessage());
         }
-        return "redirect:/admin/dashboard";
+        return "redirect:/admin/dashboard?section=customers";
     }
 
 
@@ -298,12 +339,12 @@ public class AdminAuthController {
             User user = userService.getById(id);
             if (user == null) {
                 ra.addFlashAttribute("error", "Không tìm thấy người dùng!");
-                return "redirect:/admin/dashboard";
+                return "redirect:/admin/dashboard?section=customers";
             }
 
             if (user.getAccount() == null) {
                 ra.addFlashAttribute("error", "Người dùng không có tài khoản hợp lệ!");
-                return "redirect:/admin/dashboard";
+                return "redirect:/admin/dashboard?section=customers";
             }
 
             // Đổi vai trò
@@ -320,7 +361,7 @@ public class AdminAuthController {
             ra.addFlashAttribute("error", "Lỗi khi đổi vai trò: " + e.getMessage());
         }
 
-        return "redirect:/admin/dashboard";
+        return "redirect:/admin/dashboard?section=customers";
     }
 
 

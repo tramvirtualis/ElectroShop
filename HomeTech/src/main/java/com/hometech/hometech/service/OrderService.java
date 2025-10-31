@@ -1,11 +1,15 @@
 package com.hometech.hometech.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.hometech.hometech.Repository.CartItemRepository;
@@ -196,6 +200,32 @@ public class OrderService {
         return orderRepo.findAll();
     }
 
+    // 🔵 Lấy danh sách đơn hàng với pagination
+    public org.springframework.data.domain.Page<Order> getAllOrders(int page, int size) {
+        return orderRepo.findAllWithCustomer(org.springframework.data.domain.PageRequest.of(page, size, 
+            org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "orderId")));
+    }
+    
+    // 🔵 Lấy danh sách đơn hàng với pagination và sorting
+    public org.springframework.data.domain.Page<Order> getAllOrders(int page, int size, String sortBy, String sortDir) {
+        org.springframework.data.domain.Sort.Direction direction = 
+            "asc".equalsIgnoreCase(sortDir) ? 
+            org.springframework.data.domain.Sort.Direction.ASC : 
+            org.springframework.data.domain.Sort.Direction.DESC;
+        
+        org.springframework.data.domain.Sort sort;
+        if ("date".equalsIgnoreCase(sortBy)) {
+            sort = org.springframework.data.domain.Sort.by(direction, "orderDate");
+        } else if ("price".equalsIgnoreCase(sortBy)) {
+            sort = org.springframework.data.domain.Sort.by(direction, "totalPrice");
+        } else {
+            // Default: sort by orderId DESC
+            sort = org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "orderId");
+        }
+        
+        return orderRepo.findAllWithCustomer(org.springframework.data.domain.PageRequest.of(page, size, sort));
+    }
+
     // 🔵 Lấy tất cả đơn hàng của user cụ thể
     public List<Order> getOrdersByUserId(Long userId) {
         Customer customer = customerRepo.findByUser_Id(userId)
@@ -268,6 +298,10 @@ public class OrderService {
             String message = String.format("Đơn hàng #%d đã được hủy thành công", orderId);
             notifyService.createNotification(userId, message, "ORDER_CANCELLED", orderId);
             System.out.println("🔔 Notification sent for order #" + orderId + " cancellation by user");
+            
+            // Notify admins about order cancellation
+            String adminMessage = String.format("Đơn hàng #%d đã được hủy bởi khách hàng", orderId);
+            notifyService.notifyAllAdmins(adminMessage, "ORDER_CANCELLED", orderId);
         } catch (Exception e) {
             System.err.println("❌ Failed to send cancellation notification: " + e.getMessage());
         }
@@ -299,6 +333,8 @@ public class OrderService {
                 System.err.println("❌ Failed to send cancellation notification: " + e.getMessage());
             }
         }
+        
+        // Note: Admin who cancelled already knows, so no need to notify admins again
         
         return savedOrder;
     }
@@ -344,5 +380,45 @@ public class OrderService {
         }
 
         return stats;
+    }
+    
+    /**
+     * Get active orders (not COMPLETED or CANCELLED) for a user with pagination
+     */
+    public Page<Order> getActiveOrdersByUserId(Long userId, int page, int size) {
+        Customer customer = customerRepo.findByUser_Id(userId)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        Pageable pageable = PageRequest.of(page, size);
+        List<OrderStatus> excludedStatuses = Arrays.asList(OrderStatus.COMPLETED, OrderStatus.CANCELLED);
+        return orderRepo.findByCustomerAndOrderStatusNotInOrderByOrderDateDesc(customer, excludedStatuses, pageable);
+    }
+    
+    /**
+     * Get completed or cancelled orders for a user with pagination
+     */
+    public Page<Order> getCompletedAndCancelledOrdersByUserId(Long userId, int page, int size) {
+        Customer customer = customerRepo.findByUser_Id(userId)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        Pageable pageable = PageRequest.of(page, size);
+        
+        // Get COMPLETED orders
+        Page<Order> completed = orderRepo.findByCustomerAndOrderStatusOrderByOrderDateDesc(customer, OrderStatus.COMPLETED, pageable);
+        
+        // Get CANCELLED orders with same pagination
+        Page<Order> cancelled = orderRepo.findByCustomerAndOrderStatusOrderByOrderDateDesc(customer, OrderStatus.CANCELLED, pageable);
+        
+        // Combine and sort manually - Note: This is not ideal but Spring Data JPA doesn't support OR queries easily
+        // For better performance, we'll use a custom query or fetch all and sort in memory for small datasets
+        List<Order> all = new ArrayList<>();
+        all.addAll(completed.getContent());
+        all.addAll(cancelled.getContent());
+        all.sort((a, b) -> b.getOrderDate().compareTo(a.getOrderDate()));
+        
+        // Create a custom Page - For simplicity, we'll paginate manually
+        int start = page * size;
+        int end = Math.min(start + size, all.size());
+        List<Order> pageContent = start < all.size() ? all.subList(start, end) : new ArrayList<>();
+        
+        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, all.size());
     }
 }

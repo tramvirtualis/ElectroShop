@@ -1,7 +1,10 @@
 package com.hometech.hometech.service;
 
+import com.hometech.hometech.Repository.AccountReposirory;
 import com.hometech.hometech.Repository.NotifyRepository;
 import com.hometech.hometech.Repository.UserRepository;
+import com.hometech.hometech.enums.RoleType;
+import com.hometech.hometech.model.Account;
 import com.hometech.hometech.model.Notify;
 import com.hometech.hometech.model.User;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -18,13 +21,16 @@ public class NotifyService {
     
     private final NotifyRepository notifyRepository;
     private final UserRepository userRepository;
+    private final AccountReposirory accountRepository;
     private final SimpMessagingTemplate messagingTemplate;
     
     public NotifyService(NotifyRepository notifyRepository, 
                         UserRepository userRepository,
+                        AccountReposirory accountRepository,
                         SimpMessagingTemplate messagingTemplate) {
         this.notifyRepository = notifyRepository;
         this.userRepository = userRepository;
+        this.accountRepository = accountRepository;
         this.messagingTemplate = messagingTemplate;
     }
     
@@ -133,6 +139,39 @@ public class NotifyService {
     public void cleanupOldNotifications() {
         LocalDateTime cutoffDate = LocalDateTime.now().minusDays(30);
         notifyRepository.deleteOldReadNotifications(cutoffDate);
+    }
+    
+    /**
+     * Send notification to all admin users
+     */
+    public void notifyAllAdmins(String message, String type, Integer relatedId) {
+        try {
+            List<Account> adminAccounts = accountRepository.findByRole(RoleType.ADMIN);
+            System.out.println("🔔 Sending admin notification to " + adminAccounts.size() + " admins");
+            
+            for (Account account : adminAccounts) {
+                User user = userRepository.findByAccount(account);
+                if (user != null) {
+                    try {
+                        createNotification(user.getId(), message, type, relatedId);
+                    } catch (Exception e) {
+                        System.err.println("❌ Failed to send notification to admin " + user.getId() + ": " + e.getMessage());
+                    }
+                }
+            }
+            
+            // Also send to admin topic for real-time updates
+            Map<String, Object> adminPayload = new HashMap<>();
+            adminPayload.put("message", message);
+            adminPayload.put("type", type);
+            adminPayload.put("relatedId", relatedId);
+            adminPayload.put("createdAt", LocalDateTime.now().toString());
+            messagingTemplate.convertAndSend("/topic/admin/notifications", adminPayload);
+            System.out.println("🔔 Admin notification sent to /topic/admin/notifications");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to notify admins: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
 

@@ -71,7 +71,7 @@ public class AdminProductController {
         model.addAttribute("inactiveProductsCount", inactiveProductsCount);
         model.addAttribute("categories", categoryService.getAll());
         model.addAttribute("orders", orderService.getAllOrders());
-        model.addAttribute("users", userService.getAllUsers());
+        model.addAttribute("users", userService.getUsersWithEmail());
         model.addAttribute("product", new Product());
         model.addAttribute("dashboardSection", "products");
         model.addAttribute("showProductForm", true);
@@ -169,7 +169,7 @@ public class AdminProductController {
         model.addAttribute("product", product);
         model.addAttribute("categories", categoryService.getAll());
         model.addAttribute("orders", orderService.getAllOrders());
-        model.addAttribute("users", userService.getAllUsers());
+        model.addAttribute("users", userService.getUsersWithEmail());
         model.addAttribute("dashboardSection", "products");
         model.addAttribute("showProductForm", true);
         model.addAttribute("title", "Chỉnh sửa sản phẩm");

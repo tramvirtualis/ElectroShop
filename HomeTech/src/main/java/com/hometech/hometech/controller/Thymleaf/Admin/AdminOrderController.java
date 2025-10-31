@@ -6,6 +6,9 @@ import com.hometech.hometech.service.CategoryService;
 import com.hometech.hometech.service.OrderService;
 import com.hometech.hometech.service.ProductService;
 import com.hometech.hometech.service.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -38,13 +41,31 @@ public class AdminOrderController {
     // 🟢 XEM TẤT CẢ ĐƠN HÀNG + THỐNG KÊ
     // ----------------------------------------------------------
     @GetMapping
-    public String viewAllOrders(Model model) {
-        List<Order> orders = orderService.getAllOrders();
+    public String viewAllOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "7") int size,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            Model model) {
+        Page<Order> orderPage;
+        
+        if (sortBy != null && !sortBy.trim().isEmpty() && sortDir != null && !sortDir.trim().isEmpty()) {
+            orderPage = orderService.getAllOrders(page, size, sortBy.trim(), sortDir.trim());
+            model.addAttribute("sortBy", sortBy.trim());
+            model.addAttribute("sortDir", sortDir.trim());
+        } else {
+            orderPage = orderService.getAllOrders(page, size);
+        }
+        
         Map<OrderStatus, Long> stats = orderService.countAllOrdersByStatus();
 
-        model.addAttribute("orders", orders);
+        model.addAttribute("orders", orderPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", orderPage.getTotalPages());
+        model.addAttribute("totalElements", orderPage.getTotalElements());
         model.addAttribute("orderStats", stats);
         model.addAttribute("title", "Bảng điều khiển quản trị");
+        model.addAttribute("dashboardSection", "orders");
 
         // ✅ Thêm các dữ liệu khác để dashboard không lỗi khi render
         model.addAttribute("products", productService.getAll());
@@ -54,7 +75,7 @@ public class AdminOrderController {
         model.addAttribute("totalUsers", userService.countAll());
         model.addAttribute("activeUsers", userService.countByStatus(true));
         model.addAttribute("inactiveUsers", userService.countByStatus(false));
-        model.addAttribute("totalOrders", orders.size());
+        model.addAttribute("totalOrders", orderPage.getTotalElements());
         model.addAttribute("totalProducts", productService.getAll().size());
         model.addAttribute("totalCategories", categoryService.getAll().size());
 
@@ -72,15 +93,16 @@ public class AdminOrderController {
             Order order = orderService.getOrderById(orderId);
             if (order == null) {
                 ra.addFlashAttribute("errorMessage", "Không tìm thấy đơn hàng #" + orderId);
-                return "redirect:/admin/orders";
+                return "redirect:/admin/dashboard/orders";
             }
 
             model.addAttribute("order", order);
             model.addAttribute("title", "Chi tiết đơn hàng #" + orderId);
+            model.addAttribute("orderStatuses", OrderStatus.values());
             return "admin/orders/detail";
         } catch (RuntimeException e) {
             ra.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/admin/orders";
+            return "redirect:/admin/dashboard/orders";
         }
     }
 
