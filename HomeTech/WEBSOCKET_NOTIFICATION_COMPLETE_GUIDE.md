@@ -268,3 +268,5 @@ curl -X PUT "http://localhost:8080/api/orders/22/status?newStatus=CONFIRMED"
 
 The system works perfectly when you use the proper channels (Admin UI or REST API). If you update the database directly, just call the trigger API afterward!
 
+
+

@@ -86,12 +86,16 @@ public class AdminCategoryController {
 
     /** 🟢 Lưu danh mục mới */
     @PostMapping("/dashboard/category/add")
-    public String addCategory(@ModelAttribute("category") Category category,
+    public String addCategory(@RequestParam("categoryName") String categoryName,
                               RedirectAttributes ra) {
         try {
+            Category category = new Category();
+            category.setCategoryID(0); // Explicitly set to 0 to trigger ID generation
+            category.setCategoryName(categoryName);
             categoryService.save(category);
-            ra.addFlashAttribute("success", "Thêm danh mục thành công!");
+            ra.addFlashAttribute("success", "Thêm danh mục thành công với ID: " + category.getCategoryID() + "!");
         } catch (Exception e) {
+            e.printStackTrace();
             ra.addFlashAttribute("error", "Lỗi khi thêm danh mục: " + e.getMessage());
         }
         return "redirect:/admin/dashboard";
@@ -124,7 +128,7 @@ public class AdminCategoryController {
     /** 🟢 Cập nhật danh mục */
     @PostMapping("/dashboard/category/update/{id}")
     public String updateCategory(@PathVariable("id") int id,
-                                 @ModelAttribute("category") Category category,
+                                 @RequestParam("categoryName") String categoryName,
                                  RedirectAttributes ra) {
         try {
             Category existing = categoryService.getById(id);
@@ -133,7 +137,7 @@ public class AdminCategoryController {
                 return "redirect:/admin/dashboard";
             }
 
-            existing.setCategoryName(category.getCategoryName());
+            existing.setCategoryName(categoryName);
             categoryService.save(existing);
             ra.addFlashAttribute("success", "Cập nhật danh mục thành công!");
         } catch (Exception e) {

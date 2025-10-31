@@ -108,3 +108,5 @@ const isUnread = !(notif.read || notif.isRead);
 
 If it works, you'll see your 2 notifications from the database! 🚀
 
+
+

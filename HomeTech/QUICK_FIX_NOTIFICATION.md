@@ -196,3 +196,5 @@ Share these details:
 
 Most likely issue: **Table not created yet** ← Do this first!
 
+
+

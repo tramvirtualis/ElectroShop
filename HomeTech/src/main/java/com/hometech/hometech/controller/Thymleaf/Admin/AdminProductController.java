@@ -89,6 +89,8 @@ public class AdminProductController {
                               @RequestParam(value = "description", required = false) String description,
                               @RequestParam(value = "categoryID", required = false) Integer categoryId,
                               @RequestParam(value = "status", required = false) Boolean status,
+                              @RequestParam(value = "color", required = false) String color,
+                              @RequestParam(value = "size", required = false) Integer size,
                               @RequestParam(value = "image", required = false) MultipartFile imageFile,
                               RedirectAttributes ra) {
 
@@ -112,6 +114,14 @@ public class AdminProductController {
             product.setPrice(price != null ? price : 0.0);
             product.setDescription(description);
             product.setStatus(status != null && status);
+            
+            // Set color and size
+            if (color != null && !color.trim().isEmpty()) {
+                product.setColor(color.trim());
+            } else {
+                product.setColor(null);
+            }
+            product.setSize(size != null && size > 0 ? size : 0);
 
             if (categoryId != null) {
                 product.setCategory(categoryService.getById(categoryId));

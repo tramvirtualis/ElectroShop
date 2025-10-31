@@ -86,6 +86,7 @@ public class CategoryController {
                                HttpServletRequest request,
                                Model model) {
         addSessionInfo(request, model);
+        // CategoryService will automatically generate ID if categoryID is 0
         categoryService.save(category);
         return "redirect:/categories";
     }

@@ -102,3 +102,5 @@ If it STILL doesn't work, tell me:
 2. Does "Bell button click handler attached" appear?
 3. Any errors in red?
 
+
+
