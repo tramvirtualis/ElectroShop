@@ -693,6 +693,11 @@
                     <i class="fas fa-users sidebar-icon"></i> Users
                 </a>
             </li>
+            <li class="sidebar-item">
+                <a href="/admin/statistics" class="sidebar-link">
+                    <i class="fas fa-chart-line sidebar-icon"></i> Statistics
+                </a>
+            </li>
         </ul>
     </aside>
 
@@ -836,6 +841,8 @@
             <div class="admin-content-panel" style="margin-bottom: 1rem; padding: 1rem;">
                 <form method="get" action="/admin/dashboard" style="display: flex; gap: 0.5rem; align-items: center;">
                     <input type="hidden" name="section" value="products">
+                    <input type="hidden" name="productPage" value="0">
+                    <input type="hidden" name="productSize" value="10">
                     <div class="search-input-wrapper">
                         <input type="text" 
                                name="search" 
@@ -866,7 +873,6 @@
                 <table class="data-table">
                     <thead>
                     <tr>
-                         <th>ID</th>
                         <th>Name</th>
                         <th>Category</th>
                         <th>Price</th>
@@ -876,7 +882,6 @@
                     </thead>
                     <tbody>
                      <tr th:each="p : ${products}">
-                         <td th:text="${p.productID}"></td>
                          <td th:text="${p.productName}"></td>
                          <td th:text="${p.category != null ? p.category.categoryName : 'N/A'}">N/A</td>
                         <td th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' VND'"></td>
@@ -891,13 +896,50 @@
                             </a>
                             <a class="btn-admin btn-admin-danger btn-sm"
                                 th:href="@{/admin/dashboard/product/delete/{id}(id=${p.productID})}"
-                               onclick="return confirm('Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a sáº£n pháº©m nÃ y?')">
+                               onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
                                 <i class="fas fa-trash"></i> Delete
                             </a>
                         </td>
                     </tr>
                     </tbody>
                 </table>
+                
+                <!-- Pagination for Products -->
+                <div class="pagination-container" th:if="${productTotalPages != null and productTotalPages > 1}" style="margin-top: 1.5rem;">
+                    <nav aria-label="Product pagination">
+                        <ul class="pagination">
+                            <!-- Previous button -->
+                            <li class="page-item" th:classappend="${productCurrentPage == 0} ? 'disabled' : ''">
+                                <a class="page-link" 
+                                   th:href="${searchKeyword != null and searchKeyword != '' ? 
+                                             '/admin/dashboard?section=products&productPage=' + (productCurrentPage > 0 ? productCurrentPage - 1 : 0) + '&productSize=10&search=' + searchKeyword : 
+                                             '/admin/dashboard?section=products&productPage=' + (productCurrentPage > 0 ? productCurrentPage - 1 : 0) + '&productSize=10'}"
+                                   th:if="${productCurrentPage > 0}">« Previous</a>
+                                <span class="page-link" th:if="${productCurrentPage == 0}">« Previous</span>
+                            </li>
+                            
+                            <!-- Page numbers -->
+                            <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, productTotalPages - 1)}"
+                                th:classappend="${pageNum == productCurrentPage} ? 'active' : ''">
+                                <a class="page-link" 
+                                   th:href="${searchKeyword != null and searchKeyword != '' ? 
+                                             '/admin/dashboard?section=products&productPage=' + pageNum + '&productSize=10&search=' + searchKeyword : 
+                                             '/admin/dashboard?section=products&productPage=' + pageNum + '&productSize=10'}"
+                                   th:text="${pageNum + 1}">1</a>
+                            </li>
+                            
+                            <!-- Next button -->
+                            <li class="page-item" th:classappend="${productCurrentPage >= productTotalPages - 1} ? 'disabled' : ''">
+                                <a class="page-link" 
+                                   th:href="${searchKeyword != null and searchKeyword != '' ? 
+                                             '/admin/dashboard?section=products&productPage=' + (productCurrentPage + 1) + '&productSize=10&search=' + searchKeyword : 
+                                             '/admin/dashboard?section=products&productPage=' + (productCurrentPage + 1) + '&productSize=10'}"
+                                   th:if="${productCurrentPage < productTotalPages - 1}">Next »</a>
+                                <span class="page-link" th:if="${productCurrentPage >= productTotalPages - 1}">Next »</span>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </div>
 
@@ -1004,7 +1046,7 @@
             <div class="admin-content-panel" style="margin-bottom: 1rem; padding: 1rem;">
                 <form method="get" action="/admin/dashboard/orders" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                     <input type="hidden" name="page" value="0">
-                    <input type="hidden" name="size" value="7">
+                    <input type="hidden" name="size" value="10">
                     <label style="color: #fff; margin-right: 0.5rem; white-space: nowrap;">Sort by:</label>
                     <select name="sortBy" 
                             onchange="this.form.submit()" 
@@ -1076,8 +1118,8 @@
                             <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
                                 <a class="page-link" 
                                    th:href="${(sortBy != null and sortBy != '') and (sortDir != null and sortDir != '') ? 
-                                             '/admin/dashboard/orders?page=' + (currentPage > 0 ? currentPage - 1 : 0) + '&size=7&sortBy=' + sortBy + '&sortDir=' + sortDir : 
-                                             '/admin/dashboard/orders?page=' + (currentPage > 0 ? currentPage - 1 : 0) + '&size=7'}"
+                                             '/admin/dashboard/orders?page=' + (currentPage > 0 ? currentPage - 1 : 0) + '&size=10&sortBy=' + sortBy + '&sortDir=' + sortDir : 
+                                             '/admin/dashboard/orders?page=' + (currentPage > 0 ? currentPage - 1 : 0) + '&size=10'}"
                                    th:if="${currentPage > 0}">« Previous</a>
                                 <span class="page-link" th:if="${currentPage == 0}">« Previous</span>
                             </li>
@@ -1087,8 +1129,8 @@
                                 th:classappend="${pageNum == currentPage} ? 'active' : ''">
                                 <a class="page-link" 
                                    th:href="${(sortBy != null and sortBy != '') and (sortDir != null and sortDir != '') ? 
-                                             '/admin/dashboard/orders?page=' + pageNum + '&size=7&sortBy=' + sortBy + '&sortDir=' + sortDir : 
-                                             '/admin/dashboard/orders?page=' + pageNum + '&size=7'}"
+                                             '/admin/dashboard/orders?page=' + pageNum + '&size=10&sortBy=' + sortBy + '&sortDir=' + sortDir : 
+                                             '/admin/dashboard/orders?page=' + pageNum + '&size=10'}"
                                    th:text="${pageNum + 1}">1</a>
                             </li>
                             
@@ -1096,8 +1138,8 @@
                             <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled' : ''">
                                 <a class="page-link" 
                                    th:href="${(sortBy != null and sortBy != '') and (sortDir != null and sortDir != '') ? 
-                                             '/admin/dashboard/orders?page=' + (currentPage + 1) + '&size=7&sortBy=' + sortBy + '&sortDir=' + sortDir : 
-                                             '/admin/dashboard/orders?page=' + (currentPage + 1) + '&size=7'}"
+                                             '/admin/dashboard/orders?page=' + (currentPage + 1) + '&size=10&sortBy=' + sortBy + '&sortDir=' + sortDir : 
+                                             '/admin/dashboard/orders?page=' + (currentPage + 1) + '&size=10'}"
                                    th:if="${currentPage < totalPages - 1}">Next »</a>
                                 <span class="page-link" th:if="${currentPage >= totalPages - 1}">Next »</span>
                             </li>
@@ -1122,6 +1164,8 @@
             <div class="admin-content-panel" style="margin-bottom: 1rem; padding: 1rem;">
                 <form method="get" action="/admin/dashboard" style="display: flex; gap: 0.5rem; align-items: center;">
                     <input type="hidden" name="section" value="customers">
+                    <input type="hidden" name="userPage" value="0">
+                    <input type="hidden" name="userSize" value="5">
                     <div class="search-input-wrapper">
                         <input type="text" 
                                name="userSearch" 
@@ -1153,7 +1197,6 @@
                 <table class="data-table">
                     <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Name</th>
                         <th>Email</th>
                         <th>Active</th>
@@ -1163,7 +1206,6 @@
                     </thead>
                     <tbody>
                     <tr th:each="u : ${users}">
-                        <td th:text="${u.id}"></td>
                         <td th:text="${u.fullName != null and u.fullName != '' ? u.fullName : (u.account != null ? u.account.username : '')}"></td>
                         <td th:text="${u.account != null ? u.account.email : 'N/A'}"></td>
                         <td>
@@ -1195,7 +1237,27 @@
                     </tr>
                     </tbody>
                 </table>
+                
+                <!-- Pagination for Users -->
+                <div class="pagination-container" th:if="${userTotalPages != null and userTotalPages > 1}" style="margin-top: 1.5rem;">
+                    <nav aria-label="User pagination">
+                        <ul class="pagination">
+                            <li class="page-item" th:classappend="${userCurrentPage == 0} ? 'disabled' : ''">
+                                <a class="page-link" th:href="${userSearchKeyword != null and userSearchKeyword != '' ? '/admin/dashboard?section=customers&userPage=' + (userCurrentPage > 0 ? userCurrentPage - 1 : 0) + '&userSize=5&userSearch=' + userSearchKeyword : '/admin/dashboard?section=customers&userPage=' + (userCurrentPage > 0 ? userCurrentPage - 1 : 0) + '&userSize=5'}" th:if="${userCurrentPage > 0}">« Previous</a>
+                                <span class="page-link" th:if="${userCurrentPage == 0}">« Previous</span>
+                            </li>
+                            <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, userTotalPages - 1)}" th:classappend="${pageNum == userCurrentPage} ? 'active' : ''">
+                                <a class="page-link" th:href="${userSearchKeyword != null and userSearchKeyword != '' ? '/admin/dashboard?section=customers&userPage=' + pageNum + '&userSize=5&userSearch=' + userSearchKeyword : '/admin/dashboard?section=customers&userPage=' + pageNum + '&userSize=5'}" th:text="${pageNum + 1}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${userCurrentPage >= userTotalPages - 1} ? 'disabled' : ''">
+                                <a class="page-link" th:href="${userSearchKeyword != null and userSearchKeyword != '' ? '/admin/dashboard?section=customers&userPage=' + (userCurrentPage + 1) + '&userSize=5&userSearch=' + userSearchKeyword : '/admin/dashboard?section=customers&userPage=' + (userCurrentPage + 1) + '&userSize=5'}" th:if="${userCurrentPage < userTotalPages - 1}">Next »</a>
+                                <span class="page-link" th:if="${userCurrentPage >= userTotalPages - 1}">Next »</span>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
+
 
             <!-- ðŸ”¹ Chi tiáº¿t ngÆ°á»i dÃ¹ng -->
             <div th:if="${showUserDetail}" class="admin-content-panel mt-4">

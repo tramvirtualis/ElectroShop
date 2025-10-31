@@ -5,6 +5,9 @@ import com.hometech.hometech.enums.RoleType;
 import com.hometech.hometech.model.Account;
 import com.hometech.hometech.model.User;
 import com.hometech.hometech.Repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,6 +34,12 @@ public class UserService {
         return userRepository.findByAccount_EmailIsNotNull();
     }
 
+    // Lấy danh sách người dùng có email với pagination
+    public Page<User> getUsersWithEmail(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return userRepository.findByAccount_EmailIsNotNull(pageable);
+    }
+
     // Cập nhật trạng thái hoạt động
     public void updateUserStatus(Long id, boolean active) {
         User user = userRepository.findById(id)
@@ -50,6 +59,19 @@ public class UserService {
     }
     public long countAll() { return userRepository.count(); }
     public long countByStatus(boolean active) { return userRepository.countByActive(active); }
+    
+    // Đếm số người dùng theo role (chỉ đếm user có email)
+    public long countUsersWithEmailByRole(RoleType role) {
+        List<User> usersWithEmail = userRepository.findByAccount_EmailIsNotNull();
+        return usersWithEmail.stream()
+                .filter(u -> u.getAccount() != null && u.getAccount().getRole() == role)
+                .count();
+    }
+    
+    // Đếm tổng số người dùng có email
+    public long countUsersWithEmail() {
+        return userRepository.findByAccount_EmailIsNotNull().size();
+    }
     // 🟢 Tìm kiếm người dùng
     public List<User> searchUsers(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {

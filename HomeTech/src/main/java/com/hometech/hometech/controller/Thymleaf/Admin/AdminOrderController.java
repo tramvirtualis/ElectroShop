@@ -43,7 +43,7 @@ public class AdminOrderController {
     @GetMapping
     public String viewAllOrders(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "7") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(value = "sortBy", required = false) String sortBy,
             @RequestParam(value = "sortDir", required = false) String sortDir,
             Model model) {

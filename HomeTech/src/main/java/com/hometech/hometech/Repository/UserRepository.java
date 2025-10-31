@@ -2,6 +2,8 @@ package com.hometech.hometech.Repository;
 
 import com.hometech.hometech.model.Account;
 import com.hometech.hometech.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,5 +17,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByActive(boolean active);
     List<User> findByFullNameContainingIgnoreCaseOrAccount_EmailContainingIgnoreCase(String fullName, String email);
     List<User> findByAccount_EmailIsNotNull();
+    Page<User> findByAccount_EmailIsNotNull(Pageable pageable);
 
 }

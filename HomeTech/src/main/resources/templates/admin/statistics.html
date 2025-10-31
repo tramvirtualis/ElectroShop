@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống kê - Admin Dashboard - HomeTech</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap & FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #6C5CE7;
+            --success: #00B894;
+            --danger: #FF7675;
+            --warning: #FDCB6E;
+            --dark: #2D3436;
+            --light: #F8F9FA;
+            --gray: #636E72;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #1e1e2f, #2d1b3a);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .admin-sidebar {
+            width: 260px;
+            background: rgba(30, 30, 47, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem 1rem;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            position: fixed;
+            height: 100%;
+            z-index: 1000;
+        }
+
+        .sidebar-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 2rem;
+            letter-spacing: 2px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: #ddd;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .sidebar-link:hover, .sidebar-link.active {
+            background: var(--primary);
+            color: white;
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        .sidebar-icon {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .admin-main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            background: transparent;
+        }
+
+        .admin-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-title {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin: 0;
+            color: var(--primary);
+        }
+
+        .stats-section {
+            margin-bottom: 3rem;
+        }
+
+        .stats-section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .stats-grid {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 220px;
+            background: linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(108, 92, 231, 0.05));
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(108, 92, 231, 0.4);
+        }
+
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card-title {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+        }
+
+        .stat-card-icon {
+            font-size: 2rem;
+            opacity: 0.6;
+        }
+
+        .stat-card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .order-status-card {
+            background: linear-gradient(135deg, rgba(108, 92, 231, 0.15), rgba(108, 92, 231, 0.05));
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(108, 92, 231, 0.3);
+            margin-bottom: 1rem;
+        }
+
+        .order-status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .order-status-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-status-name {
+            font-weight: 600;
+        }
+
+        .order-status-count {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-logo">
+                <i class="fas fa-globe"></i> ADMIN PANEL
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="/admin/dashboard?section=products" class="sidebar-link">
+                        <i class="fas fa-box sidebar-icon"></i> Products
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="/admin/dashboard?section=categories" class="sidebar-link">
+                        <i class="fas fa-tags sidebar-icon"></i> Categories
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="/admin/dashboard/orders" class="sidebar-link">
+                        <i class="fas fa-shopping-bag sidebar-icon"></i> Orders
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="/admin/dashboard?section=customers" class="sidebar-link">
+                        <i class="fas fa-users sidebar-icon"></i> Users
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="/admin/statistics" class="sidebar-link active">
+                        <i class="fas fa-chart-line sidebar-icon"></i> Statistics
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <div class="admin-header">
+                <h1 class="admin-title">
+                    <i class="fas fa-chart-bar"></i> Thống kê tổng hợp
+                </h1>
+            </div>
+
+            <!-- Thống kê tổng hợp -->
+            <div class="stats-section">
+                <h2 class="stats-section-title">
+                    <i class="fas fa-globe"></i> Tổng quan hệ thống
+                </h2>
+                <div class="stats-grid">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="stat-card-header">
+                            <p class="stat-card-title">Tổng sản phẩm</p>
+                            <i class="fas fa-box stat-card-icon"></i>
+                        </div>
+                        <h3 class="stat-card-value" th:text="${totalProducts}">0</h3>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="stat-card-header">
+                            <p class="stat-card-title">Danh mục</p>
+                            <i class="fas fa-tags stat-card-icon"></i>
+                        </div>
+                        <h3 class="stat-card-value" th:text="${totalCategories}">0</h3>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="stat-card-header">
+                            <p class="stat-card-title">Tổng đơn hàng</p>
+                            <i class="fas fa-shopping-bag stat-card-icon"></i>
+                        </div>
+                        <h3 class="stat-card-value" th:text="${totalOrders}">0</h3>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                        <div class="stat-card-header">
+                            <p class="stat-card-title">Tổng khách hàng</p>
+                            <i class="fas fa-users stat-card-icon"></i>
+                        </div>
+                        <h3 class="stat-card-value" th:text="${totalUsersWithEmail}">0</h3>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #fad961 0%, #f76b1c 100%);">
+                        <div class="stat-card-header">
+                            <p class="stat-card-title">Tổng doanh thu</p>
+                            <i class="fas fa-money-bill-wave stat-card-icon"></i>
+                        </div>
+                        <h3 class="stat-card-value" th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thống kê đơn hàng -->
+            <div class="stats-section">
+                <h2 class="stats-section-title">
+                    <i class="fas fa-shopping-bag"></i> Thống kê đơn hàng
+                </h2>
+                <div class="order-status-card">
+                    <div class="order-status-item" th:each="entry : ${orderStats}">
+                        <span class="order-status-name" th:text="${entry.key.name() == 'WAITING_CONFIRMATION' ? 'Chờ xác nhận' : 
+                                                                    entry.key.name() == 'CONFIRMED' ? 'Đã xác nhận' :
+                                                                    entry.key.name() == 'SHIPPED' ? 'Đang giao hàng' :
+                                                                    entry.key.name() == 'COMPLETED' ? 'Đã hoàn thành' :
+                                                                    entry.key.name() == 'CANCELLED' ? 'Đã hủy' : entry.key.name()}">Trạng thái</span>
+                        <span class="order-status-count" 
+                              th:style="${entry.key.name() == 'COMPLETED' ? 'color: var(--success);' : 
+                                         entry.key.name() == 'CANCELLED' ? 'color: var(--danger);' : ''}"
+                              th:text="${entry.value}">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thống kê khách hàng -->
+            <div class="stats-section">
+                <h2 class="stats-section-title">
+                    <i class="fas fa-users"></i> Thống kê khách hàng
+                </h2>
+                <div class="stats-grid">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                        <div class="stat-card-header">
+                            <p class="stat-card-title">Đang hoạt động</p>
+                            <i class="fas fa-user-check stat-card-icon"></i>
+                        </div>
+                        <h3 class="stat-card-value" th:text="${activeUsersWithEmail}">0</h3>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);">
+                        <div class="stat-card-header">
+                            <p class="stat-card-title">Không hoạt động</p>
+                            <i class="fas fa-user-slash stat-card-icon"></i>
+                        </div>
+                        <h3 class="stat-card-value" th:text="${inactiveUsersWithEmail}">0</h3>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="stat-card-header">
+                            <p class="stat-card-title">Quản trị viên</p>
+                            <i class="fas fa-user-shield stat-card-icon"></i>
+                        </div>
+                        <h3 class="stat-card-value" th:text="${adminUsers}">0</h3>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="stat-card-header">
+                            <p class="stat-card-title">Người dùng thường</p>
+                            <i class="fas fa-user stat-card-icon"></i>
+                        </div>
+                        <h3 class="stat-card-value" th:text="${regularUsers}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+

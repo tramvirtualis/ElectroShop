@@ -4,6 +4,9 @@ import com.hometech.hometech.Repository.CategoryRepository;
 import com.hometech.hometech.Repository.ProductRepository;
 import com.hometech.hometech.model.Category;
 import com.hometech.hometech.model.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,6 +27,12 @@ public class ProductService {
     // 🟢 Lấy toàn bộ sản phẩm
     public List<Product> getAll() {
         return productRepository.findAll();
+    }
+
+    // 🟢 Lấy sản phẩm với pagination
+    public Page<Product> getAll(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return productRepository.findAll(pageable);
     }
 
     // 🟢 Lấy sản phẩm theo ID

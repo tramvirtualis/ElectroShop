@@ -190,51 +190,99 @@ public class AdminAuthController {
     public String adminDashboard(@RequestParam(value = "section", required = false) String section,
                                  @RequestParam(value = "search", required = false) String searchKeyword,
                                  @RequestParam(value = "userSearch", required = false) String userSearchKeyword,
+                                 @RequestParam(value = "userPage", defaultValue = "0") int userPage,
+                                 @RequestParam(value = "userSize", defaultValue = "5") int userSize,
+                                 @RequestParam(value = "productPage", defaultValue = "0") int productPage,
+                                 @RequestParam(value = "productSize", defaultValue = "10") int productSize,
                                  Model model) {
         long totalUsers = userService.countAll();
         long activeUsers = userService.countByStatus(true);
         long inactiveUsers = userService.countByStatus(false);
 
-        // Get products - filter by search if provided
-        var allProducts = productService.getAll();
-        java.util.List<com.hometech.hometech.model.Product> products;
-        
+        // Get products - filter by search if provided, with pagination
+        org.springframework.data.domain.Page<com.hometech.hometech.model.Product> productPageResult;
         if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
-            // Search products by name
-            products = productService.searchByName(searchKeyword.trim());
+            // Search products by name - create manual pagination for search results
+            java.util.List<com.hometech.hometech.model.Product> allSearchResults = productService.searchByName(searchKeyword.trim());
+            int start = productPage * productSize;
+            int end = Math.min(start + productSize, allSearchResults.size());
+            java.util.List<com.hometech.hometech.model.Product> paginatedProducts = start < allSearchResults.size() 
+                    ? allSearchResults.subList(start, end) 
+                    : java.util.Collections.emptyList();
+            productPageResult = new org.springframework.data.domain.PageImpl<>(
+                    paginatedProducts, 
+                    org.springframework.data.domain.PageRequest.of(productPage, productSize), 
+                    allSearchResults.size()
+            );
             model.addAttribute("searchKeyword", searchKeyword.trim());
         } else {
-            products = allProducts;
+            productPageResult = productService.getAll(productPage, productSize);
         }
         
-        long activeProductsCount = products.stream().filter(p -> p.isStatus()).count();
-        long inactiveProductsCount = products.size() - activeProductsCount;
+        // Count active/inactive from all products (not just current page)
+        var allProducts = productService.getAll();
+        long activeProductsCount = allProducts.stream().filter(p -> p.isStatus()).count();
+        long inactiveProductsCount = allProducts.size() - activeProductsCount;
 
-        model.addAttribute("products", products);
+        model.addAttribute("products", productPageResult.getContent());
+        model.addAttribute("productCurrentPage", productPageResult.getNumber());
+        model.addAttribute("productTotalPages", productPageResult.getTotalPages());
+        model.addAttribute("productTotalElements", productPageResult.getTotalElements());
         model.addAttribute("activeProductsCount", activeProductsCount);
         model.addAttribute("inactiveProductsCount", inactiveProductsCount);
 
         model.addAttribute("categories", categoryService.getAll());
         model.addAttribute("orders", orderService.getAllOrders());
         
-        // Get users - filter by search if provided
-        java.util.List<com.hometech.hometech.model.User> users;
+        // Get users - filter by search if provided, with pagination
+        org.springframework.data.domain.Page<com.hometech.hometech.model.User> userPageResult;
         if (userSearchKeyword != null && !userSearchKeyword.trim().isEmpty()) {
             // Search users by name or email
             java.util.List<com.hometech.hometech.model.User> allUsers = userService.searchUsers(userSearchKeyword.trim());
             // Filter to only show users with non-null emails
-            users = allUsers.stream()
+            java.util.List<com.hometech.hometech.model.User> filteredUsers = allUsers.stream()
                     .filter(u -> u.getAccount() != null && u.getAccount().getEmail() != null)
                     .toList();
+            // For search results, create a paginated list manually
+            int start = userPage * userSize;
+            int end = Math.min(start + userSize, filteredUsers.size());
+            java.util.List<com.hometech.hometech.model.User> paginatedUsers = start < filteredUsers.size() 
+                    ? filteredUsers.subList(start, end) 
+                    : java.util.Collections.emptyList();
+            userPageResult = new org.springframework.data.domain.PageImpl<>(
+                    paginatedUsers, 
+                    org.springframework.data.domain.PageRequest.of(userPage, userSize), 
+                    filteredUsers.size()
+            );
             model.addAttribute("userSearchKeyword", userSearchKeyword.trim());
         } else {
-            users = userService.getUsersWithEmail();
+            userPageResult = userService.getUsersWithEmail(userPage, userSize);
         }
-        model.addAttribute("users", users);
+        model.addAttribute("users", userPageResult.getContent());
+        model.addAttribute("userCurrentPage", userPageResult.getNumber());
+        model.addAttribute("userTotalPages", userPageResult.getTotalPages());
+        model.addAttribute("userTotalElements", userPageResult.getTotalElements());
+
+        // User statistics (chỉ đếm user có email)
+        long totalUsersWithEmail = userService.countUsersWithEmail();
+        long adminUsers = userService.countUsersWithEmailByRole(RoleType.ADMIN);
+        long regularUsers = userService.countUsersWithEmailByRole(RoleType.USER);
+        
+        // Đếm active/inactive cho user có email
+        java.util.List<com.hometech.hometech.model.User> allUsersWithEmail = userService.getUsersWithEmail();
+        long activeUsersWithEmail = allUsersWithEmail.stream().filter(u -> u.isActive()).count();
+        long inactiveUsersWithEmail = allUsersWithEmail.size() - activeUsersWithEmail;
 
         model.addAttribute("totalUsers", totalUsers);
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("inactiveUsers", inactiveUsers);
+        
+        // Statistics for users with email
+        model.addAttribute("totalUsersWithEmail", totalUsersWithEmail);
+        model.addAttribute("activeUsersWithEmail", activeUsersWithEmail);
+        model.addAttribute("inactiveUsersWithEmail", inactiveUsersWithEmail);
+        model.addAttribute("adminUsers", adminUsers);
+        model.addAttribute("regularUsers", regularUsers);
         model.addAttribute("title", "Bảng điều khiển quản trị");
         
         // Set dashboard section if provided
@@ -242,7 +290,48 @@ public class AdminAuthController {
             model.addAttribute("dashboardSection", section);
         }
         
-        return "admin/dashboard"; // ✅ templates/admin/dashboard.html
+        return "admin/dashboard";
+    }
+
+    // 📊 Trang thống kê tổng hợp
+    @GetMapping("/statistics")
+    public String statistics(Model model) {
+        // Thống kê tổng hợp
+        long totalProducts = productService.getAll().size();
+        long totalCategories = categoryService.getAll().size();
+        long totalOrders = orderService.getAllOrders().size();
+        long totalUsersWithEmail = userService.countUsersWithEmail();
+        
+        // Tính tổng doanh thu từ các đơn hàng đã hoàn thành
+        java.util.List<com.hometech.hometech.model.Order> allOrders = orderService.getAllOrders();
+        double totalRevenue = allOrders.stream()
+                .filter(o -> o.getOrderStatus() == com.hometech.hometech.enums.OrderStatus.COMPLETED)
+                .mapToDouble(o -> o.getTotalPrice())
+                .sum();
+        
+        // Thống kê đơn hàng theo trạng thái
+        java.util.Map<com.hometech.hometech.enums.OrderStatus, Long> orderStats = orderService.countAllOrdersByStatus();
+        
+        // Thống kê khách hàng
+        long activeUsersWithEmail = userService.getUsersWithEmail().stream()
+                .filter(u -> u.isActive())
+                .count();
+        long inactiveUsersWithEmail = userService.countUsersWithEmail() - activeUsersWithEmail;
+        long adminUsers = userService.countUsersWithEmailByRole(RoleType.ADMIN);
+        long regularUsers = userService.countUsersWithEmailByRole(RoleType.USER);
+        
+        model.addAttribute("totalProducts", totalProducts);
+        model.addAttribute("totalCategories", totalCategories);
+        model.addAttribute("totalOrders", totalOrders);
+        model.addAttribute("totalUsersWithEmail", totalUsersWithEmail);
+        model.addAttribute("totalRevenue", totalRevenue);
+        model.addAttribute("orderStats", orderStats);
+        model.addAttribute("activeUsersWithEmail", activeUsersWithEmail);
+        model.addAttribute("inactiveUsersWithEmail", inactiveUsersWithEmail);
+        model.addAttribute("adminUsers", adminUsers);
+        model.addAttribute("regularUsers", regularUsers);
+        
+        return "admin/statistics";
     }
     @GetMapping("/register")
     public String registerPage() {

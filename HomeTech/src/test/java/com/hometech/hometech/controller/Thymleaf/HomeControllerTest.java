@@ -69,7 +69,7 @@ class HomeControllerTest {
         when(productService.getTop10BestSellingProducts()).thenReturn(mockProducts);
 
         // When
-        String result = homeController.home(model, null);
+        String result = homeController.home(model, null, null);
 
         // Then
         assertEquals("home", result);
@@ -96,7 +96,7 @@ class HomeControllerTest {
         when(productService.getTop10BestSellingProductsByCategory(category)).thenReturn(mockProducts);
 
         // When
-        String result = homeController.home(model, category);
+        String result = homeController.home(model, category, null);
 
         // Then
         assertEquals("home", result);
@@ -123,7 +123,7 @@ class HomeControllerTest {
         when(productService.getTop10BestSellingProducts()).thenReturn(mockProducts);
 
         // When
-        String result = homeController.home(model, category);
+        String result = homeController.home(model, category, null);
 
         // Then
         assertEquals("home", result);
@@ -140,7 +140,7 @@ class HomeControllerTest {
         when(productService.getTop10BestSellingProducts()).thenReturn(mockProducts);
 
         // When
-        String result = homeController.home(model, category);
+        String result = homeController.home(model, category, null);
 
         // Then
         assertEquals("home", result);
