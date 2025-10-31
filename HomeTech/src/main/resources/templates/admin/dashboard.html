@@ -78,6 +78,8 @@
             border-radius: 12px;
             transition: all 0.3s;
             font-weight: 600;
+            cursor: pointer;
+            pointer-events: auto;
         }
 
         .sidebar-link:hover, .sidebar-link.active {
@@ -261,11 +263,11 @@
         }
 
         .content-section {
-            display: none;
+            display: none !important;
         }
 
         .content-section.active {
-            display: block;
+            display: block !important;
             animation: fadeIn 0.5s ease;
         }
 
@@ -286,6 +288,70 @@
             }
         }
     </style>
+    
+    <!-- JavaScript: Tab Switching - Load early -->
+    <script>
+        // Define switchTab function globally and early
+        window.switchTab = function(sectionId) {
+            console.log('switchTab called with:', sectionId);
+            
+            try {
+                // Remove active class from all links
+                var allLinks = document.querySelectorAll('.sidebar-link');
+                console.log('Found', allLinks.length, 'sidebar links');
+                for (var i = 0; i < allLinks.length; i++) {
+                    allLinks[i].classList.remove('active');
+                }
+                
+                // Remove active class from all sections
+                var allSections = document.querySelectorAll('.content-section');
+                console.log('Found', allSections.length, 'content sections');
+                for (var i = 0; i < allSections.length; i++) {
+                    allSections[i].classList.remove('active');
+                    console.log('Removed active from:', allSections[i].id);
+                }
+                
+                // Add active class to clicked link
+                var clickedLink = document.querySelector('.sidebar-link[data-section="' + sectionId + '"]');
+                if (clickedLink) {
+                    clickedLink.classList.add('active');
+                    console.log('Link activated:', sectionId);
+                } else {
+                    console.error('Link not found for section:', sectionId);
+                }
+                
+                // Show the corresponding section
+                var targetSection = document.getElementById(sectionId);
+                if (targetSection) {
+                    // Force remove any conflicting classes first
+                    targetSection.classList.remove('active');
+                    // Use setTimeout to ensure DOM update
+                    setTimeout(function() {
+                        targetSection.classList.add('active');
+                        // Force style update
+                        targetSection.style.display = 'block';
+                        console.log('Section activated and should be visible:', sectionId);
+                        console.log('Section element:', targetSection);
+                        console.log('Section classes:', targetSection.className);
+                        console.log('Section computed display:', window.getComputedStyle(targetSection).display);
+                    }, 10);
+                } else {
+                    console.error('Section not found with ID:', sectionId);
+                    // List all available sections
+                    var sectionIds = [];
+                    for (var i = 0; i < allSections.length; i++) {
+                        sectionIds.push(allSections[i].id);
+                    }
+                    console.log('Available sections:', sectionIds);
+                }
+            } catch (error) {
+                console.error('Error in switchTab:', error);
+                console.error('Error stack:', error.stack);
+            }
+        };
+        
+        console.log('switchTab function defined');
+    </script>
 </head>
 <body>
 <div class="admin-container">
@@ -297,22 +363,22 @@
         </div>
         <ul class="sidebar-menu">
             <li class="sidebar-item">
-                <a href="#" class="sidebar-link active" data-section="products">
+                <a href="javascript:void(0);" class="sidebar-link active" data-section="products" onclick="switchTab('products'); return false;">
                     <i class="fas fa-box sidebar-icon"></i> Products
                 </a>
             </li>
             <li class="sidebar-item">
-                <a href="#" class="sidebar-link" data-section="categories">
+                <a href="javascript:void(0);" class="sidebar-link" data-section="categories" onclick="switchTab('categories'); return false;">
                     <i class="fas fa-tags sidebar-icon"></i> Categories
                 </a>
             </li>
             <li class="sidebar-item">
-                <a href="#" class="sidebar-link" data-section="orders">
+                <a href="javascript:void(0);" class="sidebar-link" data-section="orders" onclick="switchTab('orders'); return false;">
                     <i class="fas fa-shopping-bag sidebar-icon"></i> Orders
                 </a>
             </li>
             <li class="sidebar-item">
-                <a href="#" class="sidebar-link" data-section="customers">
+                <a href="javascript:void(0);" class="sidebar-link" data-section="customers" onclick="switchTab('customers'); return false;">
                     <i class="fas fa-users sidebar-icon"></i> Users
                 </a>
             </li>
@@ -323,7 +389,7 @@
     <main class="admin-main">
 
         <!-- PRODUCTS SECTION -->
-        <div class="content-section" id="products" th:classappend="${dashboardSection == null or dashboardSection == 'products' ? ' active' : ''">
+        <div class="content-section" id="products" th:classappend="${(dashboardSection == null or dashboardSection == 'products') ? ' active' : ''}">
             <div class="admin-header">
                 <h1 class="admin-title"><i class="fas fa-box"></i> Manage Products</h1>
                 <div>
@@ -341,7 +407,7 @@
             <div th:if="${showProductForm}" class="admin-content-panel" style="margin-bottom:1rem;">
                 <form th:action="@{/admin/dashboard/product/save}" method="post" enctype="multipart/form-data">
                     <!-- Náº¿u dÃ¹ng CSRF -->
-                    <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+                    <!--<input type="hidden" name="_csrf" th:value="${_csrf.token}" />-->
 
                     <!-- Hidden ID Ä‘á»ƒ phÃ¢n biá»‡t thÃªm/sá»­a -->
                     <input type="hidden" name="productID" th:value="${product != null ? product.productID : 0}" />
@@ -479,7 +545,7 @@
         </div>
 
         <!-- CATEGORIES SECTION -->
-        <div class="content-section" id="categories" th:classappend="${dashboardSection == 'categories' ? ' active' : ''">
+        <div class="content-section" id="categories" th:classappend="${dashboardSection == 'categories' ? ' active' : ''}">
             <div class="admin-header">
                 <h1 class="admin-title"><i class="fas fa-tags"></i> Manage Categories</h1>
                 <div>
@@ -494,7 +560,7 @@
 
             <!-- Category Form (inline) -->
             <div th:if="${showCategoryForm}" class="admin-content-panel" style="margin-bottom: 1rem;">
-                <form th:action="${(category != null and category.categoryID > 0) ? '/admin/dashboard/category/update/' + category.categoryID : '/admin/dashboard/category/add'}"
+                <form th:action="${(category != null and category.categoryID > 0) ? @{/admin/dashboard/category/update/{id}(id=${category.categoryID})} : @{/admin/dashboard/category/add}}"
                       method="post">
                     <div class="row g-2">
                         <div class="col-md-6">
@@ -546,7 +612,7 @@
         </div>
 
         <!-- ORDERS SECTION -->
-        <div class="content-section" id="orders" th:classappend="${dashboardSection == 'orders' ? ' active' : ''">
+        <div class="content-section" id="orders" th:classappend="${dashboardSection == 'orders' ? ' active' : ''}">
             <div class="admin-header">
                 <h1 class="admin-title"><i class="fas fa-shopping-bag"></i> Manage Orders</h1>
                 <div>
@@ -570,13 +636,13 @@
                     </thead>
                     <tbody>
                      <tr th:each="o : ${orders}">
-                         <td th:text="''#'' + o.orderId"></td>
-                         <td th:text="${o.customer != null && o.customer.account != null ? o.customer.account.username : 'N/A'}"></td>
+                         <td th:text="'#' + ${o.orderId}"></td>
+                         <td th:text="${o.customer != null and o.customer.account != null ? o.customer.account.username : 'N/A'}"></td>
                          <td th:text="${o.orderItems != null ? #lists.size(o.orderItems) : 0} + ' items'"></td>
-                        <td th:text="${#numbers.formatDecimal(o.totalPrice, 0, 'POINT', 0, 'COMMA')} + ' â‚«'"></td>
+                        <td th:text="${#numbers.formatDecimal(o.totalPrice, 0, 'POINT', 0, 'COMMA')} + ' ₫'"></td>
                         <td>
                              <span class="badge-table"
-                                   th:classappend="${o.orderStatus != null and (o.orderStatus.name() == 'COMPLETED' or o.orderStatus.name() == 'SHIPPED')} ? 'badge-active' : 'badge-inactive'"
+                                   th:classappend="${(o.orderStatus != null and (o.orderStatus.name() == 'COMPLETED' or o.orderStatus.name() == 'SHIPPED')) ? 'badge-active' : 'badge-inactive'}"
                                    th:text="${o.orderStatus}"></span>
                         </td>
                         <td>
@@ -591,7 +657,7 @@
         </div>
 
         <!-- USERS SECTION -->
-        <div class="content-section" id="customers" th:classappend="${dashboardSection == 'customers' ? ' active' : ''">
+        <div class="content-section" id="customers" th:classappend="${dashboardSection == 'customers' ? ' active' : ''}">
             <div class="admin-header">
                 <h1 class="admin-title"><i class="fas fa-users"></i> Manage Users</h1>
                 <div>
@@ -617,14 +683,14 @@
                     <tbody>
                     <tr th:each="u : ${users}">
                         <td th:text="${u.id}"></td>
-                        <td th:text="${u.fullName != null && u.fullName != '' ? u.fullName : (u.account != null ? u.account.username : '')}"></td>
+                        <td th:text="${u.fullName != null and u.fullName != '' ? u.fullName : (u.account != null ? u.account.username : '')}"></td>
                         <td th:text="${u.account != null ? u.account.email : 'N/A'}"></td>
                         <td>
                     <span class="badge-table"
                           th:classappend="${u.active} ? 'badge-active' : 'badge-inactive'"
                           th:text="${u.active} ? 'Active' : 'Inactive'"></span>
                         </td>
-                        <td th:text="${u.account != null && u.account.role != null ? u.account.role.name() : 'N/A'}"></td>
+                        <td th:text="${u.account != null and u.account.role != null ? u.account.role.name() : 'N/A'}"></td>
                         <td>
                             <a class="btn-admin btn-sm" th:href="@{/admin/dashboard/users/{id}(id=${u.id})}">
                                 <i class="fas fa-eye"></i> View
@@ -710,18 +776,32 @@
     </main>
 </div>
 
-<!-- JavaScript: Tab Switching -->
+<!-- JavaScript: Tab Switching - Initialize on load -->
 <script>
-    document.querySelectorAll('.sidebar-link').forEach(link => {
-        link.addEventListener('click', e => {
-            e.preventDefault();
-            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-            link.classList.add('active');
-            const sectionId = link.getAttribute('data-section');
-            document.getElementById(sectionId).classList.add('active');
-        });
+    // Initialize tabs when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM Content Loaded - Initializing tabs...');
+        
+        // Ensure the active section is visible on page load
+        var activeLink = document.querySelector('.sidebar-link.active');
+        if (activeLink) {
+            var sectionId = activeLink.getAttribute('data-section');
+            if (sectionId && window.switchTab) {
+                window.switchTab(sectionId);
+            }
+        }
     });
+    
+    // Also run immediately if DOM is already loaded
+    if (document.readyState !== 'loading') {
+        var activeLink = document.querySelector('.sidebar-link.active');
+        if (activeLink && window.switchTab) {
+            var sectionId = activeLink.getAttribute('data-section');
+            if (sectionId) {
+                window.switchTab(sectionId);
+            }
+        }
+    }
 </script>
 </body>
 </html>
