@@ -440,6 +440,22 @@
                             </select>
                         </div>
 
+                        <!-- Color -->
+                        <div class="col-md-2">
+                            <label class="form-label">Color</label>
+                            <input class="form-control" type="text" name="color"
+                                   th:value="${product != null ? product.color : ''}"
+                                   placeholder="e.g. Black, Silver">
+                        </div>
+
+                        <!-- Size -->
+                        <div class="col-md-2">
+                            <label class="form-label">Size</label>
+                            <input class="form-control" type="number" name="size" min="0" step="1"
+                                   th:value="${product != null and product.size > 0 ? product.size : ''}"
+                                   placeholder="e.g. 64, 128">
+                        </div>
+
                         <!-- Image Upload -->
                         <div class="col-md-3">
                             <label class="form-label">Image</label>
@@ -522,7 +538,7 @@
                          <td th:text="${p.productID}"></td>
                          <td th:text="${p.productName}"></td>
                          <td th:text="${p.category != null ? p.category.categoryName : 'N/A'}">N/A</td>
-                        <td th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' â‚«'"></td>
+                        <td th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' VND'"></td>
                         <td>
                              <span class="badge-table"
                                    th:classappend="${p.status} ? 'badge-active' : 'badge-inactive'"
