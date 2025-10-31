@@ -1,6 +1,6 @@
 ## 🚀 Giới thiệu
 
-**StarShop** là một trang web thương mại điện tử chuyên bán hoa, được xây dựng bằng Spring Boot và các công nghệ web hiện đại khác. Dự án này cung cấp một nền tảng đầy đủ tính năng cho cả người mua và người bán, với các vai trò người dùng khác nhau và các chức năng tương ứng.
+**HomeTech** là một trang web thương mại điện tử bán đồ công nghệ, được xây dựng bằng Spring Boot và các công nghệ web hiện đại khác. Dự án này cung cấp một nền tảng đầy đủ tính năng cho cả người mua và người bán, với các vai trò người dùng khác nhau và các chức năng tương ứng.
 
 ---
 
@@ -9,7 +9,7 @@
 ### 🔐 Chung
 - **Bảo mật:** Mật khẩu được mã hóa bằng Spring Security.
 - **Tìm kiếm & Lọc:** Tìm kiếm và lọc sản phẩm nâng cao.
-- **Xác thực tài khoản:** Đăng ký và quên mật khẩu với xác thực OTP qua Email.
+- **Xác thực tài khoản:** Đăng ký và quên mật khẩu với xác thực qua Email.
 - **Đăng nhập/Đăng xuất:** Chức năng đăng nhập, đăng xuất an toàn.
 
 ### 👤 Guest (Khách)
@@ -22,29 +22,17 @@
 - **Giỏ hàng:** Giỏ hàng được lưu trữ trong cơ sở dữ liệu.
 - **Thanh toán:** Hỗ trợ thanh toán khi nhận hàng (COD) và VNPAY.
 - **Lịch sử mua hàng:** Theo dõi trạng thái đơn hàng (mới, đã xác nhận, đang giao, đã giao, hủy, trả hàng/hoàn tiền).
-- **Tương tác:** Thích sản phẩm, xem lại các sản phẩm đã xem.
 - **Đánh giá:** Đánh giá và bình luận (văn bản, hình ảnh/video) về các sản phẩm đã mua.
-- **Mã giảm giá:** Áp dụng mã giảm giá khi thanh toán.
 
-### 🏪 Vendor (Người bán)
-- **Bao gồm tất cả các quyền của User.**
-- **Đăng ký cửa hàng:** Dễ dàng đăng ký và quản lý cửa hàng của riêng bạn.
-- **Quản lý sản phẩm:** Thêm, sửa, xóa sản phẩm của cửa hàng.
-- **Quản lý đơn hàng:** Theo dõi và quản lý đơn hàng của cửa hàng theo trạng thái.
-- **Khuyến mãi:** Tạo và quản lý các chương trình khuyến mãi.
-- **Doanh thu:** Thống kê và quản lý doanh thu của cửa hàng.
+
 
 ### 👑 Admin (Quản trị viên)
 - **Quản lý người dùng:** Tìm kiếm và quản lý tài khoản người dùng.
 - **Quản lý sản phẩm:** Quản lý sản phẩm của tất cả các cửa hàng.
 - **Quản lý danh mục:** Thêm, sửa, xóa các danh mục sản phẩm.
-- **Chiết khấu:** Quản lý chiết khấu của ứng dụng cho các cửa hàng.
-- **Quản lý khuyến mãi:** Quản lý các chương trình khuyến mãi chung (giảm giá sản phẩm, phí vận chuyển).
-- **Quản lý nhà vận chuyển:** Quản lý thông tin và phí vận chuyển của các nhà vận chuyển.
+- - **Quản lý đơn hàng:** cập nhật trạng thái đơn hàng.
 
-### 🚚 Shipper (Người giao hàng)
-- **Quản lý đơn hàng:** Xem và quản lý các đơn hàng được phân công.
-- **Thống kê:** Thống kê các đơn hàng đã được giao.
+
 
 ---
 
