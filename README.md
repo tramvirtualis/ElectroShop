@@ -41,7 +41,7 @@
 - **Backend:** Spring Boot, Spring Security, Spring Data JPA, Spring Validation, Thymeleaf, Java Mail Sender, Websocket và JWT 
 - **Frontend:** HTML5, CSS3, Bootstrap, Google Fonts và JavaScript
 - **Trang trí:** Decorator Sitemesh
-- **Cơ sở dữ liệu:** SQL Server
+- **Cơ sở dữ liệu:** MySQL
 - **Xác thực:** JWT (JSON Web Tokens), csrf token, spring security, Bcrypt
 - **Giao tiếp thời gian thực:** Websocket
 
